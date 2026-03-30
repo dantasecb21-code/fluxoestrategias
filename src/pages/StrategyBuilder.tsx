@@ -10,6 +10,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Progress } from "@/components/ui/progress";
+import { Card } from "@/components/ui/card";
 import { FileText, Plus, Save, Check, X, UserCheck } from "lucide-react";
 import { toast } from "sonner";
 import { StrategyMeta } from "@/types/strategy";
@@ -30,6 +32,17 @@ function initCategories(): StrategyCategory[] {
 interface Manager {
   user_id: string;
   display_name: string;
+}
+
+function calcProgress(categories: StrategyCategory[]) {
+  const allItems = categories.flatMap((c) => c.items).filter((i) => i.checked);
+  if (allItems.length === 0) return { percent: 0, completed: 0, inProgress: 0, pending: 0, total: 0 };
+  const completed = allItems.filter((i) => i.status === "completed").length;
+  const inProgress = allItems.filter((i) => i.status === "in_progress").length;
+  const pending = allItems.filter((i) => !i.status || i.status === "pending").length;
+  const total = allItems.length;
+  const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
+  return { percent, completed, inProgress, pending, total };
 }
 
 export default function StrategyBuilderPage() {
@@ -56,6 +69,21 @@ export default function StrategyBuilderPage() {
 
   const editor = useCategoryEditor(categories, setCategories);
 
+  // Sync when existing strategy loads
+  useEffect(() => {
+    if (existing) {
+      setMeta({
+        storeName: existing.store_name,
+        managerName: existing.manager_name,
+        operationalManager: existing.operational_manager,
+        deadline: existing.deadline,
+      });
+      setCategories(existing.categories);
+      setAssignedTo(existing.assigned_to || "");
+      setSavedId(existing.id);
+    }
+  }, [existing?.id]);
+
   // Fetch operational managers
   useEffect(() => {
     async function fetchManagers() {
@@ -74,9 +102,26 @@ export default function StrategyBuilderPage() {
     fetchManagers();
   }, []);
 
+  // When manager is selected, auto-fill the operationalManager name
+  const handleManagerSelect = (userId: string) => {
+    setAssignedTo(userId);
+    if (userId && userId !== "none") {
+      const found = managers.find((m) => m.user_id === userId);
+      if (found) {
+        setMeta((prev) => ({ ...prev, operationalManager: found.display_name }));
+      }
+    } else {
+      setMeta((prev) => ({ ...prev, operationalManager: "" }));
+    }
+  };
+
   const handleSave = async () => {
     if (!meta.storeName.trim()) {
       toast.error("Preencha o nome da loja!");
+      return;
+    }
+    if (!assignedTo || assignedTo === "none") {
+      toast.error("Selecione um Gestor Operacional!");
       return;
     }
     if (savedId) {
@@ -117,10 +162,7 @@ export default function StrategyBuilderPage() {
   const checkedTotal = categories.reduce((acc, c) => acc + c.items.filter((i) => i.checked).length, 0);
   const totalItems = categories.reduce((acc, c) => acc + c.items.length, 0);
 
-  // Progress from operational manager
-  const allCheckedItems = categories.flatMap((c) => c.items).filter((i) => i.checked);
-  const completedItems = allCheckedItems.filter((i) => i.status === "completed").length;
-  const progressPercent = allCheckedItems.length > 0 ? Math.round((completedItems / allCheckedItems.length) * 100) : 0;
+  const progress = calcProgress(categories);
 
   if (loading && id) {
     return <div className="flex items-center justify-center h-64 text-muted-foreground">Carregando...</div>;
@@ -136,7 +178,6 @@ export default function StrategyBuilderPage() {
           </h1>
           <p className="text-xs text-muted-foreground">
             {checkedTotal}/{totalItems} itens selecionados
-            {id && ` • Execução: ${progressPercent}%`}
           </p>
         </div>
         <div className="flex gap-2">
@@ -148,6 +189,22 @@ export default function StrategyBuilderPage() {
           </Button>
         </div>
       </div>
+
+      {/* Progress bar for existing strategies */}
+      {id && progress.total > 0 && (
+        <Card className="p-4">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm text-muted-foreground font-medium">Progresso da Execução</span>
+            <span className="font-heading font-bold text-lg text-primary">{progress.percent}%</span>
+          </div>
+          <Progress value={progress.percent} className="h-2 mb-2" />
+          <div className="flex gap-4 text-xs text-muted-foreground">
+            <span className="text-success">{progress.completed} concluídos</span>
+            <span className="text-primary">{progress.inProgress} em andamento</span>
+            <span className="text-warning">{progress.pending} pendentes</span>
+          </div>
+        </Card>
+      )}
 
       {showReport ? (
         <StrategyReport
@@ -161,18 +218,17 @@ export default function StrategyBuilderPage() {
         <>
           <StrategyMetaForm meta={meta} onChange={setMeta} />
 
-          {/* Assign to manager */}
-          {managers.length > 0 && (
-            <div className="p-4 rounded-lg border border-border bg-card space-y-2">
-              <Label className="text-muted-foreground text-xs flex items-center gap-1">
-                <UserCheck className="h-3 w-3" /> Atribuir ao Gestor Operacional
-              </Label>
-              <Select value={assignedTo} onValueChange={setAssignedTo}>
+          {/* Assign to operational manager — single unified field */}
+          <Card className="p-4 border-border bg-card space-y-2">
+            <Label className="text-muted-foreground text-xs flex items-center gap-1">
+              <UserCheck className="h-3 w-3" /> Gestor Operacional (obrigatório)
+            </Label>
+            {managers.length > 0 ? (
+              <Select value={assignedTo} onValueChange={handleManagerSelect}>
                 <SelectTrigger className="bg-background">
-                  <SelectValue placeholder="Selecione um gestor..." />
+                  <SelectValue placeholder="Selecione o gestor operacional..." />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">Nenhum</SelectItem>
                   {managers.map((m) => (
                     <SelectItem key={m.user_id} value={m.user_id}>
                       {m.display_name || "Sem nome"}
@@ -180,8 +236,12 @@ export default function StrategyBuilderPage() {
                   ))}
                 </SelectContent>
               </Select>
-            </div>
-          )}
+            ) : (
+              <p className="text-xs text-muted-foreground">
+                Nenhum gestor operacional cadastrado. Peça ao gestor para criar uma conta como "Gestor Operacional".
+              </p>
+            )}
+          </Card>
 
           <div className="space-y-4">
             {categories.map((cat) => (

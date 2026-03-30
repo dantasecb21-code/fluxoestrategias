@@ -2,7 +2,19 @@ import { useNavigate } from "react-router-dom";
 import { useDbStrategies } from "@/hooks/useDbStrategies";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Plus, Copy, Pencil, Trash2, FileText, Zap } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import { Plus, Copy, Pencil, Trash2, FileText, Zap, Clock, UserCheck } from "lucide-react";
+
+function calcProgress(categories: any[]) {
+  const allItems = categories.flatMap((c: any) => c.items).filter((i: any) => i.checked);
+  if (allItems.length === 0) return { percent: 0, completed: 0, inProgress: 0, pending: 0, total: 0 };
+  const completed = allItems.filter((i: any) => i.status === "completed").length;
+  const inProgress = allItems.filter((i: any) => i.status === "in_progress").length;
+  const pending = allItems.filter((i: any) => !i.status || i.status === "pending").length;
+  const total = allItems.length;
+  const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
+  return { percent, completed, inProgress, pending, total };
+}
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -21,7 +33,7 @@ export default function Dashboard() {
           </h1>
         </div>
         <p className="text-muted-foreground">
-          Construtor inteligente de estratégias
+          Construtor inteligente de estratégias — crie, atribua e acompanhe a execução.
         </p>
         <Button onClick={() => navigate("/nova")} className="mt-4" size="lg">
           <Plus className="h-5 w-5 mr-2" /> Nova Estratégia
@@ -44,48 +56,69 @@ export default function Dashboard() {
         <div className="space-y-3">
           <h2 className="font-heading font-semibold text-lg text-foreground mb-4 flex items-center gap-2">
             <FileText className="h-5 w-5 text-primary" />
-            Histórico ({strategies.length})
+            Estratégias ({strategies.length})
           </h2>
           {strategies.map((s) => {
-            const checkedCount = s.categories.reduce(
-              (acc, c) => acc + c.items.filter((i) => i.checked).length, 0
-            );
-            const totalItems = s.categories.reduce((acc, c) => acc + c.items.length, 0);
+            const progress = calcProgress(s.categories);
             return (
               <Card
                 key={s.id}
-                className="p-4 flex items-center justify-between hover:border-primary/30 transition-colors cursor-pointer"
+                className="p-5 hover:border-primary/30 transition-colors cursor-pointer"
                 onClick={() => navigate(`/estrategia/${s.id}`)}
               >
-                <div className="min-w-0 flex-1">
-                  <h3 className="font-heading font-semibold text-foreground truncate">
-                    {s.store_name || "Sem nome"}
-                  </h3>
-                  <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1">
-                    <span>{checkedCount}/{totalItems} itens</span>
-                    <span>•</span>
-                    <span>{s.categories.length} categorias</span>
-                    <span>•</span>
-                    <span>{new Date(s.updated_at).toLocaleDateString("pt-BR")}</span>
+                <div className="flex items-start justify-between mb-3">
+                  <div className="min-w-0 flex-1">
+                    <h3 className="font-heading font-semibold text-foreground text-lg truncate">
+                      {s.store_name || "Sem nome"}
+                    </h3>
+                    <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground mt-1">
+                      {s.operational_manager && (
+                        <span className="flex items-center gap-1">
+                          <UserCheck className="h-3 w-3" /> {s.operational_manager}
+                        </span>
+                      )}
+                      {s.deadline && (
+                        <span className="flex items-center gap-1">
+                          <Clock className="h-3 w-3" /> Prazo: {s.deadline}
+                        </span>
+                      )}
+                      <span>{new Date(s.updated_at).toLocaleDateString("pt-BR")}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1 ml-4 shrink-0" onClick={(e) => e.stopPropagation()}>
+                    <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                      onClick={() => navigate(`/estrategia/${s.id}`)}>
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                      onClick={async () => {
+                        const dup = await duplicateStrategy(s.id);
+                        if (dup) navigate(`/estrategia/${dup.id}`);
+                      }}>
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                    <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                      onClick={() => deleteStrategy(s.id)}>
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
                   </div>
                 </div>
-                <div className="flex items-center gap-1 ml-4" onClick={(e) => e.stopPropagation()}>
-                  <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                    onClick={() => navigate(`/estrategia/${s.id}`)}>
-                    <Pencil className="h-4 w-4" />
-                  </Button>
-                  <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                    onClick={async () => {
-                      const dup = await duplicateStrategy(s.id);
-                      if (dup) navigate(`/estrategia/${dup.id}`);
-                    }}>
-                    <Copy className="h-4 w-4" />
-                  </Button>
-                  <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                    onClick={() => deleteStrategy(s.id)}>
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
+
+                {/* Progress */}
+                {progress.total > 0 && (
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-muted-foreground">Execução</span>
+                      <span className="font-medium text-foreground">{progress.percent}%</span>
+                    </div>
+                    <Progress value={progress.percent} className="h-1.5" />
+                    <div className="flex gap-3 text-xs text-muted-foreground">
+                      <span className="text-success">{progress.completed} concluídos</span>
+                      <span className="text-primary">{progress.inProgress} em andamento</span>
+                      <span className="text-warning">{progress.pending} pendentes</span>
+                    </div>
+                  </div>
+                )}
               </Card>
             );
           })}
