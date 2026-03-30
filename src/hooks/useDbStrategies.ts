@@ -1,11 +1,13 @@
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { StrategyCategory, DEFAULT_CATEGORIES } from "@/types/strategy";
+import { StrategyCategory } from "@/types/strategy";
 import type { Json } from "@/integrations/supabase/types";
 
 export interface DbStrategy {
   id: string;
+  user_id: string;
+  assigned_to: string | null;
   store_name: string;
   manager_name: string;
   operational_manager: string;
@@ -20,29 +22,50 @@ function jsonToCategories(json: Json): StrategyCategory[] {
   return json as unknown as StrategyCategory[];
 }
 
+function mapRow(s: any): DbStrategy {
+  return { ...s, categories: jsonToCategories(s.categories) };
+}
+
 export function useDbStrategies() {
-  const { user } = useAuth();
+  const { user, role } = useAuth();
   const [strategies, setStrategies] = useState<DbStrategy[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchStrategies = useCallback(async () => {
     if (!user) { setStrategies([]); setLoading(false); return; }
-    const { data } = await supabase
-      .from("strategies")
-      .select("*")
-      .eq("user_id", user.id)
-      .order("updated_at", { ascending: false });
 
-    if (data) {
-      setStrategies(data.map((s) => ({
-        ...s,
-        categories: jsonToCategories(s.categories),
-      })));
+    let query = supabase.from("strategies").select("*");
+
+    if (role === "operational") {
+      query = query.eq("assigned_to", user.id);
+    } else {
+      query = query.eq("user_id", user.id);
     }
+
+    const { data } = await query.order("updated_at", { ascending: false });
+    if (data) setStrategies(data.map(mapRow));
     setLoading(false);
-  }, [user]);
+  }, [user, role]);
 
   useEffect(() => { fetchStrategies(); }, [fetchStrategies]);
+
+  // Real-time subscription
+  useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel("strategies-realtime")
+      .on("postgres_changes", {
+        event: "*",
+        schema: "public",
+        table: "strategies",
+      }, () => {
+        fetchStrategies();
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [user, fetchStrategies]);
 
   const createStrategy = async (params: {
     store_name: string;
@@ -50,6 +73,7 @@ export function useDbStrategies() {
     operational_manager: string;
     deadline: string;
     categories: StrategyCategory[];
+    assigned_to?: string | null;
   }): Promise<DbStrategy | null> => {
     if (!user) return null;
     const { data, error } = await supabase
@@ -61,12 +85,13 @@ export function useDbStrategies() {
         operational_manager: params.operational_manager,
         deadline: params.deadline,
         categories: params.categories as unknown as Json,
+        assigned_to: params.assigned_to || null,
       })
       .select()
       .single();
 
     if (error || !data) return null;
-    const mapped = { ...data, categories: jsonToCategories(data.categories) };
+    const mapped = mapRow(data);
     setStrategies((prev) => [mapped, ...prev]);
     return mapped;
   };
@@ -77,6 +102,7 @@ export function useDbStrategies() {
     operational_manager?: string;
     deadline?: string;
     categories?: StrategyCategory[];
+    assigned_to?: string | null;
   }) => {
     const updateData: Record<string, unknown> = { ...params };
     if (params.categories) {
@@ -100,6 +126,7 @@ export function useDbStrategies() {
       operational_manager: original.operational_manager,
       deadline: original.deadline,
       categories: JSON.parse(JSON.stringify(original.categories)),
+      assigned_to: original.assigned_to,
     });
   };
 

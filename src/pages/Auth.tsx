@@ -8,11 +8,14 @@ import { Card } from "@/components/ui/card";
 import { Zap, LogIn, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 
+type UserType = "admin" | "operational";
+
 export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
+  const [userType, setUserType] = useState<UserType>("admin");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -31,7 +34,7 @@ export default function Auth() {
           email,
           password,
           options: {
-            data: { display_name: name },
+            data: { display_name: name, role: userType },
             emailRedirectTo: window.location.origin,
           },
         });
@@ -63,16 +66,45 @@ export default function Auth() {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {!isLogin && (
-            <div className="space-y-1.5">
-              <Label className="text-muted-foreground text-xs">Nome</Label>
-              <Input
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Seu nome completo"
-                required={!isLogin}
-                className="bg-background"
-              />
-            </div>
+            <>
+              <div className="space-y-1.5">
+                <Label className="text-muted-foreground text-xs">Nome</Label>
+                <Input
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Seu nome completo"
+                  required
+                  className="bg-background"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-muted-foreground text-xs">Tipo de acesso</Label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setUserType("admin")}
+                    className={`p-3 rounded-lg border text-sm font-medium transition-colors ${
+                      userType === "admin"
+                        ? "border-primary bg-primary/10 text-primary"
+                        : "border-border bg-background text-muted-foreground hover:border-muted-foreground"
+                    }`}
+                  >
+                    Administrador
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setUserType("operational")}
+                    className={`p-3 rounded-lg border text-sm font-medium transition-colors ${
+                      userType === "operational"
+                        ? "border-primary bg-primary/10 text-primary"
+                        : "border-border bg-background text-muted-foreground hover:border-muted-foreground"
+                    }`}
+                  >
+                    Gestor Operacional
+                  </button>
+                </div>
+              </div>
+            </>
           )}
           <div className="space-y-1.5">
             <Label className="text-muted-foreground text-xs">Email</Label>

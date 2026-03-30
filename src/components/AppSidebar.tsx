@@ -12,20 +12,22 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { NavLink } from "@/components/NavLink";
-import { Home, Plus, LogOut, Zap } from "lucide-react";
+import { Home, Plus, LogOut, Zap, ClipboardList, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
-  const { displayName, signOut } = useAuth();
+  const { displayName, role, signOut } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
 
   const handleLogout = async () => {
     await signOut();
     navigate("/auth");
   };
+
+  const isAdmin = role === "admin";
+  const isOperational = role === "operational";
 
   return (
     <Sidebar collapsible="icon">
@@ -46,7 +48,9 @@ export function AppSidebar() {
 
         {/* Navigation */}
         <SidebarGroup>
-          <SidebarGroupLabel>Navegação</SidebarGroupLabel>
+          <SidebarGroupLabel>
+            {isOperational ? "Painel Operacional" : "Navegação"}
+          </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
@@ -57,31 +61,56 @@ export function AppSidebar() {
                     className="hover:bg-sidebar-accent/50"
                     activeClassName="bg-sidebar-accent text-primary font-medium"
                   >
-                    <Home className="mr-2 h-4 w-4" />
-                    {!collapsed && <span>Início</span>}
+                    {isOperational ? (
+                      <ClipboardList className="mr-2 h-4 w-4" />
+                    ) : (
+                      <Home className="mr-2 h-4 w-4" />
+                    )}
+                    {!collapsed && <span>{isOperational ? "Minhas Tarefas" : "Início"}</span>}
                   </NavLink>
                 </SidebarMenuButton>
               </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <NavLink
-                    to="/nova"
-                    className="hover:bg-sidebar-accent/50"
-                    activeClassName="bg-sidebar-accent text-primary font-medium"
-                  >
-                    <Plus className="mr-2 h-4 w-4" />
-                    {!collapsed && <span>Nova Estratégia</span>}
-                  </NavLink>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
+              {isAdmin && (
+                <>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild>
+                      <NavLink
+                        to="/nova"
+                        className="hover:bg-sidebar-accent/50"
+                        activeClassName="bg-sidebar-accent text-primary font-medium"
+                      >
+                        <Plus className="mr-2 h-4 w-4" />
+                        {!collapsed && <span>Nova Estratégia</span>}
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild>
+                      <NavLink
+                        to="/gestores"
+                        className="hover:bg-sidebar-accent/50"
+                        activeClassName="bg-sidebar-accent text-primary font-medium"
+                      >
+                        <Users className="mr-2 h-4 w-4" />
+                        {!collapsed && <span>Gestores</span>}
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                </>
+              )}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {/* User info + logout at bottom */}
+        {/* User info + logout */}
         <div className="mt-auto p-4 border-t border-sidebar-border">
-          {!collapsed && displayName && (
-            <p className="text-xs text-muted-foreground mb-2 truncate">{displayName}</p>
+          {!collapsed && (
+            <div className="mb-2">
+              {displayName && <p className="text-xs text-foreground font-medium truncate">{displayName}</p>}
+              <p className="text-xs text-muted-foreground">
+                {isOperational ? "Gestor Operacional" : "Administrador"}
+              </p>
+            </div>
           )}
           <Button
             variant="ghost"
