@@ -1,0 +1,99 @@
+import { useNavigate, useLocation } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  useSidebar,
+} from "@/components/ui/sidebar";
+import { NavLink } from "@/components/NavLink";
+import { Home, Plus, LogOut, Zap } from "lucide-react";
+import { Button } from "@/components/ui/button";
+
+export function AppSidebar() {
+  const { state } = useSidebar();
+  const collapsed = state === "collapsed";
+  const { displayName, signOut } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const handleLogout = async () => {
+    await signOut();
+    navigate("/auth");
+  };
+
+  return (
+    <Sidebar collapsible="icon">
+      <SidebarContent className="flex flex-col h-full">
+        {/* Logo */}
+        <div className="p-4 border-b border-sidebar-border">
+          <div className="flex items-center gap-2">
+            <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center shrink-0">
+              <Zap className="h-4 w-4 text-primary-foreground" />
+            </div>
+            {!collapsed && (
+              <span className="font-heading font-bold text-sidebar-foreground text-sm">
+                99<span className="text-primary">Food</span>
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Navigation */}
+        <SidebarGroup>
+          <SidebarGroupLabel>Navegação</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <NavLink
+                    to="/"
+                    end
+                    className="hover:bg-sidebar-accent/50"
+                    activeClassName="bg-sidebar-accent text-primary font-medium"
+                  >
+                    <Home className="mr-2 h-4 w-4" />
+                    {!collapsed && <span>Início</span>}
+                  </NavLink>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <NavLink
+                    to="/nova"
+                    className="hover:bg-sidebar-accent/50"
+                    activeClassName="bg-sidebar-accent text-primary font-medium"
+                  >
+                    <Plus className="mr-2 h-4 w-4" />
+                    {!collapsed && <span>Nova Estratégia</span>}
+                  </NavLink>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        {/* User info + logout at bottom */}
+        <div className="mt-auto p-4 border-t border-sidebar-border">
+          {!collapsed && displayName && (
+            <p className="text-xs text-muted-foreground mb-2 truncate">{displayName}</p>
+          )}
+          <Button
+            variant="ghost"
+            size={collapsed ? "icon" : "sm"}
+            onClick={handleLogout}
+            className="w-full text-muted-foreground hover:text-destructive"
+          >
+            <LogOut className="h-4 w-4" />
+            {!collapsed && <span className="ml-2">Sair</span>}
+          </Button>
+        </div>
+      </SidebarContent>
+    </Sidebar>
+  );
+}
