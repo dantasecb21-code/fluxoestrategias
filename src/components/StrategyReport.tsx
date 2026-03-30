@@ -1,44 +1,45 @@
-import { Strategy } from "@/types/strategy";
+import { StrategyCategory } from "@/types/strategy";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Copy, FileText } from "lucide-react";
 import { toast } from "sonner";
 
 interface StrategyReportProps {
-  strategy: Strategy;
+  storeName: string;
+  managerName: string;
+  operationalManager: string;
+  deadline: string;
+  categories: StrategyCategory[];
 }
 
-export function StrategyReport({ strategy }: StrategyReportProps) {
-  const { meta, categories } = strategy;
-
+export function StrategyReport({ storeName, managerName, operationalManager, deadline, categories }: StrategyReportProps) {
   const activeCategories = categories
     .map((c) => ({ ...c, items: c.items.filter((i) => i.checked) }))
     .filter((c) => c.items.length > 0);
 
   const generateText = () => {
-    let report = `📋 Estratégia Inicial - ${meta.storeName}\n\n`;
-    report += `👤 Gestor Estratégico - ${meta.managerName}\n`;
-    report += `👤 Gestor Operacional - ${meta.operationalManager}\n`;
-    report += `📅 Prazo - ${meta.deadline}\n\n`;
-    report += `${"─".repeat(40)}\n\n`;
+    let report = `Estratégia Inicial – ${storeName}\n\n`;
+    report += `Gestor Estratégico: ${managerName}\n`;
+    report += `Gestor Operacional: ${operationalManager}\n`;
+    report += `Prazo: ${deadline}\n\n`;
 
     activeCategories.forEach((cat) => {
-      report += `📌 ${cat.name}\n\n`;
+      report += `${cat.name}\n\n`;
       cat.items.forEach((item) => {
-        report += `• ${item.name}\n  → ${item.text}\n\n`;
+        report += `${item.text}\n\n`;
       });
     });
 
     if (activeCategories.length === 0) {
-      report += "⚠️ Nenhum item selecionado.\n";
+      report += "Nenhum item selecionado para esta estratégia.\n";
     }
 
-    return report;
+    return report.trim();
   };
 
   const handleCopy = () => {
     navigator.clipboard.writeText(generateText());
-    toast.success("Estratégia copiada para a área de transferência!");
+    toast.success("Estratégia copiada!");
   };
 
   return (
@@ -53,34 +54,33 @@ export function StrategyReport({ strategy }: StrategyReportProps) {
         </Button>
       </div>
 
-      <div className="bg-muted/30 rounded-lg p-5 space-y-4 font-mono text-sm">
-        <div className="text-center">
-          <h3 className="text-primary font-heading font-bold text-lg">
-            Estratégia Inicial - {meta.storeName}
+      <div className="bg-muted/30 rounded-lg p-6 space-y-6">
+        <div className="text-center space-y-2">
+          <h3 className="font-heading font-bold text-xl text-primary">
+            Estratégia Inicial – {storeName}
           </h3>
-          <div className="text-muted-foreground mt-2 space-y-1">
-            <p>Gestor Estratégico - {meta.managerName}</p>
-            <p>Gestor Operacional - {meta.operationalManager}</p>
-            <p>Prazo - {meta.deadline}</p>
+          <div className="text-sm text-muted-foreground space-y-0.5">
+            <p>Gestor Estratégico: {managerName}</p>
+            <p>Gestor Operacional: {operationalManager}</p>
+            <p>Prazo: {deadline}</p>
           </div>
         </div>
 
         <div className="border-t border-border" />
 
         {activeCategories.length === 0 ? (
-          <p className="text-muted-foreground text-center py-4">Nenhum item selecionado. Marque os itens desejados.</p>
+          <p className="text-muted-foreground text-center py-4">Nenhum item selecionado. Marque os itens desejados nas categorias.</p>
         ) : (
           activeCategories.map((cat) => (
             <div key={cat.id}>
-              <h4 className="font-heading font-semibold text-primary mb-2">📌 {cat.name}</h4>
-              <ul className="space-y-2">
+              <h4 className="font-heading font-semibold text-foreground text-lg mb-3">{cat.name}</h4>
+              <div className="space-y-3">
                 {cat.items.map((item) => (
-                  <li key={item.id} className="text-foreground">
-                    <span className="font-medium">• {item.name}</span>
-                    <p className="text-muted-foreground ml-3">→ {item.text}</p>
-                  </li>
+                  <p key={item.id} className="text-foreground text-sm leading-relaxed">
+                    {item.text}
+                  </p>
                 ))}
-              </ul>
+              </div>
             </div>
           ))
         )}
