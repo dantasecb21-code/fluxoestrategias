@@ -20,7 +20,7 @@ export function StrategyMetaForm({ meta, onChange }: StrategyMetaFormProps) {
         <Store className="h-5 w-5 text-primary" />
         Informações da Estratégia
       </h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="space-y-1.5">
           <Label className="text-muted-foreground text-xs flex items-center gap-1">
             <Store className="h-3 w-3" /> Nome da Loja
@@ -32,12 +32,6 @@ export function StrategyMetaForm({ meta, onChange }: StrategyMetaFormProps) {
             <User className="h-3 w-3" /> Gestor Estratégico
           </Label>
           <Input value={meta.managerName} onChange={(e) => update("managerName", e.target.value)} placeholder="Seu nome" className="bg-background" />
-        </div>
-        <div className="space-y-1.5">
-          <Label className="text-muted-foreground text-xs flex items-center gap-1">
-            <User className="h-3 w-3" /> Gestor Operacional
-          </Label>
-          <Input value={meta.operationalManager} onChange={(e) => update("operationalManager", e.target.value)} placeholder="Nome do operacional" className="bg-background" />
         </div>
         <div className="space-y-1.5">
           <Label className="text-muted-foreground text-xs flex items-center gap-1">
