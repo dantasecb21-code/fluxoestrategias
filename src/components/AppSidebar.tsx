@@ -40,7 +40,7 @@ export function AppSidebar() {
             </div>
             {!collapsed && (
               <span className="font-heading font-bold text-sidebar-foreground text-sm">
-                99<span className="text-primary">Food</span>
+                Gestor <span className="text-primary">Estratégico</span>
               </span>
             )}
           </div>
