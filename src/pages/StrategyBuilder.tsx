@@ -255,6 +255,7 @@ export default function StrategyBuilderPage() {
                 onEditItem={editor.editItem}
                 onRemoveItem={editor.removeItem}
                 onToggleItem={editor.toggleItem}
+                onMoveItem={editor.moveItem}
               />
             ))}
           </div>
