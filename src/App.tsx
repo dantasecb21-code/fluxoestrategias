@@ -11,6 +11,7 @@ import StrategyBuilderPage from "./pages/StrategyBuilder";
 import OperationalDashboard from "./pages/OperationalDashboard";
 import OperationalStrategyView from "./pages/OperationalStrategyView";
 import ManagersList from "./pages/ManagersList";
+import PendingStrategies from "./pages/PendingStrategies";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
