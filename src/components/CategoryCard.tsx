@@ -6,17 +6,21 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
-import { Pencil, Trash2, Plus, Check, X, ChevronDown, ChevronRight, Sparkles, Loader2, ArrowUp, ArrowDown } from "lucide-react";
+import { Pencil, Trash2, Plus, Check, X, ChevronDown, ChevronRight, Sparkles, Loader2, ArrowUp, ArrowDown, GripVertical, MoveRight } from "lucide-react";
 import { toast } from "sonner";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface CategoryCardProps {
   category: StrategyCategory;
+  allCategories?: StrategyCategory[];
   onEditCategory: (id: string, name: string) => void;
   onRemoveCategory: (id: string) => void;
   onAddItem: (catId: string, item: Omit<StrategyItem, "id" | "checked">) => void;
   onEditItem: (catId: string, itemId: string, updates: Partial<StrategyItem>) => void;
   onRemoveItem: (catId: string, itemId: string) => void;
   onMoveItem?: (catId: string, itemId: string, direction: "up" | "down") => void;
+  onMoveItemToCategory?: (fromCatId: string, itemId: string, toCatId: string) => void;
+  onDropItem?: (fromCatId: string, itemId: string, toCatId: string) => void;
 }
 
 async function fetchAIText(itemName: string): Promise<string | null> {
