@@ -95,7 +95,7 @@ export default function StrategyBuilderPage() {
       if (roles && roles.length > 0) {
         const { data: profiles } = await supabase
           .from("profiles")
-          .select("user_id, display_name")
+          .select("user_id, display_name, whatsapp")
           .in("user_id", roles.map((r) => r.user_id))
           .eq("approved", true);
         if (profiles) setManagers(profiles);
