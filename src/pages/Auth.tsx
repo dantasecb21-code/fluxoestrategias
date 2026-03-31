@@ -41,7 +41,7 @@ export default function Auth() {
         }
         navigate("/");
       } else {
-        const { error } = await supabase.auth.signUp({
+        const { error, data: signUpData } = await supabase.auth.signUp({
           email,
           password,
           options: {
@@ -49,6 +49,11 @@ export default function Auth() {
             emailRedirectTo: window.location.origin,
           },
         });
+        if (error) throw error;
+        // Save whatsapp to profile
+        if (signUpData?.user) {
+          await supabase.from("profiles").update({ whatsapp: whatsapp.trim() }).eq("user_id", signUpData.user.id);
+        }
         if (error) throw error;
         toast.success("Conta criada! Aguarde aprovação do administrador para acessar o sistema.");
       }
