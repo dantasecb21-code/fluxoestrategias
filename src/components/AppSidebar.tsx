@@ -87,6 +87,7 @@ export function AppSidebar() {
                     <SidebarMenuButton asChild>
                       <NavLink
                         to="/nova"
+                        onClick={() => handleNav("/nova")}
                         className="hover:bg-sidebar-accent/50"
                         activeClassName="bg-sidebar-accent text-primary font-medium"
                       >
