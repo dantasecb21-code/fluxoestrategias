@@ -96,7 +96,7 @@ export default function ManagersList() {
   const sortedManagers = [...managers].sort((a, b) => {
     const statsA = calcManagerStats(strategies, a.user_id);
     const statsB = calcManagerStats(strategies, b.user_id);
-    return statsB.completionRate - statsA.completionRate || statsB.completed - statsA.completed;
+    return statsB.completed - statsA.completed || statsB.completionRate - statsA.completionRate;
   });
 
   return (

@@ -99,7 +99,7 @@ export default function Auth() {
                         : "border-border bg-background text-muted-foreground hover:border-muted-foreground"
                     }`}
                   >
-                    Gestor Estratégico
+                    Administrador
                   </button>
                   <button
                     type="button"

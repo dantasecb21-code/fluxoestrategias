@@ -107,7 +107,7 @@ export default function UserApproval() {
   };
 
   const roleLabel = (role: string) => {
-    if (role === "admin") return "Gestor Estratégico";
+    if (role === "admin") return "Administrador";
     if (role === "operational") return "Gestor Operacional";
     return role;
   };
