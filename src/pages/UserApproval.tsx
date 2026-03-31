@@ -22,7 +22,8 @@ interface PendingUser {
   display_name: string;
   approved: boolean;
   role: string;
-  email?: string;
+  email: string;
+  whatsapp: string;
 }
 
 export default function UserApproval() {
