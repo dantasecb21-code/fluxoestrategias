@@ -12,6 +12,7 @@ import OperationalDashboard from "./pages/OperationalDashboard";
 import OperationalStrategyView from "./pages/OperationalStrategyView";
 import UserProfile from "./pages/UserProfile";
 import ManagersList from "./pages/ManagersList";
+import StrategyNotes from "./pages/StrategyNotes";
 import PendingStrategies from "./pages/PendingStrategies";
 import UserApproval from "./pages/UserApproval";
 import NotFound from "./pages/NotFound";
