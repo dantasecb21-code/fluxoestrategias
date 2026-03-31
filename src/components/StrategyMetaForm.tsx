@@ -29,7 +29,7 @@ export function StrategyMetaForm({ meta, onChange }: StrategyMetaFormProps) {
         </div>
         <div className="space-y-1.5">
           <Label className="text-muted-foreground text-xs flex items-center gap-1">
-            <User className="h-3 w-3" /> Gestor Estratégico
+            <User className="h-3 w-3" /> Administrador
           </Label>
           <Input value={meta.managerName} onChange={(e) => update("managerName", e.target.value)} placeholder="Seu nome" className="bg-background" />
         </div>
