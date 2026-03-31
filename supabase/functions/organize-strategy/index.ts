@@ -39,9 +39,11 @@ REGRAS OBRIGATÓRIAS:
 
 2. RESPEITAR EXATAMENTE o texto enviado. Tudo que for escrito deve ser mantido fielmente, sem alterações de sentido — apenas organizando.
 
-3. EVITAR TEXTOS SECOS OU GENÉRICOS. A escrita deve ser clara, profissional e levemente explicativa, trazendo contexto quando necessário. Não use linguagem formal demais, seja direto mas com substância.
+3. EVITAR TEXTOS SECOS OU GENÉRICOS. A escrita deve ser clara, profissional e levemente explicativa. NÃO ESCREVA TEXTOS LONGOS — o texto de cada item deve ter NO MÁXIMO 2 frases curtas e diretas. Seja objetivo.
 
-4. Cada item deve começar com "-" no nome (para formatação WhatsApp).
+4. SEPARAR ITENS CORRETAMENTE. Se o texto mencionar mais de um assunto (ex: "categoria principal e nome"), crie um card/item SEPARADO para cada um. NUNCA junte dois temas diferentes em um único item.
+
+5. Cada item deve começar com "-" no nome (para formatação WhatsApp).
 
 SOBRE CATEGORIA DA LOJA (Detalhes da loja):
 Sempre que houver informações como Categoria Principal, Subcategoria1, Subcategoria2 — isso faz parte de "Detalhes da loja".

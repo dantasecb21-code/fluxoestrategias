@@ -477,7 +477,7 @@ export default function StrategyBuilderPage() {
                 onRemoveItem={editor.removeItem}
                 onMoveItem={editor.moveItem}
                 onMoveItemToCategory={editor.moveItemToCategory}
-                onDropItem={editor.moveItemToCategory}
+                
               />
             ))}
           </div>
