@@ -141,10 +141,11 @@ export default function ManagersList() {
                     }`}>
                       {index < 3 ? <Trophy className="h-5 w-5" /> : `#${index + 1}`}
                     </div>
-                    <div>
-                      <p className="font-heading font-semibold text-foreground">{m.display_name || "Sem nome"}</p>
-                      <p className="text-xs text-muted-foreground">Gestor Operacional</p>
-                    </div>
+                     <div>
+                       <p className="font-heading font-semibold text-foreground">{m.display_name || "Sem nome"}</p>
+                       <p className="text-xs text-muted-foreground">Gestor Operacional</p>
+                       {m.whatsapp && <p className="text-xs text-muted-foreground">📱 {m.whatsapp}</p>}
+                     </div>
                   </div>
                   <AlertDialog>
                     <AlertDialogTrigger asChild>

@@ -94,6 +94,16 @@ export default function Auth() {
                 />
               </div>
               <div className="space-y-1.5">
+                <Label className="text-muted-foreground text-xs">WhatsApp</Label>
+                <Input
+                  value={whatsapp}
+                  onChange={(e) => setWhatsapp(e.target.value)}
+                  placeholder="(11) 99999-9999"
+                  required
+                  className="bg-background"
+                />
+              </div>
+              <div className="space-y-1.5">
                 <Label className="text-muted-foreground text-xs">Tipo de acesso</Label>
                 <div className="grid grid-cols-2 gap-2">
                   <button

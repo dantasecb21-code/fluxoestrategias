@@ -215,12 +215,15 @@ export default function UserApproval() {
                       <div className="h-10 w-10 rounded-full bg-success/20 flex items-center justify-center">
                         <UserCheck className="h-5 w-5 text-success" />
                       </div>
-                      <div>
-                        <p className="font-medium text-foreground">{u.display_name || "Sem nome"}</p>
-                        <Badge variant="outline" className="text-xs mt-0.5">{roleLabel(u.role)}</Badge>
-                      </div>
-                    </div>
-                    <Button size="sm" variant="ghost" onClick={() => handleRevoke(u.user_id)} className="text-muted-foreground hover:text-destructive">
+                       <div>
+                         <p className="font-medium text-foreground">{u.display_name || "Sem nome"}</p>
+                         <div className="flex items-center gap-2 flex-wrap">
+                           <Badge variant="outline" className="text-xs mt-0.5">{roleLabel(u.role)}</Badge>
+                           {u.whatsapp && <span className="text-xs text-muted-foreground">📱 {u.whatsapp}</span>}
+                         </div>
+                       </div>
+                     </div>
+                     <Button size="sm" variant="ghost" onClick={() => handleRevoke(u.user_id)} className="text-muted-foreground hover:text-destructive">
                       Revogar acesso
                     </Button>
                   </Card>
