@@ -48,7 +48,6 @@ export function CategoryCard({
   onDropItem,
 }: CategoryCardProps) {
   const [expanded, setExpanded] = useState(true);
-  const [dragOverCat, setDragOverCat] = useState(false);
   const [editingName, setEditingName] = useState(false);
   const [catName, setCatName] = useState(category.name);
   const [addingItem, setAddingItem] = useState(false);
