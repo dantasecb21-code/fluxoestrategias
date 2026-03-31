@@ -32,6 +32,7 @@ function initCategories(): StrategyCategory[] {
 interface Manager {
   user_id: string;
   display_name: string;
+  whatsapp?: string;
 }
 
 function calcProgress(categories: StrategyCategory[]) {
