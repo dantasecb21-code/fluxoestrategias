@@ -185,7 +185,13 @@ export function CategoryCard({
             <div className="p-3 rounded-lg border border-dashed border-primary/40 space-y-2">
               <Input
                 value={newItemName}
-                onChange={(e) => setNewItemName(e.target.value)}
+                onChange={(e) => {
+                  setNewItemName(e.target.value);
+                  // Auto-generate strategic text when name changes
+                  if (e.target.value.trim()) {
+                    setNewItemText(generateStrategicText(e.target.value));
+                  }
+                }}
                 placeholder="Nome do item (ex: Categoria mal posicionada)"
                 className="bg-background"
                 autoFocus
