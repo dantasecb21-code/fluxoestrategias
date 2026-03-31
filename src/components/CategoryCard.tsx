@@ -1,14 +1,13 @@
 import { useState } from "react";
 import { StrategyCategory, StrategyItem } from "@/types/strategy";
-import { generateStrategicText, validateStrategicText } from "@/lib/strategicTextGenerator";
+import { generateStrategicText } from "@/lib/strategicTextGenerator";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card } from "@/components/ui/card";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Pencil, Trash2, Plus, Check, X, ChevronDown, ChevronRight, AlertTriangle, Sparkles, Loader2 } from "lucide-react";
+import { Pencil, Trash2, Plus, Check, X, ChevronDown, ChevronRight, Sparkles, Loader2, ArrowUp, ArrowDown } from "lucide-react";
 import { toast } from "sonner";
 
 interface CategoryCardProps {
@@ -19,6 +18,7 @@ interface CategoryCardProps {
   onEditItem: (catId: string, itemId: string, updates: Partial<StrategyItem>) => void;
   onRemoveItem: (catId: string, itemId: string) => void;
   onToggleItem: (catId: string, itemId: string) => void;
+  onMoveItem?: (catId: string, itemId: string, direction: "up" | "down") => void;
 }
 
 async function fetchAIText(itemName: string): Promise<string | null> {
@@ -41,6 +41,7 @@ export function CategoryCard({
   onEditItem,
   onRemoveItem,
   onToggleItem,
+  onMoveItem,
 }: CategoryCardProps) {
   const [expanded, setExpanded] = useState(true);
   const [editingName, setEditingName] = useState(false);
@@ -64,8 +65,9 @@ export function CategoryCard({
   };
 
   const handleAddItem = () => {
-    if (newItemName.trim() && newItemText.trim()) {
-      onAddItem(category.id, { name: newItemName.trim(), text: newItemText.trim() });
+    if (newItemName.trim()) {
+      const text = newItemText.trim() || generateStrategicText(newItemName.trim());
+      onAddItem(category.id, { name: newItemName.trim(), text });
       setNewItemName("");
       setNewItemText("");
       setAddingItem(false);
@@ -79,8 +81,9 @@ export function CategoryCard({
   };
 
   const handleSaveEdit = () => {
-    if (editingItemId && editItemName.trim() && editItemText.trim()) {
-      onEditItem(category.id, editingItemId, { name: editItemName.trim(), text: editItemText.trim() });
+    if (editingItemId && editItemName.trim()) {
+      const text = editItemText.trim() || generateStrategicText(editItemName.trim());
+      onEditItem(category.id, editingItemId, { name: editItemName.trim(), text });
     }
     setEditingItemId(null);
   };
@@ -95,7 +98,6 @@ export function CategoryCard({
       if (isEdit) setEditItemText(aiText);
       else setNewItemText(aiText);
     } else {
-      // Fallback to local generator
       const fallback = generateStrategicText(name);
       if (isEdit) setEditItemText(fallback);
       else setNewItemText(fallback);
@@ -104,16 +106,6 @@ export function CategoryCard({
 
     if (isEdit) setEditGeneratingAI(false);
     else setGeneratingAI(false);
-  };
-
-  const handleItemNameChange = (value: string) => {
-    setNewItemName(value);
-    // Auto-generate with local fallback immediately for responsiveness
-    if (value.trim()) {
-      setNewItemText(generateStrategicText(value));
-    } else {
-      setNewItemText("");
-    }
   };
 
   return (
@@ -175,7 +167,7 @@ export function CategoryCard({
       {/* Items */}
       {expanded && (
         <div className="p-4 space-y-3">
-          {category.items.map((item) =>
+          {category.items.map((item, index) =>
             editingItemId === item.id ? (
               <div key={item.id} className="p-3 rounded-lg bg-muted/50 space-y-2">
                 <Input
@@ -187,7 +179,7 @@ export function CategoryCard({
                 <Textarea
                   value={editItemText}
                   onChange={(e) => setEditItemText(e.target.value)}
-                  placeholder="Texto estratégico"
+                  placeholder="Texto estratégico (opcional)"
                   rows={2}
                   className="bg-background"
                 />
@@ -212,20 +204,44 @@ export function CategoryCard({
             ) : (
               <div
                 key={item.id}
-                className="flex items-start gap-3 p-3 rounded-lg hover:bg-muted/30 transition-colors group"
+                className="flex items-start gap-3 p-3 rounded-lg hover:bg-muted/30 transition-colors group cursor-pointer"
+                onClick={() => onToggleItem(category.id, item.id)}
               >
                 <Checkbox
                   checked={item.checked}
                   onCheckedChange={() => onToggleItem(category.id, item.id)}
+                  onClick={(e) => e.stopPropagation()}
                   className="mt-0.5 border-muted-foreground data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                 />
                 <div className="flex-1 min-w-0">
                   <p className={`font-medium text-sm ${item.checked ? "line-through text-muted-foreground" : "text-foreground"}`}>
                     - {item.name}
                   </p>
-                  <p className="text-xs text-muted-foreground mt-0.5">{item.text}</p>
+                  {item.text && <p className="text-xs text-muted-foreground mt-0.5">{item.text}</p>}
                 </div>
-                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
+                  {onMoveItem && (
+                    <>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={() => onMoveItem(category.id, item.id, "up")}
+                        disabled={index === 0}
+                        className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                      >
+                        <ArrowUp className="h-3 w-3" />
+                      </Button>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={() => onMoveItem(category.id, item.id, "down")}
+                        disabled={index === category.items.length - 1}
+                        className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                      >
+                        <ArrowDown className="h-3 w-3" />
+                      </Button>
+                    </>
+                  )}
                   <Button size="icon" variant="ghost" onClick={() => handleStartEdit(item)} className="h-7 w-7 text-muted-foreground hover:text-foreground">
                     <Pencil className="h-3 w-3" />
                   </Button>
@@ -242,44 +258,36 @@ export function CategoryCard({
             <div className="p-3 rounded-lg border border-dashed border-primary/40 space-y-2">
               <Input
                 value={newItemName}
-                onChange={(e) => handleItemNameChange(e.target.value)}
+                onChange={(e) => setNewItemName(e.target.value)}
                 placeholder="Nome do item (ex: Ajustar categorias do cardápio)"
                 className="bg-background"
                 autoFocus
+                onKeyDown={(e) => e.key === "Enter" && newItemName.trim() && handleAddItem()}
               />
-               <Textarea
-                  value={newItemText}
-                  onChange={(e) => setNewItemText(e.target.value)}
-                  placeholder="Texto estratégico vinculado"
-                  rows={2}
-                  className="bg-background"
-                />
-                {newItemName.trim() && newItemText.trim() && (() => {
-                  const warning = validateStrategicText(newItemName, newItemText);
-                  return warning ? (
-                    <Alert variant="destructive" className="py-2">
-                      <AlertTriangle className="h-4 w-4" />
-                      <AlertDescription className="text-xs">{warning}</AlertDescription>
-                    </Alert>
-                  ) : null;
-                })()}
-                <div className="flex gap-2">
-                  <Button size="sm" onClick={handleAddItem} disabled={!newItemName.trim() || !newItemText.trim()}>
-                    <Plus className="h-3 w-3 mr-1" /> Adicionar
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => handleGenerateAI(newItemName, false)}
-                    disabled={generatingAI || !newItemName.trim()}
-                  >
-                    {generatingAI ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Sparkles className="h-3 w-3 mr-1" />}
-                    Gerar com IA
-                  </Button>
-                  <Button size="sm" variant="ghost" onClick={() => { setAddingItem(false); setNewItemName(""); setNewItemText(""); }}>
-                    Cancelar
-                  </Button>
-                </div>
+              <Textarea
+                value={newItemText}
+                onChange={(e) => setNewItemText(e.target.value)}
+                placeholder="Texto estratégico (opcional - a IA pode gerar depois)"
+                rows={2}
+                className="bg-background"
+              />
+              <div className="flex gap-2">
+                <Button size="sm" onClick={handleAddItem} disabled={!newItemName.trim()}>
+                  <Plus className="h-3 w-3 mr-1" /> Adicionar
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => handleGenerateAI(newItemName, false)}
+                  disabled={generatingAI || !newItemName.trim()}
+                >
+                  {generatingAI ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Sparkles className="h-3 w-3 mr-1" />}
+                  Gerar com IA
+                </Button>
+                <Button size="sm" variant="ghost" onClick={() => { setAddingItem(false); setNewItemName(""); setNewItemText(""); }}>
+                  Cancelar
+                </Button>
+              </div>
             </div>
           ) : (
             <Button

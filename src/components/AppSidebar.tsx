@@ -1,4 +1,4 @@
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import {
   Sidebar,
@@ -27,7 +27,11 @@ export function AppSidebar() {
   };
 
   const isAdmin = role === "admin";
+  const isStrategic = role === "strategic";
   const isOperational = role === "operational";
+  const canManage = isAdmin || isStrategic;
+
+  const roleLabel = isAdmin ? "Administrador" : isStrategic ? "Gestor Estratégico" : "Gestor Operacional";
 
   return (
     <Sidebar collapsible="icon">
@@ -70,7 +74,7 @@ export function AppSidebar() {
                   </NavLink>
                 </SidebarMenuButton>
               </SidebarMenuItem>
-              {isAdmin && (
+              {canManage && (
                 <>
                   <SidebarMenuItem>
                     <SidebarMenuButton asChild>
@@ -108,19 +112,21 @@ export function AppSidebar() {
                       </NavLink>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton asChild>
-                      <NavLink
-                        to="/aprovacoes"
-                        className="hover:bg-sidebar-accent/50"
-                        activeClassName="bg-sidebar-accent text-primary font-medium"
-                      >
-                        <ShieldCheck className="mr-2 h-4 w-4" />
-                        {!collapsed && <span>Aprovações</span>}
-                      </NavLink>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
                 </>
+              )}
+              {isAdmin && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild>
+                    <NavLink
+                      to="/aprovacoes"
+                      className="hover:bg-sidebar-accent/50"
+                      activeClassName="bg-sidebar-accent text-primary font-medium"
+                    >
+                      <ShieldCheck className="mr-2 h-4 w-4" />
+                      {!collapsed && <span>Aprovações</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
               )}
             </SidebarMenu>
           </SidebarGroupContent>
@@ -131,9 +137,7 @@ export function AppSidebar() {
           {!collapsed && (
             <div className="mb-2">
               {displayName && <p className="text-xs text-foreground font-medium truncate">{displayName}</p>}
-              <p className="text-xs text-muted-foreground">
-                {isOperational ? "Gestor Operacional" : "Administrador"}
-              </p>
+              <p className="text-xs text-muted-foreground">{roleLabel}</p>
             </div>
           )}
           <Button

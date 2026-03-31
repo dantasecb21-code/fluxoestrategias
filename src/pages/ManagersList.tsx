@@ -66,7 +66,7 @@ export default function ManagersList() {
         setManagers(profiles.map((p) => ({
           user_id: p.user_id,
           display_name: p.display_name,
-          whatsapp: (p as any).whatsapp || "",
+          whatsapp: p.whatsapp || "",
         })));
       }
     } else {
