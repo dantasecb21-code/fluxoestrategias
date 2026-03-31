@@ -37,14 +37,18 @@ async function fetchAIText(itemName: string): Promise<string | null> {
 
 export function CategoryCard({
   category,
+  allCategories,
   onEditCategory,
   onRemoveCategory,
   onAddItem,
   onEditItem,
   onRemoveItem,
   onMoveItem,
+  onMoveItemToCategory,
+  onDropItem,
 }: CategoryCardProps) {
   const [expanded, setExpanded] = useState(true);
+  const [dragOverCat, setDragOverCat] = useState(false);
   const [editingName, setEditingName] = useState(false);
   const [catName, setCatName] = useState(category.name);
   const [addingItem, setAddingItem] = useState(false);
