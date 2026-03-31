@@ -180,12 +180,9 @@ export function CategoryCard({
         </div>
       </div>
 
-      {/* Items — all items are part of strategy, no checkboxes */}
+      {/* Items */}
       {expanded && (
-        <div
-          className="p-4 space-y-3"
-          onDragOver={(e) => e.preventDefault()}
-        >
+        <div className="p-4 space-y-3">
           {category.items.map((item, index) =>
             editingItemId === item.id ? (
               <div key={item.id} className="p-3 rounded-lg bg-muted/50 space-y-2">
