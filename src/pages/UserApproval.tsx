@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { UserCheck, UserX, ShieldCheck, Clock, Trash2, AlertTriangle } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { UserCheck, UserX, ShieldCheck, Clock, AlertTriangle, Eye } from "lucide-react";
 import { toast } from "sonner";
 import {
   AlertDialog,
@@ -29,17 +31,16 @@ interface PendingUser {
 export default function UserApproval() {
   const [users, setUsers] = useState<PendingUser[]>([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   const fetchUsers = async () => {
     setLoading(true);
-    // Get all profiles
     const { data: profiles } = await supabase
       .from("profiles")
       .select("user_id, display_name, approved, whatsapp");
 
     if (!profiles) { setLoading(false); return; }
 
-    // Get roles
     const { data: roles } = await supabase
       .from("user_roles")
       .select("user_id, role");
@@ -47,17 +48,15 @@ export default function UserApproval() {
     const roleMap = new Map<string, string>();
     roles?.forEach((r) => roleMap.set(r.user_id, r.role));
 
-    // Fetch emails from auth via edge function or show user_id as fallback
     const mapped: PendingUser[] = profiles.map((p) => ({
       user_id: p.user_id,
       display_name: p.display_name,
       approved: p.approved,
       role: roleMap.get(p.user_id) || "unknown",
       email: "",
-      whatsapp: (p as any).whatsapp || "",
+      whatsapp: p.whatsapp || "",
     }));
 
-    // Show pending first, then approved
     mapped.sort((a, b) => {
       if (a.approved === b.approved) return 0;
       return a.approved ? 1 : -1;
@@ -75,23 +74,16 @@ export default function UserApproval() {
       .update({ approved: true })
       .eq("user_id", userId);
 
-    if (error) {
-      toast.error("Erro ao aprovar usuário");
-      return;
-    }
+    if (error) { toast.error("Erro ao aprovar usuário"); return; }
     toast.success("Usuário aprovado com sucesso!");
     setUsers((prev) => prev.map((u) => u.user_id === userId ? { ...u, approved: true } : u));
   };
 
   const handleReject = async (userId: string) => {
-    // Delete role and profile
     await supabase.from("user_roles").delete().eq("user_id", userId);
     const { error } = await supabase.from("profiles").delete().eq("user_id", userId);
 
-    if (error) {
-      toast.error("Erro ao recusar usuário");
-      return;
-    }
+    if (error) { toast.error("Erro ao recusar usuário"); return; }
     toast.success("Usuário recusado e removido");
     setUsers((prev) => prev.filter((u) => u.user_id !== userId));
   };
@@ -102,12 +94,20 @@ export default function UserApproval() {
       .update({ approved: false })
       .eq("user_id", userId);
 
-    if (error) {
-      toast.error("Erro ao revogar acesso");
-      return;
-    }
+    if (error) { toast.error("Erro ao revogar acesso"); return; }
     toast.success("Acesso revogado");
     setUsers((prev) => prev.map((u) => u.user_id === userId ? { ...u, approved: false } : u));
+  };
+
+  const handleRoleChange = async (userId: string, newRole: string) => {
+    const { error } = await supabase
+      .from("user_roles")
+      .update({ role: newRole })
+      .eq("user_id", userId);
+
+    if (error) { toast.error("Erro ao alterar tipo de acesso"); return; }
+    toast.success(`Tipo de acesso alterado para ${roleLabel(newRole)}`);
+    setUsers((prev) => prev.map((u) => u.user_id === userId ? { ...u, role: newRole } : u));
   };
 
   const roleLabel = (role: string) => {
@@ -119,6 +119,85 @@ export default function UserApproval() {
 
   const pendingUsers = users.filter((u) => !u.approved);
   const approvedUsers = users.filter((u) => u.approved);
+
+  const UserCard = ({ u, isPending }: { u: PendingUser; isPending: boolean }) => (
+    <Card key={u.user_id} className="p-4">
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-3">
+          <div className={`h-10 w-10 rounded-full flex items-center justify-center ${isPending ? "bg-warning/20" : "bg-success/20"}`}>
+            {isPending ? <Clock className="h-5 w-5 text-warning" /> : <UserCheck className="h-5 w-5 text-success" />}
+          </div>
+          <div>
+            <p className="font-medium text-foreground">{u.display_name || "Sem nome"}</p>
+            <div className="flex items-center gap-2 flex-wrap">
+              {u.whatsapp && <span className="text-xs text-muted-foreground">📱 {u.whatsapp}</span>}
+            </div>
+          </div>
+        </div>
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={() => navigate(`/perfil/${u.user_id}`)}
+          className="text-muted-foreground hover:text-primary"
+        >
+          <Eye className="h-4 w-4 mr-1" /> Perfil
+        </Button>
+      </div>
+
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-muted-foreground">Tipo:</span>
+          <Select value={u.role} onValueChange={(val) => handleRoleChange(u.user_id, val)}>
+            <SelectTrigger className="h-8 w-48 text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="admin">Administrador</SelectItem>
+              <SelectItem value="strategic">Gestor Estratégico</SelectItem>
+              <SelectItem value="operational">Gestor Operacional</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="flex gap-2">
+          {isPending ? (
+            <>
+              <Button size="sm" onClick={() => handleApprove(u.user_id)} className="bg-success hover:bg-success/90 text-success-foreground">
+                <UserCheck className="h-4 w-4 mr-1" /> Aprovar
+              </Button>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button size="sm" variant="destructive">
+                    <UserX className="h-4 w-4 mr-1" /> Recusar
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle className="flex items-center gap-2">
+                      <AlertTriangle className="h-5 w-5 text-destructive" /> Recusar usuário
+                    </AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Tem certeza que deseja recusar <strong>{u.display_name}</strong>? O cadastro será removido.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                    <AlertDialogAction onClick={() => handleReject(u.user_id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                      Recusar
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </>
+          ) : (
+            <Button size="sm" variant="ghost" onClick={() => handleRevoke(u.user_id)} className="text-muted-foreground hover:text-destructive">
+              Revogar acesso
+            </Button>
+          )}
+        </div>
+      </div>
+    </Card>
+  );
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
@@ -132,7 +211,7 @@ export default function UserApproval() {
           </h1>
         </div>
         <p className="text-muted-foreground">
-          Gerencie o acesso dos usuários ao sistema. Apenas usuários aprovados podem utilizar a plataforma.
+          Gerencie o acesso e tipo de cada usuário. Apenas usuários aprovados podem utilizar a plataforma.
         </p>
       </div>
 
@@ -140,7 +219,6 @@ export default function UserApproval() {
         <p className="text-muted-foreground">Carregando...</p>
       ) : (
         <div className="space-y-6">
-          {/* Pending */}
           <div>
             <h2 className="font-heading font-semibold text-lg text-foreground mb-3 flex items-center gap-2">
               <Clock className="h-5 w-5 text-warning" /> Pendentes de Aprovação ({pendingUsers.length})
@@ -151,55 +229,11 @@ export default function UserApproval() {
               </Card>
             ) : (
               <div className="space-y-2">
-                {pendingUsers.map((u) => (
-                  <Card key={u.user_id} className="p-4 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-full bg-warning/20 flex items-center justify-center">
-                        <Clock className="h-5 w-5 text-warning" />
-                      </div>
-                       <div>
-                         <p className="font-medium text-foreground">{u.display_name || "Sem nome"}</p>
-                         <div className="flex items-center gap-2 flex-wrap">
-                           <Badge variant="outline" className="text-xs mt-0.5">{roleLabel(u.role)}</Badge>
-                           {u.whatsapp && <span className="text-xs text-muted-foreground">📱 {u.whatsapp}</span>}
-                         </div>
-                       </div>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button size="sm" onClick={() => handleApprove(u.user_id)} className="bg-success hover:bg-success/90 text-success-foreground">
-                        <UserCheck className="h-4 w-4 mr-1" /> Aprovar
-                      </Button>
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button size="sm" variant="destructive">
-                            <UserX className="h-4 w-4 mr-1" /> Recusar
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle className="flex items-center gap-2">
-                              <AlertTriangle className="h-5 w-5 text-destructive" /> Recusar usuário
-                            </AlertDialogTitle>
-                            <AlertDialogDescription>
-                              Tem certeza que deseja recusar <strong>{u.display_name}</strong>? O cadastro será removido.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => handleReject(u.user_id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                              Recusar
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </div>
-                  </Card>
-                ))}
+                {pendingUsers.map((u) => <UserCard key={u.user_id} u={u} isPending />)}
               </div>
             )}
           </div>
 
-          {/* Approved */}
           <div>
             <h2 className="font-heading font-semibold text-lg text-foreground mb-3 flex items-center gap-2">
               <UserCheck className="h-5 w-5 text-success" /> Usuários Aprovados ({approvedUsers.length})
@@ -210,25 +244,7 @@ export default function UserApproval() {
               </Card>
             ) : (
               <div className="space-y-2">
-                {approvedUsers.map((u) => (
-                  <Card key={u.user_id} className="p-4 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-full bg-success/20 flex items-center justify-center">
-                        <UserCheck className="h-5 w-5 text-success" />
-                      </div>
-                       <div>
-                         <p className="font-medium text-foreground">{u.display_name || "Sem nome"}</p>
-                         <div className="flex items-center gap-2 flex-wrap">
-                           <Badge variant="outline" className="text-xs mt-0.5">{roleLabel(u.role)}</Badge>
-                           {u.whatsapp && <span className="text-xs text-muted-foreground">📱 {u.whatsapp}</span>}
-                         </div>
-                       </div>
-                     </div>
-                     <Button size="sm" variant="ghost" onClick={() => handleRevoke(u.user_id)} className="text-muted-foreground hover:text-destructive">
-                      Revogar acesso
-                    </Button>
-                  </Card>
-                ))}
+                {approvedUsers.map((u) => <UserCard key={u.user_id} u={u} isPending={false} />)}
               </div>
             )}
           </div>
