@@ -11,7 +11,7 @@ import { ArrowLeft, ChevronDown, ChevronRight, Save, MessageSquare } from "lucid
 import { toast } from "sonner";
 
 function calcProgress(categories: StrategyCategory[]) {
-  const allItems = categories.flatMap((c) => c.items).filter((i) => i.checked);
+  const allItems = categories.flatMap((c) => c.items);
   if (allItems.length === 0) return { percent: 0, completed: 0, inProgress: 0, pending: 0, total: 0 };
   const completed = allItems.filter((i) => i.status === "completed").length;
   const inProgress = allItems.filter((i) => i.status === "in_progress").length;
