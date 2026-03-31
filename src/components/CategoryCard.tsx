@@ -220,8 +220,14 @@ export function CategoryCard({
             ) : (
               <div
                 key={item.id}
-                className="flex items-start gap-3 p-3 rounded-lg hover:bg-muted/30 transition-colors group"
+                draggable
+                onDragStart={(e) => {
+                  e.dataTransfer.setData("fromCatId", category.id);
+                  e.dataTransfer.setData("itemId", item.id);
+                }}
+                className="flex items-start gap-2 p-3 rounded-lg hover:bg-muted/30 transition-colors group cursor-grab active:cursor-grabbing"
               >
+                <GripVertical className="h-4 w-4 mt-0.5 text-muted-foreground/50 shrink-0" />
                 <div className="flex-1 min-w-0">
                   <p className="font-medium text-sm text-foreground">
                     - {item.name}
