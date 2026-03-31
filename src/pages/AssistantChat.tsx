@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import ReactMarkdown, { Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { ImageLightbox } from "@/components/ImageLightbox";
+import { supabase } from "@/integrations/supabase/client";
 
 type Message = {
   id: string;
