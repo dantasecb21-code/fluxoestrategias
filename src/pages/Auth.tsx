@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
-import { Zap, LogIn, UserPlus } from "lucide-react";
+import { Zap, LogIn, UserPlus, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 
 type UserType = "strategic" | "operational";
