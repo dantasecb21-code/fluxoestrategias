@@ -22,7 +22,8 @@ interface PendingUser {
   display_name: string;
   approved: boolean;
   role: string;
-  email?: string;
+  email: string;
+  whatsapp: string;
 }
 
 export default function UserApproval() {
@@ -34,7 +35,7 @@ export default function UserApproval() {
     // Get all profiles
     const { data: profiles } = await supabase
       .from("profiles")
-      .select("user_id, display_name, approved");
+      .select("user_id, display_name, approved, whatsapp");
 
     if (!profiles) { setLoading(false); return; }
 
@@ -46,11 +47,14 @@ export default function UserApproval() {
     const roleMap = new Map<string, string>();
     roles?.forEach((r) => roleMap.set(r.user_id, r.role));
 
+    // Fetch emails from auth via edge function or show user_id as fallback
     const mapped: PendingUser[] = profiles.map((p) => ({
       user_id: p.user_id,
       display_name: p.display_name,
       approved: p.approved,
       role: roleMap.get(p.user_id) || "unknown",
+      email: "",
+      whatsapp: (p as any).whatsapp || "",
     }));
 
     // Show pending first, then approved
@@ -152,10 +156,13 @@ export default function UserApproval() {
                       <div className="h-10 w-10 rounded-full bg-warning/20 flex items-center justify-center">
                         <Clock className="h-5 w-5 text-warning" />
                       </div>
-                      <div>
-                        <p className="font-medium text-foreground">{u.display_name || "Sem nome"}</p>
-                        <Badge variant="outline" className="text-xs mt-0.5">{roleLabel(u.role)}</Badge>
-                      </div>
+                       <div>
+                         <p className="font-medium text-foreground">{u.display_name || "Sem nome"}</p>
+                         <div className="flex items-center gap-2 flex-wrap">
+                           <Badge variant="outline" className="text-xs mt-0.5">{roleLabel(u.role)}</Badge>
+                           {u.whatsapp && <span className="text-xs text-muted-foreground">📱 {u.whatsapp}</span>}
+                         </div>
+                       </div>
                     </div>
                     <div className="flex gap-2">
                       <Button size="sm" onClick={() => handleApprove(u.user_id)} className="bg-success hover:bg-success/90 text-success-foreground">
@@ -208,12 +215,15 @@ export default function UserApproval() {
                       <div className="h-10 w-10 rounded-full bg-success/20 flex items-center justify-center">
                         <UserCheck className="h-5 w-5 text-success" />
                       </div>
-                      <div>
-                        <p className="font-medium text-foreground">{u.display_name || "Sem nome"}</p>
-                        <Badge variant="outline" className="text-xs mt-0.5">{roleLabel(u.role)}</Badge>
-                      </div>
-                    </div>
-                    <Button size="sm" variant="ghost" onClick={() => handleRevoke(u.user_id)} className="text-muted-foreground hover:text-destructive">
+                       <div>
+                         <p className="font-medium text-foreground">{u.display_name || "Sem nome"}</p>
+                         <div className="flex items-center gap-2 flex-wrap">
+                           <Badge variant="outline" className="text-xs mt-0.5">{roleLabel(u.role)}</Badge>
+                           {u.whatsapp && <span className="text-xs text-muted-foreground">📱 {u.whatsapp}</span>}
+                         </div>
+                       </div>
+                     </div>
+                     <Button size="sm" variant="ghost" onClick={() => handleRevoke(u.user_id)} className="text-muted-foreground hover:text-destructive">
                       Revogar acesso
                     </Button>
                   </Card>

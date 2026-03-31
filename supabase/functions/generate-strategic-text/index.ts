@@ -35,10 +35,9 @@ serve(async (req) => {
 Sua função é gerar um texto estratégico profissional e coerente com o nome do item fornecido.
 
 REGRAS:
-- O texto DEVE explicar exatamente a ação que o item propõe
-- O texto DEVE complementar o item com um objetivo claro e mensurável
-- O texto DEVE ter contexto estratégico voltado para delivery digital
-- O texto deve ter entre 1 e 3 frases, sendo direto e profissional
+- O texto DEVE ter NO MÁXIMO 1 a 2 frases curtas e objetivas
+- Seja direto ao ponto, sem enrolação
+- O texto DEVE explicar a ação do item de forma clara
 - NÃO use aspas, NÃO repita o nome do item no início
 - NÃO use expressões genéricas como "implementar melhorias"
 - Responda APENAS com o texto estratégico, sem explicações adicionais`

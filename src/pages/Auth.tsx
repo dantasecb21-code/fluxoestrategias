@@ -15,6 +15,7 @@ export default function Auth() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
+  const [whatsapp, setWhatsapp] = useState("");
   const [userType, setUserType] = useState<UserType>("admin");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -40,7 +41,7 @@ export default function Auth() {
         }
         navigate("/");
       } else {
-        const { error } = await supabase.auth.signUp({
+        const { error, data: signUpData } = await supabase.auth.signUp({
           email,
           password,
           options: {
@@ -48,6 +49,11 @@ export default function Auth() {
             emailRedirectTo: window.location.origin,
           },
         });
+        if (error) throw error;
+        // Save whatsapp to profile
+        if (signUpData?.user) {
+          await supabase.from("profiles").update({ whatsapp: whatsapp.trim() }).eq("user_id", signUpData.user.id);
+        }
         if (error) throw error;
         toast.success("Conta criada! Aguarde aprovação do administrador para acessar o sistema.");
       }
@@ -83,6 +89,16 @@ export default function Auth() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Seu nome completo"
+                  required
+                  className="bg-background"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-muted-foreground text-xs">WhatsApp</Label>
+                <Input
+                  value={whatsapp}
+                  onChange={(e) => setWhatsapp(e.target.value)}
+                  placeholder="(11) 99999-9999"
                   required
                   className="bg-background"
                 />

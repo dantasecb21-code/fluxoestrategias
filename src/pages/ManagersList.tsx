@@ -21,6 +21,7 @@ import {
 interface OperationalManager {
   user_id: string;
   display_name: string;
+  whatsapp: string;
 }
 
 function calcManagerStats(strategies: any[], managerId: string) {
@@ -58,13 +59,14 @@ export default function ManagersList() {
       const userIds = roles.map((r) => r.user_id);
       const { data: profiles } = await supabase
         .from("profiles")
-        .select("user_id, display_name")
+        .select("user_id, display_name, whatsapp")
         .in("user_id", userIds);
 
       if (profiles) {
         setManagers(profiles.map((p) => ({
           user_id: p.user_id,
           display_name: p.display_name,
+          whatsapp: (p as any).whatsapp || "",
         })));
       }
     } else {
@@ -139,10 +141,11 @@ export default function ManagersList() {
                     }`}>
                       {index < 3 ? <Trophy className="h-5 w-5" /> : `#${index + 1}`}
                     </div>
-                    <div>
-                      <p className="font-heading font-semibold text-foreground">{m.display_name || "Sem nome"}</p>
-                      <p className="text-xs text-muted-foreground">Gestor Operacional</p>
-                    </div>
+                     <div>
+                       <p className="font-heading font-semibold text-foreground">{m.display_name || "Sem nome"}</p>
+                       <p className="text-xs text-muted-foreground">Gestor Operacional</p>
+                       {m.whatsapp && <p className="text-xs text-muted-foreground">📱 {m.whatsapp}</p>}
+                     </div>
                   </div>
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
