@@ -114,7 +114,7 @@ export default function OperationalStrategyView() {
       </Card>
 
       {/* Categories */}
-      {checkedCategories.map((cat) => (
+      {visibleCategories.map((cat) => (
         <Card key={cat.id} className="overflow-hidden">
           <button
             className="w-full flex items-center justify-between p-4 border-b border-border hover:bg-muted/30 transition-colors"
