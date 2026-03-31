@@ -6,7 +6,7 @@ import { Clock, AlertTriangle, UserCheck, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 function calcProgress(categories: any[]) {
-  const allItems = categories.flatMap((c: any) => c.items).filter((i: any) => i.checked);
+  const allItems = categories.flatMap((c: any) => c.items);
   if (allItems.length === 0) return { percent: 0, completed: 0, inProgress: 0, pending: 0, total: 0 };
   const completed = allItems.filter((i: any) => i.status === "completed").length;
   const inProgress = allItems.filter((i: any) => i.status === "in_progress").length;
