@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
-import { Pencil, Trash2, Plus, Check, X, ChevronDown, ChevronRight, Sparkles, Loader2, ArrowUp, ArrowDown, GripVertical, MoveRight } from "lucide-react";
+import { Pencil, Trash2, Plus, Check, X, ChevronDown, ChevronRight, Sparkles, Loader2, ArrowUp, ArrowDown, MoveRight } from "lucide-react";
 import { toast } from "sonner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
