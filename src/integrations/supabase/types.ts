@@ -22,6 +22,7 @@ export type Database = {
           id: string
           updated_at: string
           user_id: string
+          whatsapp: string
         }
         Insert: {
           approved?: boolean
@@ -30,6 +31,7 @@ export type Database = {
           id?: string
           updated_at?: string
           user_id: string
+          whatsapp?: string
         }
         Update: {
           approved?: boolean
@@ -38,6 +40,7 @@ export type Database = {
           id?: string
           updated_at?: string
           user_id?: string
+          whatsapp?: string
         }
         Relationships: []
       }
