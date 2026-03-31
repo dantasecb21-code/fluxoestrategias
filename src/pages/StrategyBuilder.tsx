@@ -32,6 +32,7 @@ function initCategories(): StrategyCategory[] {
 interface Manager {
   user_id: string;
   display_name: string;
+  whatsapp?: string;
 }
 
 function calcProgress(categories: StrategyCategory[]) {
@@ -94,7 +95,7 @@ export default function StrategyBuilderPage() {
       if (roles && roles.length > 0) {
         const { data: profiles } = await supabase
           .from("profiles")
-          .select("user_id, display_name")
+          .select("user_id, display_name, whatsapp")
           .in("user_id", roles.map((r) => r.user_id))
           .eq("approved", true);
         if (profiles) setManagers(profiles);
@@ -214,6 +215,7 @@ export default function StrategyBuilderPage() {
           operationalManager={meta.operationalManager}
           deadline={meta.deadline}
           categories={categories}
+          whatsapp={managers.find((m) => m.user_id === assignedTo)?.whatsapp}
         />
       ) : (
         <>

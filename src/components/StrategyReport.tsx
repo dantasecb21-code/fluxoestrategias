@@ -1,7 +1,7 @@
 import { StrategyCategory } from "@/types/strategy";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Copy, FileText } from "lucide-react";
+import { Copy, FileText, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 
 interface StrategyReportProps {
@@ -10,21 +10,22 @@ interface StrategyReportProps {
   operationalManager: string;
   deadline: string;
   categories: StrategyCategory[];
+  whatsapp?: string;
 }
 
-export function StrategyReport({ storeName, managerName, operationalManager, deadline, categories }: StrategyReportProps) {
+export function StrategyReport({ storeName, managerName, operationalManager, deadline, categories, whatsapp }: StrategyReportProps) {
   const activeCategories = categories
     .map((c) => ({ ...c, items: c.items.filter((i) => i.checked) }))
     .filter((c) => c.items.length > 0);
 
   const generateText = () => {
-    let report = `Estratégia Inicial – ${storeName}\n\n`;
-    report += `Administrador: ${managerName}\n`;
-    report += `Gestor Operacional: ${operationalManager}\n`;
-    report += `Prazo: ${deadline}\n\n`;
+    let report = `*Estratégia Inicial – ${storeName}*\n\n`;
+    report += `*Gestor Estratégico:* ${managerName}\n`;
+    report += `*Gestor Operacional:* ${operationalManager}\n`;
+    report += `*Prazo:* ${deadline}\n\n`;
 
     activeCategories.forEach((cat) => {
-      report += `${cat.name}\n\n`;
+      report += `*${cat.name}*\n\n`;
       cat.items.forEach((item) => {
         report += `- ${item.name}: ${item.text}\n\n`;
       });
@@ -42,6 +43,17 @@ export function StrategyReport({ storeName, managerName, operationalManager, dea
     toast.success("Estratégia copiada!");
   };
 
+  const handleWhatsApp = () => {
+    if (!whatsapp) {
+      toast.error("WhatsApp do gestor não cadastrado.");
+      return;
+    }
+    const cleanNumber = whatsapp.replace(/\D/g, "");
+    const number = cleanNumber.startsWith("55") ? cleanNumber : `55${cleanNumber}`;
+    const text = encodeURIComponent(generateText());
+    window.open(`https://wa.me/${number}?text=${text}`, "_blank");
+  };
+
   return (
     <Card className="border-border bg-card p-6">
       <div className="flex items-center justify-between mb-6">
@@ -49,9 +61,14 @@ export function StrategyReport({ storeName, managerName, operationalManager, dea
           <FileText className="h-5 w-5 text-primary" />
           <h2 className="font-heading font-bold text-xl text-foreground">Relatório Gerado</h2>
         </div>
-        <Button onClick={handleCopy} size="sm">
-          <Copy className="h-4 w-4 mr-1" /> Copiar
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={handleWhatsApp} size="sm" variant="outline" className="text-green-500 border-green-500/30 hover:bg-green-500/10">
+            <MessageCircle className="h-4 w-4 mr-1" /> WhatsApp
+          </Button>
+          <Button onClick={handleCopy} size="sm">
+            <Copy className="h-4 w-4 mr-1" /> Copiar
+          </Button>
+        </div>
       </div>
 
       <div className="bg-muted/30 rounded-lg p-6 space-y-6">
@@ -60,7 +77,7 @@ export function StrategyReport({ storeName, managerName, operationalManager, dea
             Estratégia Inicial – {storeName}
           </h3>
           <div className="text-sm text-muted-foreground space-y-0.5">
-            <p>Administrador: {managerName}</p>
+            <p>Gestor Estratégico: {managerName}</p>
             <p>Gestor Operacional: {operationalManager}</p>
             <p>Prazo: {deadline}</p>
           </div>
