@@ -9,6 +9,7 @@ interface StrategyReportProps {
   managerName: string;
   operationalManager: string;
   deadline: string;
+  categories: StrategyCategory[];
 }
 
 export function StrategyReport({ storeName, managerName, operationalManager, deadline, categories }: StrategyReportProps) {
