@@ -60,14 +60,9 @@ export function StrategyReport({ storeName, managerName, operationalManager, dea
           <FileText className="h-5 w-5 text-primary" />
           <h2 className="font-heading font-bold text-xl text-foreground">Relatório Gerado</h2>
         </div>
-        <div className="flex gap-2">
-          <Button onClick={handleWhatsApp} size="sm" variant="outline" className="text-green-500 border-green-500/30 hover:bg-green-500/10">
-            <MessageCircle className="h-4 w-4 mr-1" /> WhatsApp
-          </Button>
-          <Button onClick={handleCopy} size="sm">
-            <Copy className="h-4 w-4 mr-1" /> Copiar
-          </Button>
-        </div>
+      <Button onClick={handleCopy} size="sm">
+          <Copy className="h-4 w-4 mr-1" /> Copiar
+        </Button>
       </div>
 
       <div className="bg-muted/30 rounded-lg p-6 space-y-6">
