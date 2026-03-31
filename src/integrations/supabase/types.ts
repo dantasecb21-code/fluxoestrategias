@@ -22,6 +22,7 @@ export type Database = {
           created_at: string
           display_name: string
           id: string
+          status_text: string
           updated_at: string
           user_id: string
           whatsapp: string
@@ -33,6 +34,7 @@ export type Database = {
           created_at?: string
           display_name?: string
           id?: string
+          status_text?: string
           updated_at?: string
           user_id: string
           whatsapp?: string
@@ -44,6 +46,7 @@ export type Database = {
           created_at?: string
           display_name?: string
           id?: string
+          status_text?: string
           updated_at?: string
           user_id?: string
           whatsapp?: string
@@ -84,6 +87,33 @@ export type Database = {
           manager_name?: string
           operational_manager?: string
           store_name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      strategy_notes: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content?: string
+          created_at?: string
+          id?: string
+          title?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          title?: string
           updated_at?: string
           user_id?: string
         }
