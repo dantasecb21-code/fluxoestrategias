@@ -197,21 +197,30 @@ export function CategoryCard({
                 className="bg-background"
                 autoFocus
               />
-              <Textarea
-                value={newItemText}
-                onChange={(e) => setNewItemText(e.target.value)}
-                placeholder="Texto estratégico vinculado"
-                rows={2}
-                className="bg-background"
-              />
-              <div className="flex gap-2">
-                <Button size="sm" onClick={handleAddItem} disabled={!newItemName.trim() || !newItemText.trim()}>
-                  <Plus className="h-3 w-3 mr-1" /> Adicionar
-                </Button>
-                <Button size="sm" variant="ghost" onClick={() => { setAddingItem(false); setNewItemName(""); setNewItemText(""); }}>
-                  Cancelar
-                </Button>
-              </div>
+               <Textarea
+                  value={newItemText}
+                  onChange={(e) => setNewItemText(e.target.value)}
+                  placeholder="Texto estratégico vinculado"
+                  rows={2}
+                  className="bg-background"
+                />
+                {newItemName.trim() && newItemText.trim() && (() => {
+                  const warning = validateStrategicText(newItemName, newItemText);
+                  return warning ? (
+                    <Alert variant="destructive" className="py-2">
+                      <AlertTriangle className="h-4 w-4" />
+                      <AlertDescription className="text-xs">{warning}</AlertDescription>
+                    </Alert>
+                  ) : null;
+                })()}
+                <div className="flex gap-2">
+                  <Button size="sm" onClick={handleAddItem} disabled={!newItemName.trim() || !newItemText.trim()}>
+                    <Plus className="h-3 w-3 mr-1" /> Adicionar
+                  </Button>
+                  <Button size="sm" variant="ghost" onClick={() => { setAddingItem(false); setNewItemName(""); setNewItemText(""); }}>
+                    Cancelar
+                  </Button>
+                </div>
             </div>
           ) : (
             <Button

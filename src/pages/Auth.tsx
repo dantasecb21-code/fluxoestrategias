@@ -27,7 +27,17 @@ export default function Auth() {
       if (isLogin) {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
-        toast.success("Login realizado com sucesso!");
+        
+        // Check approval status
+        const { data: { user: loggedUser } } = await supabase.auth.getUser();
+        if (loggedUser) {
+          const { data: profile } = await supabase.from("profiles").select("approved").eq("user_id", loggedUser.id).single();
+          if (profile && !profile.approved) {
+            toast.info("Seu cadastro está pendente de aprovação pelo administrador.");
+          } else {
+            toast.success("Login realizado com sucesso!");
+          }
+        }
         navigate("/");
       } else {
         const { error } = await supabase.auth.signUp({
@@ -39,8 +49,7 @@ export default function Auth() {
           },
         });
         if (error) throw error;
-        toast.success("Conta criada com sucesso!");
-        navigate("/");
+        toast.success("Conta criada! Aguarde aprovação do administrador para acessar o sistema.");
       }
     } catch (err: any) {
       toast.error(err.message || "Erro na autenticação");
