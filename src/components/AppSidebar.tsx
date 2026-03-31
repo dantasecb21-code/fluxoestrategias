@@ -33,9 +33,9 @@ export function AppSidebar() {
     <Sidebar collapsible="icon">
       <SidebarContent className="flex flex-col h-full">
         {/* Logo */}
-        <div className="p-4 border-b border-sidebar-border">
+        <div className="p-4 border-b border-sidebar-border flex items-center justify-center">
           <div className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center shrink-0">
+            <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center shrink-0 mx-auto">
               <Zap className="h-4 w-4 text-primary-foreground" />
             </div>
             {!collapsed && (
