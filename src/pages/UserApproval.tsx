@@ -35,7 +35,7 @@ export default function UserApproval() {
     // Get all profiles
     const { data: profiles } = await supabase
       .from("profiles")
-      .select("user_id, display_name, approved");
+      .select("user_id, display_name, approved, whatsapp");
 
     if (!profiles) { setLoading(false); return; }
 
