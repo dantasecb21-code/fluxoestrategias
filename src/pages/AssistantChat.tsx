@@ -182,7 +182,7 @@ export default function AssistantChat() {
               <Bot className="h-8 w-8 text-primary" />
             </div>
             <div>
-              <h2 className="font-heading font-semibold text-foreground mb-1">Olá! Sou o assistente Lavebo</h2>
+              <h2 className="font-heading font-semibold text-foreground mb-1">Olá! Sou o Chatinho Gepeto</h2>
               <p className="text-sm text-muted-foreground max-w-md">
                 Pergunte qualquer coisa sobre a plataforma: como alterar nome, criar categorias, configurar entrega, promoções, avaliações e mais. Vou te mostrar com prints!
               </p>
