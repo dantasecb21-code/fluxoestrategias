@@ -14,10 +14,12 @@ import {
 import { NavLink } from "@/components/NavLink";
 import { Home, Plus, LogOut, Zap, ClipboardList, Users, AlertTriangle, ShieldCheck, MessageCircleQuestion } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export function AppSidebar() {
-  const { state } = useSidebar();
+  const { state, setOpenMobile } = useSidebar();
   const collapsed = state === "collapsed";
+  const isMobile = useIsMobile();
   const { user, displayName, role, signOut } = useAuth();
   const navigate = useNavigate();
 
