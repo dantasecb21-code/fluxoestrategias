@@ -15,6 +15,7 @@ export default function Auth() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
+  const [whatsapp, setWhatsapp] = useState("");
   const [userType, setUserType] = useState<UserType>("admin");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
