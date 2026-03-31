@@ -10,6 +10,7 @@ import Dashboard from "./pages/Dashboard";
 import StrategyBuilderPage from "./pages/StrategyBuilder";
 import OperationalDashboard from "./pages/OperationalDashboard";
 import OperationalStrategyView from "./pages/OperationalStrategyView";
+import UserProfile from "./pages/UserProfile";
 import ManagersList from "./pages/ManagersList";
 import PendingStrategies from "./pages/PendingStrategies";
 import UserApproval from "./pages/UserApproval";
@@ -74,6 +75,7 @@ const App = () => (
             <Route path="/pendentes" element={<ProtectedRoute allowedRoles={["admin", "strategic"]}><PendingStrategies /></ProtectedRoute>} />
             <Route path="/aprovacoes" element={<ProtectedRoute allowedRoles={["admin"]}><UserApproval /></ProtectedRoute>} />
             <Route path="/operacional/:id" element={<ProtectedRoute allowedRoles={["operational"]}><OperationalStrategyView /></ProtectedRoute>} />
+            <Route path="/perfil/:userId" element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
