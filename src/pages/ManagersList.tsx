@@ -59,13 +59,14 @@ export default function ManagersList() {
       const userIds = roles.map((r) => r.user_id);
       const { data: profiles } = await supabase
         .from("profiles")
-        .select("user_id, display_name")
+        .select("user_id, display_name, whatsapp")
         .in("user_id", userIds);
 
       if (profiles) {
         setManagers(profiles.map((p) => ({
           user_id: p.user_id,
           display_name: p.display_name,
+          whatsapp: (p as any).whatsapp || "",
         })));
       }
     } else {
