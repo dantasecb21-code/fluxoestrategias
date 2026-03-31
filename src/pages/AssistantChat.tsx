@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import ReactMarkdown, { Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { ImageLightbox } from "@/components/ImageLightbox";
+import { supabase } from "@/integrations/supabase/client";
 
 type Message = {
   id: string;
@@ -42,11 +43,14 @@ export default function AssistantChat() {
     const allMessages = [...messages, userMsg].map((m) => ({ role: m.role, content: m.content }));
 
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+
       const resp = await fetch(CHAT_URL, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ messages: allMessages }),
       });
@@ -159,7 +163,7 @@ export default function AssistantChat() {
             <Bot className="h-5 w-5 text-primary-foreground" />
           </div>
           <div>
-            <h1 className="font-heading font-bold text-lg text-foreground">Assistente Lavebo</h1>
+            <h1 className="font-heading font-bold text-lg text-foreground">Chatinho Gepeto - 99Food</h1>
             <p className="text-xs text-muted-foreground">Tire dúvidas sobre a plataforma com prints e passo a passo</p>
           </div>
         </div>
@@ -178,7 +182,7 @@ export default function AssistantChat() {
               <Bot className="h-8 w-8 text-primary" />
             </div>
             <div>
-              <h2 className="font-heading font-semibold text-foreground mb-1">Olá! Sou o assistente Lavebo</h2>
+              <h2 className="font-heading font-semibold text-foreground mb-1">Olá! Sou o Chatinho Gepeto</h2>
               <p className="text-sm text-muted-foreground max-w-md">
                 Pergunte qualquer coisa sobre a plataforma: como alterar nome, criar categorias, configurar entrega, promoções, avaliações e mais. Vou te mostrar com prints!
               </p>
