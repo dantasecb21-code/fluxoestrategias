@@ -100,6 +100,7 @@ export function AppSidebar() {
                     <SidebarMenuButton asChild>
                       <NavLink
                         to="/pendentes"
+                        onClick={() => handleNav("/pendentes")}
                         className="hover:bg-sidebar-accent/50"
                         activeClassName="bg-sidebar-accent text-primary font-medium"
                       >
