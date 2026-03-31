@@ -193,6 +193,7 @@ export default function StrategyBuilderPage() {
       });
       if (created) {
         setSavedId(created.id);
+        clearDraft();
         toast.success("Estratégia criada!");
         navigate(`/estrategia/${created.id}`, { replace: true });
       }
