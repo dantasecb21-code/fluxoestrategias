@@ -76,21 +76,45 @@ ESTRUTURA PADRÃO DE CATEGORIAS (use EXATAMENTE estas quando aplicável, nesta o
 
 NUNCA repetir ou recriar essas categorias. Só crie novas se o conteúdo não se encaixar.
 
-BASE ESTRATÉGICA (usar como referência):
-- Boas fotos aumentam conversão
-- Palavras-chave nos títulos melhoram busca
-- Descrições atrativas aumentam vendas
-- Estrutura de cardápio impacta decisão do cliente
-- Combos aumentam ticket médio
-- Promoções aumentam visibilidade na plataforma
+BASE DE CONHECIMENTO DA PLATAFORMA (conteúdo real dos guias oficiais — use como referência estratégica):
 
-DIRETRIZES DE CARDÁPIO:
-- Use linguagem que gere desejo (sem exagero)
-- Destaque qualidade dos ingredientes
-- Otimize títulos para busca
-- Organize categorias na jornada do cliente
-- Priorize itens mais vendidos no topo
-- Reduza excesso de opções (evitar poluição visual)
+COBERTURA DE IMAGEM:
+- A cobertura de imagem mede quantos itens do cardápio possuem fotos vs total de itens.
+- Meta de Ouro: pelo menos 99% a 100% dos pratos devem ter fotos para pontuação máxima (2 pontos no indicador).
+- Cardápio com fotos completas e atraentes aumenta confiança do cliente e conversão de vendas.
+- Dicas de foto: usar iluminação natural (perto de janela), ângulos clássicos (de cima ou levemente inclinado), fotos reais dos pratos (nunca fotos de internet).
+- Manter fundos limpos e parecidos para todas as fotos dá ar profissional.
+- Restaurantes com Score de Qualidade acima de 7 ganham créditos de publicidade grátis.
+
+AVALIAÇÕES (5 ESTRELAS):
+- A Avaliação do Comerciante é a média das notas dos consumidores após receberem o pedido.
+- Compõe a Nota de Qualidade geral (vale 2 pontos de 10).
+- Nota baixa (abaixo de 4.0) faz cliente desistir e comprar no concorrente.
+- Meta: manter avaliação média acima de 4.5 estrelas.
+- Ações: responder avaliações, agradecer elogios, gerenciar críticas com educação.
+- Incentivos: bilhetinho na sacola pedindo avaliação, mimos surpresa (bala, recado à mão).
+- Cozinha: caprichar em sabor, temperatura e embalagem térmica.
+
+PRIMEIROS PEDIDOS E VISIBILIDADE:
+- Loja deve estar aberta no horário correto, itens ativos, preços/descrições/fotos corretos, área de entrega configurada.
+- Loja incompleta ou com informações inconsistentes aparece menos para clientes.
+- Cardápio atrativo: focar em itens simples e populares, combos com bom custo-benefício, descrições claras.
+- Campanhas promocionais são a forma mais rápida de gerar primeiros pedidos.
+- Participar de campanhas ajuda a aparecer para mais clientes e competir com estabelecimentos consolidados.
+- No início: selecionar poucos itens estratégicos, priorizar pratos fáceis de preparar, evitar cardápio muito amplo.
+
+GESTÃO DE CARDÁPIO:
+- Manter cardápio sempre atualizado é essencial para boa experiência.
+- Item indisponível visível gera cancelamentos, frustração e perda de confiança.
+- Construção: fotos aceitas devem ser reais, bem iluminadas, sem flash artificial.
+- Preços na plataforma não podem ser mais caros que no estabelecimento físico.
+- Organizar categorias pensando na jornada do cliente (o que ele procura primeiro).
+- Priorizar itens mais vendidos no topo das categorias.
+- Reduzir excesso de opções para evitar poluição visual.
+- Títulos devem conter palavras-chave para facilitar busca na plataforma.
+- Descrições devem gerar desejo e destacar qualidade dos ingredientes (sem exagero).
+- Combos aumentam ticket médio.
+- Promoções aumentam visibilidade dentro da plataforma.
 
 OBJETIVO DA ESTRATÉGIA:
 - Aumentar visibilidade na plataforma
