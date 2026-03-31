@@ -45,7 +45,6 @@ export function CategoryCard({
   onRemoveItem,
   onMoveItem,
   onMoveItemToCategory,
-  onDropItem,
 }: CategoryCardProps) {
   const [expanded, setExpanded] = useState(true);
   const [editingName, setEditingName] = useState(false);
