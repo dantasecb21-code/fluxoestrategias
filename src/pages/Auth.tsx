@@ -39,7 +39,8 @@ export default function Auth() {
           },
         });
         if (error) throw error;
-        toast.success("Conta criada! Verifique seu email para confirmar.");
+        toast.success("Conta criada com sucesso!");
+        navigate("/");
       }
     } catch (err: any) {
       toast.error(err.message || "Erro na autenticação");
@@ -56,7 +57,7 @@ export default function Auth() {
             <Zap className="h-5 w-5 text-primary-foreground" />
           </div>
           <h1 className="font-heading font-bold text-2xl text-foreground">
-            99<span className="text-primary">Food</span>
+            Gestor de <span className="text-primary">Estratégias</span>
           </h1>
         </div>
 
@@ -89,7 +90,7 @@ export default function Auth() {
                         : "border-border bg-background text-muted-foreground hover:border-muted-foreground"
                     }`}
                   >
-                    Administrador
+                    Gestor Estratégico
                   </button>
                   <button
                     type="button"

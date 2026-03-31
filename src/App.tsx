@@ -11,6 +11,7 @@ import StrategyBuilderPage from "./pages/StrategyBuilder";
 import OperationalDashboard from "./pages/OperationalDashboard";
 import OperationalStrategyView from "./pages/OperationalStrategyView";
 import ManagersList from "./pages/ManagersList";
+import PendingStrategies from "./pages/PendingStrategies";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -50,6 +51,7 @@ const App = () => (
             <Route path="/nova" element={<ProtectedRoute allowedRoles={["admin"]}><StrategyBuilderPage /></ProtectedRoute>} />
             <Route path="/estrategia/:id" element={<ProtectedRoute allowedRoles={["admin"]}><StrategyBuilderPage /></ProtectedRoute>} />
             <Route path="/gestores" element={<ProtectedRoute allowedRoles={["admin"]}><ManagersList /></ProtectedRoute>} />
+            <Route path="/pendentes" element={<ProtectedRoute allowedRoles={["admin"]}><PendingStrategies /></ProtectedRoute>} />
             <Route path="/operacional/:id" element={<ProtectedRoute allowedRoles={["operational"]}><OperationalStrategyView /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
