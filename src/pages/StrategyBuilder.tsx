@@ -180,6 +180,7 @@ export default function StrategyBuilderPage() {
         categories,
         assigned_to: assignedTo || null,
       });
+      clearDraft();
       toast.success("Estratégia atualizada!");
     } else {
       const created = await createStrategy({
