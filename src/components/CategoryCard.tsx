@@ -257,6 +257,18 @@ export function CategoryCard({
                       </Button>
                     </>
                   )}
+                  {onMoveItemToCategory && allCategories && allCategories.filter(c => c.id !== category.id).length > 0 && (
+                    <Select onValueChange={(toCatId) => onMoveItemToCategory(category.id, item.id, toCatId)}>
+                      <SelectTrigger className="h-7 w-7 p-0 border-0 bg-transparent text-muted-foreground hover:text-foreground [&>svg:last-child]:hidden">
+                        <MoveRight className="h-3 w-3" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {allCategories.filter(c => c.id !== category.id).map(c => (
+                          <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
                   <Button size="icon" variant="ghost" onClick={() => handleStartEdit(item)} className="h-7 w-7 text-muted-foreground hover:text-foreground">
                     <Pencil className="h-3 w-3" />
                   </Button>
