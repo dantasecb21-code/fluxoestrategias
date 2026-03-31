@@ -38,9 +38,8 @@ export function useDbStrategies() {
 
     if (role === "operational") {
       query = query.eq("assigned_to", user.id);
-    } else {
-      query = query.eq("user_id", user.id);
     }
+    // admin and strategic users see ALL strategies (no filter needed, RLS handles access)
 
     const { data } = await query.order("updated_at", { ascending: false });
     if (data) setStrategies(data.map(mapRow));
