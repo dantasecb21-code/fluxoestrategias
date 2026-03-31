@@ -222,8 +222,13 @@ export default function AssistantChat() {
                   }`}
                 >
                   {msg.role === "assistant" ? (
-                    <div className="prose prose-sm dark:prose-invert max-w-none [&_img]:rounded-lg [&_img]:border [&_img]:border-border [&_img]:my-3 [&_img]:max-w-full [&_img]:shadow-md">
-                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                    <div className="prose prose-sm dark:prose-invert max-w-none">
+                      <ReactMarkdown
+                        remarkPlugins={[remarkGfm]}
+                        components={{
+                          img: ({ src, alt }) => <ImageLightbox src={src} alt={alt} />,
+                        }}
+                      >
                         {msg.content || "..."}
                       </ReactMarkdown>
                     </div>
