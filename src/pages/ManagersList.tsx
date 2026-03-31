@@ -21,6 +21,7 @@ import {
 interface OperationalManager {
   user_id: string;
   display_name: string;
+  whatsapp: string;
 }
 
 function calcManagerStats(strategies: any[], managerId: string) {
