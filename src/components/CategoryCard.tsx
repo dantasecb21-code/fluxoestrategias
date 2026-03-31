@@ -20,7 +20,7 @@ interface CategoryCardProps {
   onRemoveItem: (catId: string, itemId: string) => void;
   onMoveItem?: (catId: string, itemId: string, direction: "up" | "down") => void;
   onMoveItemToCategory?: (fromCatId: string, itemId: string, toCatId: string) => void;
-  onDropItem?: (fromCatId: string, itemId: string, toCatId: string) => void;
+  
 }
 
 async function fetchAIText(itemName: string): Promise<string | null> {
