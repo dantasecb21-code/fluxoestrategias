@@ -26,7 +26,7 @@ export function StrategyReport({ storeName, managerName, operationalManager, dea
     activeCategories.forEach((cat) => {
       report += `*${cat.name}*\n\n`;
       cat.items.forEach((item) => {
-        report += `- ${item.name}: ${item.text}\n\n`;
+        report += `${item.name}: ${item.text}\n\n`;
       });
     });
 
