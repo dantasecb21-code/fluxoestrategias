@@ -47,22 +47,43 @@ function calcProgress(categories: StrategyCategory[]) {
   return { percent, completed, inProgress, pending, total };
 }
 
+const DRAFT_KEY = "strategy-draft";
+
+function loadDraft() {
+  try {
+    const raw = localStorage.getItem(DRAFT_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch {}
+  return null;
+}
+
+function saveDraft(data: { meta: StrategyMeta; categories: StrategyCategory[]; assignedTo: string; freeText: string }) {
+  try {
+    localStorage.setItem(DRAFT_KEY, JSON.stringify(data));
+  } catch {}
+}
+
+function clearDraft() {
+  localStorage.removeItem(DRAFT_KEY);
+}
+
 export default function StrategyBuilderPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { strategies, createStrategy, updateStrategy, loading } = useDbStrategies();
 
   const existing = id ? strategies.find((s) => s.id === id) : null;
+  const draft = !id ? loadDraft() : null;
 
   const [meta, setMeta] = useState<StrategyMeta>(
     existing
       ? { storeName: existing.store_name, managerName: existing.manager_name, operationalManager: existing.operational_manager, deadline: existing.deadline }
-      : { storeName: "", managerName: "", operationalManager: "", deadline: "" }
+      : draft?.meta || { storeName: "", managerName: "", operationalManager: "", deadline: "" }
   );
   const [categories, setCategories] = useState<StrategyCategory[]>(
-    existing?.categories?.length ? existing.categories : initCategories()
+    existing?.categories?.length ? existing.categories : draft?.categories?.length ? draft.categories : initCategories()
   );
-  const [assignedTo, setAssignedTo] = useState<string>(existing?.assigned_to || "");
+  const [assignedTo, setAssignedTo] = useState<string>(existing?.assigned_to || draft?.assignedTo || "");
   const [showReport, setShowReport] = useState(false);
   const [addingCategory, setAddingCategory] = useState(false);
   const [newCatName, setNewCatName] = useState("");
@@ -70,7 +91,7 @@ export default function StrategyBuilderPage() {
   const [managers, setManagers] = useState<Manager[]>([]);
 
   // Free-text AI
-  const [freeText, setFreeText] = useState("");
+  const [freeText, setFreeText] = useState(draft?.freeText || "");
   const [organizingAI, setOrganizingAI] = useState(false);
 
   // Audio recording (record-then-process model)
@@ -82,6 +103,13 @@ export default function StrategyBuilderPage() {
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const editor = useCategoryEditor(categories, setCategories);
+
+  // Save draft to localStorage for new strategies
+  useEffect(() => {
+    if (!id) {
+      saveDraft({ meta, categories, assignedTo, freeText });
+    }
+  }, [meta, categories, assignedTo, freeText, id]);
 
   useEffect(() => {
     if (existing) {
