@@ -15,6 +15,7 @@ import ManagersList from "./pages/ManagersList";
 import StrategyNotes from "./pages/StrategyNotes";
 import PendingStrategies from "./pages/PendingStrategies";
 import UserApproval from "./pages/UserApproval";
+import AssistantChat from "./pages/AssistantChat";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -78,6 +79,7 @@ const App = () => (
             <Route path="/aprovacoes" element={<ProtectedRoute allowedRoles={["admin"]}><UserApproval /></ProtectedRoute>} />
             <Route path="/operacional/:id" element={<ProtectedRoute allowedRoles={["operational"]}><OperationalStrategyView /></ProtectedRoute>} />
             <Route path="/perfil/:userId" element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
+            <Route path="/assistente" element={<ProtectedRoute><AssistantChat /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
