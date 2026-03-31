@@ -105,7 +105,7 @@ export default function UserProfile() {
       const items = (s.categories as any[]).flatMap((c: any) => c.items).filter((i: any) => i.checked);
       if (items.length === 0) return;
       if (items.every((i: any) => i.status === "completed")) completed++;
-      else inProgress++;
+      else if (items.some((i: any) => i.status === "in_progress" || i.status === "completed")) inProgress++;
     });
     const pending = total - completed - inProgress;
     const rate = total > 0 ? Math.round((completed / total) * 100) : 0;
