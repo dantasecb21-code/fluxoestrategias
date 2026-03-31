@@ -23,6 +23,10 @@ export function AppSidebar() {
   const { user, displayName, role, signOut } = useAuth();
   const navigate = useNavigate();
 
+  const handleNav = (path: string) => {
+    if (isMobile) setOpenMobile(false);
+  };
+
   const handleLogout = async () => {
     await signOut();
     navigate("/auth");
