@@ -40,7 +40,7 @@ export function AppSidebar() {
             </div>
             {!collapsed && (
               <span className="font-heading font-bold text-sidebar-foreground text-sm">
-                Gestor <span className="text-primary">Estratégico</span>
+                Gestor de <span className="text-primary">Estratégias</span>
               </span>
             )}
           </div>
@@ -132,7 +132,7 @@ export function AppSidebar() {
             <div className="mb-2">
               {displayName && <p className="text-xs text-foreground font-medium truncate">{displayName}</p>}
               <p className="text-xs text-muted-foreground">
-                {isOperational ? "Gestor Operacional" : "Gestor Estratégico"}
+                {isOperational ? "Gestor Operacional" : "Administrador"}
               </p>
             </div>
           )}

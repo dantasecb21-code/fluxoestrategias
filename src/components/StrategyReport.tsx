@@ -19,14 +19,14 @@ export function StrategyReport({ storeName, managerName, operationalManager, dea
 
   const generateText = () => {
     let report = `Estratégia Inicial – ${storeName}\n\n`;
-    report += `Gestor Estratégico: ${managerName}\n`;
+    report += `Administrador: ${managerName}\n`;
     report += `Gestor Operacional: ${operationalManager}\n`;
     report += `Prazo: ${deadline}\n\n`;
 
     activeCategories.forEach((cat) => {
       report += `${cat.name}\n\n`;
       cat.items.forEach((item) => {
-        report += `${item.text}\n\n`;
+        report += `- ${item.name}: ${item.text}\n\n`;
       });
     });
 
@@ -60,7 +60,7 @@ export function StrategyReport({ storeName, managerName, operationalManager, dea
             Estratégia Inicial – {storeName}
           </h3>
           <div className="text-sm text-muted-foreground space-y-0.5">
-            <p>Gestor Estratégico: {managerName}</p>
+            <p>Administrador: {managerName}</p>
             <p>Gestor Operacional: {operationalManager}</p>
             <p>Prazo: {deadline}</p>
           </div>
@@ -77,7 +77,7 @@ export function StrategyReport({ storeName, managerName, operationalManager, dea
               <div className="space-y-3">
                 {cat.items.map((item) => (
                   <p key={item.id} className="text-foreground text-sm leading-relaxed">
-                    {item.text}
+                    - {item.name}: {item.text}
                   </p>
                 ))}
               </div>

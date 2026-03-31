@@ -1,13 +1,15 @@
 import { useState } from "react";
 import { StrategyCategory, StrategyItem } from "@/types/strategy";
 import { generateStrategicText, validateStrategicText } from "@/lib/strategicTextGenerator";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Pencil, Trash2, Plus, Check, X, ChevronDown, ChevronRight, AlertTriangle } from "lucide-react";
+import { Pencil, Trash2, Plus, Check, X, ChevronDown, ChevronRight, AlertTriangle, Sparkles, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 interface CategoryCardProps {
   category: StrategyCategory;
@@ -17,6 +19,18 @@ interface CategoryCardProps {
   onEditItem: (catId: string, itemId: string, updates: Partial<StrategyItem>) => void;
   onRemoveItem: (catId: string, itemId: string) => void;
   onToggleItem: (catId: string, itemId: string) => void;
+}
+
+async function fetchAIText(itemName: string): Promise<string | null> {
+  try {
+    const { data, error } = await supabase.functions.invoke("generate-strategic-text", {
+      body: { itemName },
+    });
+    if (error) throw error;
+    return data?.text || null;
+  } catch {
+    return null;
+  }
 }
 
 export function CategoryCard({
@@ -37,6 +51,8 @@ export function CategoryCard({
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
   const [editItemName, setEditItemName] = useState("");
   const [editItemText, setEditItemText] = useState("");
+  const [generatingAI, setGeneratingAI] = useState(false);
+  const [editGeneratingAI, setEditGeneratingAI] = useState(false);
 
   const checkedCount = category.items.filter((i) => i.checked).length;
 
@@ -67,6 +83,37 @@ export function CategoryCard({
       onEditItem(category.id, editingItemId, { name: editItemName.trim(), text: editItemText.trim() });
     }
     setEditingItemId(null);
+  };
+
+  const handleGenerateAI = async (name: string, isEdit: boolean) => {
+    if (!name.trim()) return;
+    if (isEdit) setEditGeneratingAI(true);
+    else setGeneratingAI(true);
+
+    const aiText = await fetchAIText(name);
+    if (aiText) {
+      if (isEdit) setEditItemText(aiText);
+      else setNewItemText(aiText);
+    } else {
+      // Fallback to local generator
+      const fallback = generateStrategicText(name);
+      if (isEdit) setEditItemText(fallback);
+      else setNewItemText(fallback);
+      toast.info("IA indisponível, texto gerado localmente.");
+    }
+
+    if (isEdit) setEditGeneratingAI(false);
+    else setGeneratingAI(false);
+  };
+
+  const handleItemNameChange = (value: string) => {
+    setNewItemName(value);
+    // Auto-generate with local fallback immediately for responsiveness
+    if (value.trim()) {
+      setNewItemText(generateStrategicText(value));
+    } else {
+      setNewItemText("");
+    }
   };
 
   return (
@@ -148,6 +195,15 @@ export function CategoryCard({
                   <Button size="sm" onClick={handleSaveEdit}>
                     <Check className="h-3 w-3 mr-1" /> Salvar
                   </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleGenerateAI(editItemName, true)}
+                    disabled={editGeneratingAI || !editItemName.trim()}
+                  >
+                    {editGeneratingAI ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Sparkles className="h-3 w-3 mr-1" />}
+                    Gerar com IA
+                  </Button>
                   <Button size="sm" variant="ghost" onClick={() => setEditingItemId(null)}>
                     Cancelar
                   </Button>
@@ -165,7 +221,7 @@ export function CategoryCard({
                 />
                 <div className="flex-1 min-w-0">
                   <p className={`font-medium text-sm ${item.checked ? "line-through text-muted-foreground" : "text-foreground"}`}>
-                    {item.name}
+                    - {item.name}
                   </p>
                   <p className="text-xs text-muted-foreground mt-0.5">{item.text}</p>
                 </div>
@@ -186,14 +242,8 @@ export function CategoryCard({
             <div className="p-3 rounded-lg border border-dashed border-primary/40 space-y-2">
               <Input
                 value={newItemName}
-                onChange={(e) => {
-                  setNewItemName(e.target.value);
-                  // Auto-generate strategic text when name changes
-                  if (e.target.value.trim()) {
-                    setNewItemText(generateStrategicText(e.target.value));
-                  }
-                }}
-                placeholder="Nome do item (ex: Categoria mal posicionada)"
+                onChange={(e) => handleItemNameChange(e.target.value)}
+                placeholder="Nome do item (ex: Ajustar categorias do cardápio)"
                 className="bg-background"
                 autoFocus
               />
@@ -216,6 +266,15 @@ export function CategoryCard({
                 <div className="flex gap-2">
                   <Button size="sm" onClick={handleAddItem} disabled={!newItemName.trim() || !newItemText.trim()}>
                     <Plus className="h-3 w-3 mr-1" /> Adicionar
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleGenerateAI(newItemName, false)}
+                    disabled={generatingAI || !newItemName.trim()}
+                  >
+                    {generatingAI ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Sparkles className="h-3 w-3 mr-1" />}
+                    Gerar com IA
                   </Button>
                   <Button size="sm" variant="ghost" onClick={() => { setAddingItem(false); setNewItemName(""); setNewItemText(""); }}>
                     Cancelar
