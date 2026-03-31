@@ -41,16 +41,6 @@ export function StrategyReport({ storeName, managerName, operationalManager, dea
     toast.success("Estratégia copiada!");
   };
 
-  const handleWhatsApp = () => {
-    if (!whatsapp) {
-      toast.error("WhatsApp do gestor não cadastrado.");
-      return;
-    }
-    const cleanNumber = whatsapp.replace(/\D/g, "");
-    const number = cleanNumber.startsWith("55") ? cleanNumber : `55${cleanNumber}`;
-    const text = encodeURIComponent(generateText());
-    window.open(`https://wa.me/${number}?text=${text}`, "_blank");
-  };
 
   return (
     <Card className="border-border bg-card p-6">
