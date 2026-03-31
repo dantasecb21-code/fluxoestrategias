@@ -8,7 +8,7 @@ import { Card } from "@/components/ui/card";
 import { Zap, LogIn, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 
-type UserType = "admin" | "operational";
+type UserType = "strategic" | "operational";
 
 export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
@@ -16,7 +16,7 @@ export default function Auth() {
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
-  const [userType, setUserType] = useState<UserType>("admin");
+  const [userType, setUserType] = useState<UserType>("strategic");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -29,7 +29,6 @@ export default function Auth() {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
         
-        // Check approval status
         const { data: { user: loggedUser } } = await supabase.auth.getUser();
         if (loggedUser) {
           const { data: profile } = await supabase.from("profiles").select("approved").eq("user_id", loggedUser.id).single();
@@ -45,15 +44,10 @@ export default function Auth() {
           email,
           password,
           options: {
-            data: { display_name: name, role: userType },
+            data: { display_name: name, role: userType, whatsapp: whatsapp.trim() },
             emailRedirectTo: window.location.origin,
           },
         });
-        if (error) throw error;
-        // Save whatsapp to profile
-        if (signUpData?.user) {
-          await supabase.from("profiles").update({ whatsapp: whatsapp.trim() }).eq("user_id", signUpData.user.id);
-        }
         if (error) throw error;
         toast.success("Conta criada! Aguarde aprovação do administrador para acessar o sistema.");
       }
@@ -108,14 +102,14 @@ export default function Auth() {
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     type="button"
-                    onClick={() => setUserType("admin")}
+                    onClick={() => setUserType("strategic")}
                     className={`p-3 rounded-lg border text-sm font-medium transition-colors ${
-                      userType === "admin"
+                      userType === "strategic"
                         ? "border-primary bg-primary/10 text-primary"
                         : "border-border bg-background text-muted-foreground hover:border-muted-foreground"
                     }`}
                   >
-                    Administrador
+                    Gestor Estratégico
                   </button>
                   <button
                     type="button"
