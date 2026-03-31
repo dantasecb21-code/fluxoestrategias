@@ -11,7 +11,7 @@ import { ArrowLeft, ChevronDown, ChevronRight, Save, MessageSquare } from "lucid
 import { toast } from "sonner";
 
 function calcProgress(categories: StrategyCategory[]) {
-  const allItems = categories.flatMap((c) => c.items).filter((i) => i.checked);
+  const allItems = categories.flatMap((c) => c.items);
   if (allItems.length === 0) return { percent: 0, completed: 0, inProgress: 0, pending: 0, total: 0 };
   const completed = allItems.filter((i) => i.status === "completed").length;
   const inProgress = allItems.filter((i) => i.status === "in_progress").length;
@@ -75,9 +75,7 @@ export default function OperationalStrategyView() {
     setSaving(false);
   };
 
-  const checkedCategories = categories
-    .map((c) => ({ ...c, items: c.items.filter((i) => i.checked) }))
-    .filter((c) => c.items.length > 0);
+  const visibleCategories = categories.filter((c) => c.items.length > 0);
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-6 space-y-6">
@@ -116,7 +114,7 @@ export default function OperationalStrategyView() {
       </Card>
 
       {/* Categories */}
-      {checkedCategories.map((cat) => (
+      {visibleCategories.map((cat) => (
         <Card key={cat.id} className="overflow-hidden">
           <button
             className="w-full flex items-center justify-between p-4 border-b border-border hover:bg-muted/30 transition-colors"
@@ -199,7 +197,7 @@ export default function OperationalStrategyView() {
         </Card>
       ))}
 
-      {checkedCategories.length === 0 && (
+      {visibleCategories.length === 0 && (
         <Card className="p-8 text-center">
           <p className="text-muted-foreground">Nenhum item selecionado nesta estratégia.</p>
         </Card>
