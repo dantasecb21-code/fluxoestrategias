@@ -368,12 +368,15 @@ export default function StrategyBuilderPage() {
               <CategoryCard
                 key={cat.id}
                 category={cat}
+                allCategories={categories}
                 onEditCategory={editor.editCategory}
                 onRemoveCategory={editor.removeCategory}
                 onAddItem={editor.addItem}
                 onEditItem={editor.editItem}
                 onRemoveItem={editor.removeItem}
                 onMoveItem={editor.moveItem}
+                onMoveItemToCategory={editor.moveItemToCategory}
+                onDropItem={editor.moveItemToCategory}
               />
             ))}
           </div>
