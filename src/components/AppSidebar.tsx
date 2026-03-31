@@ -18,7 +18,7 @@ import { Button } from "@/components/ui/button";
 export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
-  const { displayName, role, signOut } = useAuth();
+  const { user, displayName, role, signOut } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = async () => {
