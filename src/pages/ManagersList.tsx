@@ -35,8 +35,9 @@ function calcManagerStats(strategies: any[], managerId: string) {
     const allItems = s.categories.flatMap((c: any) => c.items).filter((i: any) => i.checked);
     if (allItems.length === 0) return;
     const allCompleted = allItems.every((i: any) => i.status === "completed");
+    const hasStarted = allItems.some((i: any) => i.status === "in_progress" || i.status === "completed");
     if (allCompleted) completed++;
-    else inProgress++;
+    else if (hasStarted) inProgress++;
   });
 
   const pending = total - completed - inProgress;
