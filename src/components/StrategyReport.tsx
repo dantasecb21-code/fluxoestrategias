@@ -9,11 +9,9 @@ interface StrategyReportProps {
   managerName: string;
   operationalManager: string;
   deadline: string;
-  categories: StrategyCategory[];
-  }
 }
 
-export function StrategyReport({ storeName, managerName, operationalManager, deadline, categories, whatsapp }: StrategyReportProps) {
+export function StrategyReport({ storeName, managerName, operationalManager, deadline, categories }: StrategyReportProps) {
   // All items are part of the strategy now (no more checked filter)
   const activeCategories = categories.filter((c) => c.items.length > 0);
 
