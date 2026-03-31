@@ -403,7 +403,7 @@ export default function StrategyBuilderPage() {
           operationalManager={meta.operationalManager}
           deadline={meta.deadline}
           categories={categories}
-          whatsapp={managers.find((m) => m.user_id === assignedTo)?.whatsapp}
+          
         />
       ) : (
         <>
