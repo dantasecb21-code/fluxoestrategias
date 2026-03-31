@@ -174,11 +174,7 @@ export default function ManagersList() {
                 </div>
 
                 {/* Stats */}
-                <div className="grid grid-cols-4 gap-3 mb-3">
-                  <div className="text-center p-2 rounded-lg bg-muted/30">
-                    <p className="font-heading font-bold text-lg text-foreground">{stats.total}</p>
-                    <p className="text-xs text-muted-foreground">Total</p>
-                  </div>
+                <div className="grid grid-cols-3 gap-3 mb-3">
                   <div className="text-center p-2 rounded-lg bg-success/10">
                     <p className="font-heading font-bold text-lg text-success">{stats.completed}</p>
                     <p className="text-xs text-muted-foreground">Concluídas</p>
