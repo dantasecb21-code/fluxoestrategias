@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useDbStrategies } from "@/hooks/useDbStrategies";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Users, UserCheck, Trophy, Trash2, AlertTriangle } from "lucide-react";
+import { Users, UserCheck, Trophy, Trash2, AlertTriangle, Eye } from "lucide-react";
 import { toast } from "sonner";
 import {
   AlertDialog,
@@ -48,6 +49,7 @@ export default function ManagersList() {
   const [managers, setManagers] = useState<OperationalManager[]>([]);
   const [loading, setLoading] = useState(true);
   const { strategies } = useDbStrategies();
+  const navigate = useNavigate();
 
   const fetchManagers = async () => {
     const { data: roles } = await supabase
@@ -145,6 +147,7 @@ export default function ManagersList() {
                        <p className="font-heading font-semibold text-foreground">{m.display_name || "Sem nome"}</p>
                        <p className="text-xs text-muted-foreground">Gestor Operacional</p>
                        {m.whatsapp && <p className="text-xs text-muted-foreground">📱 {m.whatsapp}</p>}
+                       <button onClick={() => navigate(`/perfil/${m.user_id}`)} className="text-xs text-primary hover:underline mt-0.5">Ver perfil →</button>
                      </div>
                   </div>
                   <AlertDialog>

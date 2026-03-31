@@ -6,8 +6,9 @@ import { useDbStrategies } from "@/hooks/useDbStrategies";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
-import { ArrowLeft, Camera, Upload, Phone, Mail, Shield, CheckCircle, Clock, AlertTriangle } from "lucide-react";
+import { ArrowLeft, Camera, Phone, Mail, Shield, CheckCircle, Clock, Edit2, Save, X, FileText } from "lucide-react";
 import { toast } from "sonner";
 
 interface ProfileData {
@@ -16,7 +17,7 @@ interface ProfileData {
   whatsapp: string;
   approved: boolean;
   avatar_url: string;
-  cover_url: string;
+  status_text: string;
 }
 
 export default function UserProfile() {
@@ -28,21 +29,27 @@ export default function UserProfile() {
   const [userRole, setUserRole] = useState("");
   const [userEmail, setUserEmail] = useState("");
   const [loading, setLoading] = useState(true);
+  const [editing, setEditing] = useState(false);
+  const [editForm, setEditForm] = useState({ display_name: "", whatsapp: "", status_text: "" });
   const avatarInputRef = useRef<HTMLInputElement>(null);
-  const coverInputRef = useRef<HTMLInputElement>(null);
 
   const isOwnProfile = user?.id === userId;
   const isAdmin = myRole === "admin";
+  const canEdit = isOwnProfile || isAdmin;
+  const canViewHistory = myRole === "admin" || myRole === "strategic";
 
   useEffect(() => {
     async function fetchProfile() {
       if (!userId) return;
       const [profileRes, roleRes] = await Promise.all([
-        supabase.from("profiles").select("user_id, display_name, whatsapp, approved, avatar_url, cover_url").eq("user_id", userId).single(),
+        supabase.from("profiles").select("user_id, display_name, whatsapp, approved, avatar_url, status_text").eq("user_id", userId).single(),
         supabase.from("user_roles").select("role").eq("user_id", userId).single(),
       ]);
-
-      if (profileRes.data) setProfile(profileRes.data as ProfileData);
+      if (profileRes.data) {
+        const p = profileRes.data as ProfileData;
+        setProfile(p);
+        setEditForm({ display_name: p.display_name, whatsapp: p.whatsapp, status_text: p.status_text || "" });
+      }
       if (roleRes.data) setUserRole(roleRes.data.role);
       setLoading(false);
     }
@@ -56,43 +63,40 @@ export default function UserProfile() {
     return role;
   };
 
-  const handleUpload = async (file: File, type: "avatar" | "cover") => {
-    if (!userId || (!isOwnProfile && !isAdmin)) return;
-
-    const targetUserId = userId;
+  const handleAvatarUpload = async (file: File) => {
+    if (!userId || !canEdit) return;
     const ext = file.name.split(".").pop();
-    const path = `${targetUserId}/${type}_${Date.now()}.${ext}`;
-
+    const path = `${userId}/avatar_${Date.now()}.${ext}`;
     const { error: uploadError } = await supabase.storage.from("avatars").upload(path, file, { upsert: true });
-    if (uploadError) {
-      toast.error("Erro ao enviar imagem");
-      return;
-    }
-
+    if (uploadError) { toast.error("Erro ao enviar imagem"); return; }
     const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path);
-    const publicUrl = urlData.publicUrl;
-
-    const updateField = type === "avatar" ? { avatar_url: publicUrl } : { cover_url: publicUrl };
-
-    if (isAdmin) {
-      const { error } = await supabase.from("profiles").update(updateField).eq("user_id", targetUserId);
-      if (error) { toast.error("Erro ao salvar"); return; }
-    } else {
-      const { error } = await supabase.from("profiles").update(updateField).eq("user_id", targetUserId);
-      if (error) { toast.error("Erro ao salvar"); return; }
-    }
-
-    setProfile((prev) => prev ? { ...prev, ...updateField } : prev);
-    toast.success(type === "avatar" ? "Foto de perfil atualizada!" : "Foto de capa atualizada!");
+    const { error } = await supabase.from("profiles").update({ avatar_url: urlData.publicUrl }).eq("user_id", userId);
+    if (error) { toast.error("Erro ao salvar"); return; }
+    setProfile((prev) => prev ? { ...prev, avatar_url: urlData.publicUrl } : prev);
+    toast.success("Foto de perfil atualizada!");
   };
 
-  const onFileSelect = (e: React.ChangeEvent<HTMLInputElement>, type: "avatar" | "cover") => {
-    const file = e.target.files?.[0];
-    if (file) handleUpload(file, type);
-    e.target.value = "";
+  const handleSaveProfile = async () => {
+    if (!userId || !canEdit) return;
+    const { error } = await supabase.from("profiles").update({
+      display_name: editForm.display_name,
+      whatsapp: editForm.whatsapp,
+      status_text: editForm.status_text,
+    }).eq("user_id", userId);
+    if (error) { toast.error("Erro ao salvar"); return; }
+    setProfile((prev) => prev ? { ...prev, ...editForm } : prev);
+    setEditing(false);
+    toast.success("Perfil atualizado!");
   };
 
-  // Stats for operational managers
+  // Completed strategies for this user
+  const completedStrategies = userId ? strategies.filter((s) => {
+    if (s.assigned_to !== userId) return false;
+    const items = (s.categories as any[]).flatMap((c: any) => c.items).filter((i: any) => i.checked);
+    return items.length > 0 && items.every((i: any) => i.status === "completed");
+  }) : [];
+
+  // Stats
   const managerStats = userId ? (() => {
     const assigned = strategies.filter((s) => s.assigned_to === userId);
     const total = assigned.length;
@@ -111,42 +115,22 @@ export default function UserProfile() {
   if (loading) return <div className="flex items-center justify-center h-64 text-muted-foreground">Carregando...</div>;
   if (!profile) return <div className="flex items-center justify-center h-64 text-muted-foreground">Perfil não encontrado</div>;
 
-  const canEdit = isOwnProfile || isAdmin;
-
   return (
-    <div className="max-w-3xl mx-auto px-4 py-6 space-y-6">
+    <div className="max-w-2xl mx-auto px-4 py-6 space-y-5">
       <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="text-muted-foreground">
         <ArrowLeft className="h-4 w-4 mr-1" /> Voltar
       </Button>
 
-      {/* Cover Photo */}
-      <div className="relative rounded-xl overflow-hidden">
-        <div
-          className="h-48 bg-gradient-to-r from-primary/30 to-primary/10 bg-cover bg-center"
-          style={profile.cover_url ? { backgroundImage: `url(${profile.cover_url})` } : {}}
-        />
-        {canEdit && (
-          <>
-            <Button
-              size="sm"
-              variant="secondary"
-              className="absolute bottom-3 right-3 opacity-80 hover:opacity-100"
-              onClick={() => coverInputRef.current?.click()}
-            >
-              <Camera className="h-4 w-4 mr-1" /> Alterar capa
-            </Button>
-            <input ref={coverInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => onFileSelect(e, "cover")} />
-          </>
-        )}
-
-        {/* Avatar */}
-        <div className="absolute -bottom-12 left-6">
-          <div className="relative">
-            <div className="h-24 w-24 rounded-full border-4 border-background bg-muted flex items-center justify-center overflow-hidden">
+      {/* Profile Card */}
+      <Card className="p-6">
+        <div className="flex items-start gap-5">
+          {/* Avatar */}
+          <div className="relative shrink-0">
+            <div className="h-20 w-20 rounded-full border-2 border-border bg-muted flex items-center justify-center overflow-hidden">
               {profile.avatar_url ? (
                 <img src={profile.avatar_url} alt="Avatar" className="h-full w-full object-cover" />
               ) : (
-                <span className="text-3xl font-bold text-muted-foreground">
+                <span className="text-2xl font-bold text-muted-foreground">
                   {profile.display_name?.charAt(0)?.toUpperCase() || "?"}
                 </span>
               )}
@@ -155,78 +139,137 @@ export default function UserProfile() {
               <>
                 <button
                   onClick={() => avatarInputRef.current?.click()}
-                  className="absolute bottom-0 right-0 h-8 w-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground hover:bg-primary/90 transition-colors"
+                  className="absolute bottom-0 right-0 h-7 w-7 rounded-full bg-primary flex items-center justify-center text-primary-foreground hover:bg-primary/90 transition-colors"
                 >
-                  <Camera className="h-4 w-4" />
+                  <Camera className="h-3.5 w-3.5" />
                 </button>
-                <input ref={avatarInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => onFileSelect(e, "avatar")} />
+                <input ref={avatarInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleAvatarUpload(f); e.target.value = ""; }} />
               </>
             )}
           </div>
-        </div>
-      </div>
 
-      {/* Profile Info */}
-      <Card className="pt-16 p-6 space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="font-heading font-bold text-2xl text-foreground">{profile.display_name || "Sem nome"}</h1>
-            <Badge variant="outline" className="mt-1">{roleLabel(userRole)}</Badge>
-          </div>
-          <Badge className={profile.approved ? "bg-success/20 text-success border-success/30" : "bg-warning/20 text-warning border-warning/30"}>
-            {profile.approved ? (
-              <><CheckCircle className="h-3 w-3 mr-1" /> Aprovado</>
+          {/* Info */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center justify-between mb-1">
+              {editing ? (
+                <Input value={editForm.display_name} onChange={(e) => setEditForm(f => ({ ...f, display_name: e.target.value }))} className="h-8 text-lg font-bold" />
+              ) : (
+                <h1 className="font-heading font-bold text-xl text-foreground truncate">{profile.display_name || "Sem nome"}</h1>
+              )}
+              {canEdit && !editing && (
+                <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={() => setEditing(true)}>
+                  <Edit2 className="h-3.5 w-3.5" />
+                </Button>
+              )}
+            </div>
+
+            <div className="flex items-center gap-2 mb-2">
+              <Badge variant="outline" className="text-xs">{roleLabel(userRole)}</Badge>
+              <Badge className={`text-xs ${profile.approved ? "bg-success/20 text-success border-success/30" : "bg-warning/20 text-warning border-warning/30"}`}>
+                {profile.approved ? <><CheckCircle className="h-3 w-3 mr-1" /> Aprovado</> : <><Clock className="h-3 w-3 mr-1" /> Pendente</>}
+              </Badge>
+            </div>
+
+            {/* Status text */}
+            {editing ? (
+              <Input
+                value={editForm.status_text}
+                onChange={(e) => setEditForm(f => ({ ...f, status_text: e.target.value }))}
+                placeholder="Como está seu dia? Escreva algo..."
+                className="h-8 text-sm mb-2"
+              />
             ) : (
-              <><Clock className="h-3 w-3 mr-1" /> Pendente</>
+              profile.status_text && <p className="text-sm text-muted-foreground italic mb-2">"{profile.status_text}"</p>
             )}
-          </Badge>
-        </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/30">
-            <Phone className="h-4 w-4 text-muted-foreground" />
-            <div>
-              <p className="text-xs text-muted-foreground">WhatsApp</p>
-              <p className="text-sm text-foreground font-medium">{profile.whatsapp || "Não informado"}</p>
+            {/* Contact info */}
+            <div className="space-y-1.5">
+              {editing ? (
+                <Input
+                  value={editForm.whatsapp}
+                  onChange={(e) => setEditForm(f => ({ ...f, whatsapp: e.target.value }))}
+                  placeholder="WhatsApp"
+                  className="h-8 text-sm"
+                />
+              ) : (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Phone className="h-3.5 w-3.5" />
+                  <span>{profile.whatsapp || "Não informado"}</span>
+                </div>
+              )}
             </div>
-          </div>
-          <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/30">
-            <Shield className="h-4 w-4 text-muted-foreground" />
-            <div>
-              <p className="text-xs text-muted-foreground">Status</p>
-              <p className="text-sm text-foreground font-medium">{profile.approved ? "Ativo" : "Pendente de aprovação"}</p>
-            </div>
+
+            {editing && (
+              <div className="flex gap-2 mt-3">
+                <Button size="sm" onClick={handleSaveProfile}><Save className="h-3.5 w-3.5 mr-1" /> Salvar</Button>
+                <Button size="sm" variant="ghost" onClick={() => { setEditing(false); setEditForm({ display_name: profile.display_name, whatsapp: profile.whatsapp, status_text: profile.status_text || "" }); }}><X className="h-3.5 w-3.5" /></Button>
+              </div>
+            )}
           </div>
         </div>
-
-        {/* Stats for managers */}
-        {userRole === "operational" && managerStats && managerStats.total > 0 && (
-          <div className="space-y-3 pt-2">
-            <h3 className="font-heading font-semibold text-foreground">Desempenho</h3>
-            <div className="grid grid-cols-3 gap-3">
-              <div className="text-center p-3 rounded-lg bg-success/10">
-                <p className="font-heading font-bold text-xl text-success">{managerStats.completed}</p>
-                <p className="text-xs text-muted-foreground">Concluídas</p>
-              </div>
-              <div className="text-center p-3 rounded-lg bg-primary/10">
-                <p className="font-heading font-bold text-xl text-primary">{managerStats.inProgress}</p>
-                <p className="text-xs text-muted-foreground">Em andamento</p>
-              </div>
-              <div className="text-center p-3 rounded-lg bg-warning/10">
-                <p className="font-heading font-bold text-xl text-warning">{managerStats.pending}</p>
-                <p className="text-xs text-muted-foreground">Pendentes</p>
-              </div>
-            </div>
-            <div className="space-y-1">
-              <div className="flex items-center justify-between text-xs">
-                <span className="text-muted-foreground">Taxa de conclusão</span>
-                <span className="font-medium text-foreground">{managerStats.rate}%</span>
-              </div>
-              <Progress value={managerStats.rate} className="h-1.5" />
-            </div>
-          </div>
-        )}
       </Card>
+
+      {/* Performance Stats */}
+      {managerStats && managerStats.total > 0 && (
+        <Card className="p-5 space-y-3">
+          <h3 className="font-heading font-semibold text-foreground">Desempenho</h3>
+          <div className="grid grid-cols-3 gap-3">
+            <div className="text-center p-2.5 rounded-lg bg-success/10">
+              <p className="font-heading font-bold text-xl text-success">{managerStats.completed}</p>
+              <p className="text-xs text-muted-foreground">Concluídas</p>
+            </div>
+            <div className="text-center p-2.5 rounded-lg bg-primary/10">
+              <p className="font-heading font-bold text-xl text-primary">{managerStats.inProgress}</p>
+              <p className="text-xs text-muted-foreground">Em andamento</p>
+            </div>
+            <div className="text-center p-2.5 rounded-lg bg-warning/10">
+              <p className="font-heading font-bold text-xl text-warning">{managerStats.pending}</p>
+              <p className="text-xs text-muted-foreground">Pendentes</p>
+            </div>
+          </div>
+          <div className="space-y-1">
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-muted-foreground">Taxa de conclusão</span>
+              <span className="font-medium text-foreground">{managerStats.rate}%</span>
+            </div>
+            <Progress value={managerStats.rate} className="h-1.5" />
+          </div>
+        </Card>
+      )}
+
+      {/* Completed Strategies History */}
+      {canViewHistory && completedStrategies.length > 0 && (
+        <Card className="p-5 space-y-3">
+          <h3 className="font-heading font-semibold text-foreground flex items-center gap-2">
+            <FileText className="h-4 w-4 text-success" /> Estratégias Concluídas ({completedStrategies.length})
+          </h3>
+          <div className="space-y-2">
+            {completedStrategies.map((s) => (
+              <div
+                key={s.id}
+                className="flex items-center justify-between p-3 rounded-lg bg-success/5 border border-success/10 cursor-pointer hover:bg-success/10 transition-colors"
+                onClick={() => navigate(`/estrategia/${s.id}`)}
+              >
+                <div>
+                  <p className="text-sm font-medium text-foreground">{s.store_name || "Sem nome"}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {(s.categories as any[]).flatMap((c: any) => c.items).filter((i: any) => i.checked).length} itens • {new Date(s.created_at).toLocaleDateString("pt-BR")}
+                  </p>
+                </div>
+                <Badge className="bg-success/20 text-success border-success/30 text-xs">
+                  <CheckCircle className="h-3 w-3 mr-1" /> Concluída
+                </Badge>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+
+      {canViewHistory && completedStrategies.length === 0 && (
+        <Card className="p-5 text-center text-sm text-muted-foreground">
+          Nenhuma estratégia concluída ainda.
+        </Card>
+      )}
     </div>
   );
 }
