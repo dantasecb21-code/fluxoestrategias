@@ -49,5 +49,20 @@ export function useCategoryEditor(categories: StrategyCategory[], onChange: (cat
     );
   };
 
-  return { addCategory, editCategory, removeCategory, addItem, editItem, removeItem, toggleItem };
+  const moveItem = (catId: string, itemId: string, direction: "up" | "down") => {
+    onChange(
+      categories.map((c) => {
+        if (c.id !== catId) return c;
+        const idx = c.items.findIndex((i) => i.id === itemId);
+        if (idx < 0) return c;
+        const newIdx = direction === "up" ? idx - 1 : idx + 1;
+        if (newIdx < 0 || newIdx >= c.items.length) return c;
+        const newItems = [...c.items];
+        [newItems[idx], newItems[newIdx]] = [newItems[newIdx], newItems[idx]];
+        return { ...c, items: newItems };
+      })
+    );
+  };
+
+  return { addCategory, editCategory, removeCategory, addItem, editItem, removeItem, toggleItem, moveItem };
 }

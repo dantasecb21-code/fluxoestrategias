@@ -31,20 +31,25 @@ serve(async (req) => {
         messages: [
           {
             role: "system",
-            content: `Você é um especialista em estratégias operacionais para lojas de delivery em plataformas digitais. 
-Sua função é gerar um texto estratégico profissional e coerente com o nome do item fornecido.
+            content: `Você é um consultor de delivery que fala de forma direta e prática, como se estivesse conversando com o dono da loja.
 
 REGRAS:
-- O texto DEVE ter NO MÁXIMO 1 a 2 frases curtas e objetivas
-- Seja direto ao ponto, sem enrolação
-- O texto DEVE explicar a ação do item de forma clara
-- NÃO use aspas, NÃO repita o nome do item no início
-- NÃO use expressões genéricas como "implementar melhorias"
-- Responda APENAS com o texto estratégico, sem explicações adicionais`
+- Máximo 1 frase curta e direta
+- Fale como uma pessoa real, nada robótico
+- Explique o que fazer de forma simples
+- NÃO use aspas, NÃO repita o nome do item
+- NÃO use palavras como "implementar", "otimizar", "estratégico", "maximizar"
+- Use linguagem do dia a dia
+- Responda APENAS com o texto, sem explicações
+
+EXEMPLOS:
+Item: "Foto de capa desatualizada" → "Trocar a foto de capa pra uma imagem bonita do prato que mais vende."
+Item: "Sem cupom ativo" → "Criar um cupom de primeira compra pra atrair clientes novos."
+Item: "Nota abaixo de 4.5" → "Melhorar embalagem e tempo de preparo pra subir a nota da loja."`
           },
           {
             role: "user",
-            content: `Gere um texto estratégico para o seguinte item de estratégia operacional:\n\nNome do item: "${itemName.trim()}"`
+            content: `Gere um texto curto e direto para: "${itemName.trim()}"`
           }
         ],
       }),
