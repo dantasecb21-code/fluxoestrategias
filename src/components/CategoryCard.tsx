@@ -126,6 +126,10 @@ export function CategoryCard({
         }
       }}
     >
+      {/* Header */}
+      <div className="flex items-center justify-between p-4 border-b border-border">
+        <button
+          onClick={() => setExpanded(!expanded)}
           className="flex items-center gap-2 text-foreground font-heading font-semibold text-lg hover:text-primary transition-colors"
         >
           {expanded ? <ChevronDown className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />}
