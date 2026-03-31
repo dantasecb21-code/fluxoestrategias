@@ -112,20 +112,7 @@ export function CategoryCard({
   };
 
   return (
-    <Card
-      className={`border-border bg-card overflow-hidden transition-colors ${dragOverCat ? "ring-2 ring-primary/50 bg-primary/5" : ""}`}
-      onDragOver={(e) => { e.preventDefault(); setDragOverCat(true); }}
-      onDragLeave={() => setDragOverCat(false)}
-      onDrop={(e) => {
-        e.preventDefault();
-        setDragOverCat(false);
-        const fromCatId = e.dataTransfer.getData("fromCatId");
-        const itemId = e.dataTransfer.getData("itemId");
-        if (fromCatId && itemId && fromCatId !== category.id && onDropItem) {
-          onDropItem(fromCatId, itemId, category.id);
-        }
-      }}
-    >
+    <Card className="border-border bg-card overflow-hidden">
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-border">
         <button
