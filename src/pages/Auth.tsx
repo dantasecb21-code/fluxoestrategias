@@ -56,7 +56,7 @@ export default function Auth() {
             <Zap className="h-5 w-5 text-primary-foreground" />
           </div>
           <h1 className="font-heading font-bold text-2xl text-foreground">
-            99<span className="text-primary">Food</span>
+            Gestor de <span className="text-primary">Estratégias</span>
           </h1>
         </div>
 
