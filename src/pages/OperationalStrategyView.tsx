@@ -75,9 +75,7 @@ export default function OperationalStrategyView() {
     setSaving(false);
   };
 
-  const checkedCategories = categories
-    .map((c) => ({ ...c, items: c.items.filter((i) => i.checked) }))
-    .filter((c) => c.items.length > 0);
+  const visibleCategories = categories.filter((c) => c.items.length > 0);
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-6 space-y-6">
