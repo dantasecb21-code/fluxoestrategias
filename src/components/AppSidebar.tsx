@@ -68,6 +68,7 @@ export function AppSidebar() {
                   <NavLink
                     to="/"
                     end
+                    onClick={() => handleNav("/")}
                     className="hover:bg-sidebar-accent/50"
                     activeClassName="bg-sidebar-accent text-primary font-medium"
                   >
