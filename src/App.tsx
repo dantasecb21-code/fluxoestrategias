@@ -10,6 +10,7 @@ import Dashboard from "./pages/Dashboard";
 import StrategyBuilderPage from "./pages/StrategyBuilder";
 import OperationalDashboard from "./pages/OperationalDashboard";
 import OperationalStrategyView from "./pages/OperationalStrategyView";
+import UserProfile from "./pages/UserProfile";
 import ManagersList from "./pages/ManagersList";
 import PendingStrategies from "./pages/PendingStrategies";
 import UserApproval from "./pages/UserApproval";
