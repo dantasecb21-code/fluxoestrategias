@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { StrategyCategory, StrategyItem } from "@/types/strategy";
-import { generateStrategicText } from "@/lib/strategicTextGenerator";
+import { generateStrategicText, validateStrategicText } from "@/lib/strategicTextGenerator";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card } from "@/components/ui/card";
-import { Pencil, Trash2, Plus, Check, X, ChevronDown, ChevronRight } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Pencil, Trash2, Plus, Check, X, ChevronDown, ChevronRight, AlertTriangle } from "lucide-react";
 
 interface CategoryCardProps {
   category: StrategyCategory;
