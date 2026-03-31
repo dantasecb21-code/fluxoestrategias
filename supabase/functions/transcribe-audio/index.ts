@@ -34,11 +34,11 @@ serve(async (req) => {
         messages: [
           {
             role: "system",
-            content: `Você é um transcritor de áudio para estratégias de lojas de delivery.
+            content: `Você é um transcritor de áudio para estratégias de lojas de delivery (sistema Lavebo).
 
 Transcreva EXATAMENTE o que foi dito no áudio, em português brasileiro.
 
-REGRA CRÍTICA: Quando o locutor mencionar MÚLTIPLOS itens/tópicos separados (ex: "categoria principal e nome", "foto de capa e logo"), transcreva cada um SEPARADAMENTE com quebra de linha entre eles. Cada item mencionado deve ficar em sua própria linha.
+REGRA CRÍTICA: Quando o locutor mencionar MÚLTIPLOS itens/tópicos separados (ex: "categoria principal e nome", "foto de capa e logo"), transcreva cada um SEPARADAMENTE com quebra de linha. Cada item mencionado deve ficar em sua própria linha.
 
 Exemplo: se o áudio diz "precisa mudar a categoria principal e o nome da loja", transcreva:
 categoria principal
