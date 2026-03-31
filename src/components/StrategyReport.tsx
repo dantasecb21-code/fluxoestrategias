@@ -1,7 +1,7 @@
 import { StrategyCategory } from "@/types/strategy";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Copy, FileText, MessageCircle } from "lucide-react";
+import { Copy, FileText } from "lucide-react";
 import { toast } from "sonner";
 
 interface StrategyReportProps {
