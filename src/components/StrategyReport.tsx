@@ -19,7 +19,7 @@ export function StrategyReport({ storeName, managerName, operationalManager, dea
 
   const generateText = () => {
     let report = `Estratégia Inicial – ${storeName}\n\n`;
-    report += `Gestor Estratégico: ${managerName}\n`;
+    report += `Administrador: ${managerName}\n`;
     report += `Gestor Operacional: ${operationalManager}\n`;
     report += `Prazo: ${deadline}\n\n`;
 
