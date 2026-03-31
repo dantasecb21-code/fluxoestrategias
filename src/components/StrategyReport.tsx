@@ -60,7 +60,7 @@ export function StrategyReport({ storeName, managerName, operationalManager, dea
             Estratégia Inicial – {storeName}
           </h3>
           <div className="text-sm text-muted-foreground space-y-0.5">
-            <p>Gestor Estratégico: {managerName}</p>
+            <p>Administrador: {managerName}</p>
             <p>Gestor Operacional: {operationalManager}</p>
             <p>Prazo: {deadline}</p>
           </div>
