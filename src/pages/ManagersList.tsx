@@ -5,7 +5,7 @@ import { useDbStrategies } from "@/hooks/useDbStrategies";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Users, UserCheck, Trophy, Trash2, AlertTriangle } from "lucide-react";
+import { Users, UserCheck, Trophy, Trash2, AlertTriangle, Eye } from "lucide-react";
 import { toast } from "sonner";
 import {
   AlertDialog,
