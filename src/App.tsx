@@ -80,6 +80,7 @@ const App = () => (
             <Route path="/aprovacoes" element={<ProtectedRoute allowedRoles={["admin"]}><UserApproval /></ProtectedRoute>} />
             <Route path="/operacional/:id" element={<ProtectedRoute allowedRoles={["operational"]}><OperationalStrategyView /></ProtectedRoute>} />
             <Route path="/perfil/:userId" element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
+            <Route path="/assistente" element={<ProtectedRoute><AssistantChat /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
