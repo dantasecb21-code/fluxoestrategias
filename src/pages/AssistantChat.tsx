@@ -1,12 +1,13 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Send, Loader2, Bot, User, Trash2 } from "lucide-react";
 import { toast } from "sonner";
-import ReactMarkdown from "react-markdown";
+import ReactMarkdown, { Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { ImageLightbox } from "@/components/ImageLightbox";
 
 type Message = {
   id: string;
@@ -221,8 +222,13 @@ export default function AssistantChat() {
                   }`}
                 >
                   {msg.role === "assistant" ? (
-                    <div className="prose prose-sm dark:prose-invert max-w-none [&_img]:rounded-lg [&_img]:border [&_img]:border-border [&_img]:my-3 [&_img]:max-w-full [&_img]:shadow-md">
-                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                    <div className="prose prose-sm dark:prose-invert max-w-none">
+                      <ReactMarkdown
+                        remarkPlugins={[remarkGfm]}
+                        components={{
+                          img: ({ src, alt }) => <ImageLightbox src={src} alt={alt} />,
+                        }}
+                      >
                         {msg.content || "..."}
                       </ReactMarkdown>
                     </div>

@@ -14,12 +14,18 @@ import {
 import { NavLink } from "@/components/NavLink";
 import { Home, Plus, LogOut, Zap, ClipboardList, Users, AlertTriangle, ShieldCheck, MessageCircleQuestion } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export function AppSidebar() {
-  const { state } = useSidebar();
+  const { state, setOpenMobile } = useSidebar();
   const collapsed = state === "collapsed";
+  const isMobile = useIsMobile();
   const { user, displayName, role, signOut } = useAuth();
   const navigate = useNavigate();
+
+  const handleNav = (path: string) => {
+    if (isMobile) setOpenMobile(false);
+  };
 
   const handleLogout = async () => {
     await signOut();
@@ -62,6 +68,7 @@ export function AppSidebar() {
                   <NavLink
                     to="/"
                     end
+                    onClick={() => handleNav("/")}
                     className="hover:bg-sidebar-accent/50"
                     activeClassName="bg-sidebar-accent text-primary font-medium"
                   >
@@ -80,6 +87,7 @@ export function AppSidebar() {
                     <SidebarMenuButton asChild>
                       <NavLink
                         to="/nova"
+                        onClick={() => handleNav("/nova")}
                         className="hover:bg-sidebar-accent/50"
                         activeClassName="bg-sidebar-accent text-primary font-medium"
                       >
@@ -92,6 +100,7 @@ export function AppSidebar() {
                     <SidebarMenuButton asChild>
                       <NavLink
                         to="/pendentes"
+                        onClick={() => handleNav("/pendentes")}
                         className="hover:bg-sidebar-accent/50"
                         activeClassName="bg-sidebar-accent text-primary font-medium"
                       >
@@ -104,6 +113,7 @@ export function AppSidebar() {
                     <SidebarMenuButton asChild>
                       <NavLink
                         to="/gestores"
+                        onClick={() => handleNav("/gestores")}
                         className="hover:bg-sidebar-accent/50"
                         activeClassName="bg-sidebar-accent text-primary font-medium"
                       >
@@ -119,6 +129,7 @@ export function AppSidebar() {
                   <SidebarMenuButton asChild>
                     <NavLink
                       to="/aprovacoes"
+                      onClick={() => handleNav("/aprovacoes")}
                       className="hover:bg-sidebar-accent/50"
                       activeClassName="bg-sidebar-accent text-primary font-medium"
                     >
@@ -132,6 +143,7 @@ export function AppSidebar() {
                 <SidebarMenuButton asChild>
                   <NavLink
                     to="/assistente"
+                    onClick={() => handleNav("/assistente")}
                     className="hover:bg-sidebar-accent/50"
                     activeClassName="bg-sidebar-accent text-primary font-medium"
                   >
