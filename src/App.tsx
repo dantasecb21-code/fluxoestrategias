@@ -51,6 +51,7 @@ const App = () => (
             <Route path="/nova" element={<ProtectedRoute allowedRoles={["admin"]}><StrategyBuilderPage /></ProtectedRoute>} />
             <Route path="/estrategia/:id" element={<ProtectedRoute allowedRoles={["admin"]}><StrategyBuilderPage /></ProtectedRoute>} />
             <Route path="/gestores" element={<ProtectedRoute allowedRoles={["admin"]}><ManagersList /></ProtectedRoute>} />
+            <Route path="/pendentes" element={<ProtectedRoute allowedRoles={["admin"]}><PendingStrategies /></ProtectedRoute>} />
             <Route path="/operacional/:id" element={<ProtectedRoute allowedRoles={["operational"]}><OperationalStrategyView /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
