@@ -6,17 +6,21 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
-import { Pencil, Trash2, Plus, Check, X, ChevronDown, ChevronRight, Sparkles, Loader2, ArrowUp, ArrowDown } from "lucide-react";
+import { Pencil, Trash2, Plus, Check, X, ChevronDown, ChevronRight, Sparkles, Loader2, ArrowUp, ArrowDown, GripVertical, MoveRight } from "lucide-react";
 import { toast } from "sonner";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface CategoryCardProps {
   category: StrategyCategory;
+  allCategories?: StrategyCategory[];
   onEditCategory: (id: string, name: string) => void;
   onRemoveCategory: (id: string) => void;
   onAddItem: (catId: string, item: Omit<StrategyItem, "id" | "checked">) => void;
   onEditItem: (catId: string, itemId: string, updates: Partial<StrategyItem>) => void;
   onRemoveItem: (catId: string, itemId: string) => void;
   onMoveItem?: (catId: string, itemId: string, direction: "up" | "down") => void;
+  onMoveItemToCategory?: (fromCatId: string, itemId: string, toCatId: string) => void;
+  onDropItem?: (fromCatId: string, itemId: string, toCatId: string) => void;
 }
 
 async function fetchAIText(itemName: string): Promise<string | null> {
@@ -33,14 +37,18 @@ async function fetchAIText(itemName: string): Promise<string | null> {
 
 export function CategoryCard({
   category,
+  allCategories,
   onEditCategory,
   onRemoveCategory,
   onAddItem,
   onEditItem,
   onRemoveItem,
   onMoveItem,
+  onMoveItemToCategory,
+  onDropItem,
 }: CategoryCardProps) {
   const [expanded, setExpanded] = useState(true);
+  const [dragOverCat, setDragOverCat] = useState(false);
   const [editingName, setEditingName] = useState(false);
   const [catName, setCatName] = useState(category.name);
   const [addingItem, setAddingItem] = useState(false);
@@ -104,7 +112,20 @@ export function CategoryCard({
   };
 
   return (
-    <Card className="border-border bg-card overflow-hidden">
+    <Card
+      className={`border-border bg-card overflow-hidden transition-colors ${dragOverCat ? "ring-2 ring-primary/50 bg-primary/5" : ""}`}
+      onDragOver={(e) => { e.preventDefault(); setDragOverCat(true); }}
+      onDragLeave={() => setDragOverCat(false)}
+      onDrop={(e) => {
+        e.preventDefault();
+        setDragOverCat(false);
+        const fromCatId = e.dataTransfer.getData("fromCatId");
+        const itemId = e.dataTransfer.getData("itemId");
+        if (fromCatId && itemId && fromCatId !== category.id && onDropItem) {
+          onDropItem(fromCatId, itemId, category.id);
+        }
+      }}
+    >
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-border">
         <button
@@ -199,8 +220,14 @@ export function CategoryCard({
             ) : (
               <div
                 key={item.id}
-                className="flex items-start gap-3 p-3 rounded-lg hover:bg-muted/30 transition-colors group"
+                draggable
+                onDragStart={(e) => {
+                  e.dataTransfer.setData("fromCatId", category.id);
+                  e.dataTransfer.setData("itemId", item.id);
+                }}
+                className="flex items-start gap-2 p-3 rounded-lg hover:bg-muted/30 transition-colors group cursor-grab active:cursor-grabbing"
               >
+                <GripVertical className="h-4 w-4 mt-0.5 text-muted-foreground/50 shrink-0" />
                 <div className="flex-1 min-w-0">
                   <p className="font-medium text-sm text-foreground">
                     - {item.name}
@@ -229,6 +256,18 @@ export function CategoryCard({
                         <ArrowDown className="h-3 w-3" />
                       </Button>
                     </>
+                  )}
+                  {onMoveItemToCategory && allCategories && allCategories.filter(c => c.id !== category.id).length > 0 && (
+                    <Select onValueChange={(toCatId) => onMoveItemToCategory(category.id, item.id, toCatId)}>
+                      <SelectTrigger className="h-7 w-7 p-0 border-0 bg-transparent text-muted-foreground hover:text-foreground [&>svg:last-child]:hidden">
+                        <MoveRight className="h-3 w-3" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {allCategories.filter(c => c.id !== category.id).map(c => (
+                          <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   )}
                   <Button size="icon" variant="ghost" onClick={() => handleStartEdit(item)} className="h-7 w-7 text-muted-foreground hover:text-foreground">
                     <Pencil className="h-3 w-3" />

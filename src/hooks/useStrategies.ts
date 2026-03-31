@@ -64,5 +64,24 @@ export function useCategoryEditor(categories: StrategyCategory[], onChange: (cat
     );
   };
 
-  return { addCategory, editCategory, removeCategory, addItem, editItem, removeItem, toggleItem, moveItem };
+  const moveItemToCategory = (fromCatId: string, itemId: string, toCatId: string) => {
+    if (fromCatId === toCatId) return;
+    let movedItem: StrategyItem | null = null;
+    const updated = categories.map((c) => {
+      if (c.id === fromCatId) {
+        movedItem = c.items.find((i) => i.id === itemId) || null;
+        return { ...c, items: c.items.filter((i) => i.id !== itemId) };
+      }
+      return c;
+    });
+    if (!movedItem) return;
+    const finalItem = movedItem;
+    onChange(
+      updated.map((c) =>
+        c.id === toCatId ? { ...c, items: [...c.items, finalItem] } : c
+      )
+    );
+  };
+
+  return { addCategory, editCategory, removeCategory, addItem, editItem, removeItem, toggleItem, moveItem, moveItemToCategory };
 }
