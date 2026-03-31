@@ -47,11 +47,14 @@ export default function UserApproval() {
     const roleMap = new Map<string, string>();
     roles?.forEach((r) => roleMap.set(r.user_id, r.role));
 
+    // Fetch emails from auth via edge function or show user_id as fallback
     const mapped: PendingUser[] = profiles.map((p) => ({
       user_id: p.user_id,
       display_name: p.display_name,
       approved: p.approved,
       role: roleMap.get(p.user_id) || "unknown",
+      email: "",
+      whatsapp: (p as any).whatsapp || "",
     }));
 
     // Show pending first, then approved
