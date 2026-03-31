@@ -197,7 +197,7 @@ export default function OperationalStrategyView() {
         </Card>
       ))}
 
-      {checkedCategories.length === 0 && (
+      {visibleCategories.length === 0 && (
         <Card className="p-8 text-center">
           <p className="text-muted-foreground">Nenhum item selecionado nesta estratégia.</p>
         </Card>
