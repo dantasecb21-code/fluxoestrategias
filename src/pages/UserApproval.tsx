@@ -156,10 +156,13 @@ export default function UserApproval() {
                       <div className="h-10 w-10 rounded-full bg-warning/20 flex items-center justify-center">
                         <Clock className="h-5 w-5 text-warning" />
                       </div>
-                      <div>
-                        <p className="font-medium text-foreground">{u.display_name || "Sem nome"}</p>
-                        <Badge variant="outline" className="text-xs mt-0.5">{roleLabel(u.role)}</Badge>
-                      </div>
+                       <div>
+                         <p className="font-medium text-foreground">{u.display_name || "Sem nome"}</p>
+                         <div className="flex items-center gap-2 flex-wrap">
+                           <Badge variant="outline" className="text-xs mt-0.5">{roleLabel(u.role)}</Badge>
+                           {u.whatsapp && <span className="text-xs text-muted-foreground">📱 {u.whatsapp}</span>}
+                         </div>
+                       </div>
                     </div>
                     <div className="flex gap-2">
                       <Button size="sm" onClick={() => handleApprove(u.user_id)} className="bg-success hover:bg-success/90 text-success-foreground">
