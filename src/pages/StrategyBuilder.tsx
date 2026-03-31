@@ -95,7 +95,8 @@ export default function StrategyBuilderPage() {
         const { data: profiles } = await supabase
           .from("profiles")
           .select("user_id, display_name")
-          .in("user_id", roles.map((r) => r.user_id));
+          .in("user_id", roles.map((r) => r.user_id))
+          .eq("approved", true);
         if (profiles) setManagers(profiles);
       }
     }
