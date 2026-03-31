@@ -12,7 +12,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { NavLink } from "@/components/NavLink";
-import { Home, Plus, LogOut, Zap, ClipboardList, Users, AlertTriangle, ShieldCheck, StickyNote, User } from "lucide-react";
+import { Home, Plus, LogOut, Zap, ClipboardList, Users, AlertTriangle, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export function AppSidebar() {
