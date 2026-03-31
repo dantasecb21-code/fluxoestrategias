@@ -14,9 +14,8 @@ interface StrategyReportProps {
 }
 
 export function StrategyReport({ storeName, managerName, operationalManager, deadline, categories, whatsapp }: StrategyReportProps) {
-  const activeCategories = categories
-    .map((c) => ({ ...c, items: c.items.filter((i) => i.checked) }))
-    .filter((c) => c.items.length > 0);
+  // All items are part of the strategy now (no more checked filter)
+  const activeCategories = categories.filter((c) => c.items.length > 0);
 
   const generateText = () => {
     let report = `*Estratégia Inicial – ${storeName}*\n\n`;
@@ -32,7 +31,7 @@ export function StrategyReport({ storeName, managerName, operationalManager, dea
     });
 
     if (activeCategories.length === 0) {
-      report += "Nenhum item selecionado para esta estratégia.\n";
+      report += "Nenhum item nesta estratégia.\n";
     }
 
     return report.trim();
@@ -86,7 +85,7 @@ export function StrategyReport({ storeName, managerName, operationalManager, dea
         <div className="border-t border-border" />
 
         {activeCategories.length === 0 ? (
-          <p className="text-muted-foreground text-center py-4">Nenhum item selecionado. Marque os itens desejados nas categorias.</p>
+          <p className="text-muted-foreground text-center py-4">Nenhum item adicionado. Adicione itens nas categorias.</p>
         ) : (
           activeCategories.map((cat) => (
             <div key={cat.id}>

@@ -5,7 +5,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Card } from "@/components/ui/card";
 import { Pencil, Trash2, Plus, Check, X, ChevronDown, ChevronRight, Sparkles, Loader2, ArrowUp, ArrowDown } from "lucide-react";
 import { toast } from "sonner";
@@ -17,7 +16,6 @@ interface CategoryCardProps {
   onAddItem: (catId: string, item: Omit<StrategyItem, "id" | "checked">) => void;
   onEditItem: (catId: string, itemId: string, updates: Partial<StrategyItem>) => void;
   onRemoveItem: (catId: string, itemId: string) => void;
-  onToggleItem: (catId: string, itemId: string) => void;
   onMoveItem?: (catId: string, itemId: string, direction: "up" | "down") => void;
 }
 
@@ -40,7 +38,6 @@ export function CategoryCard({
   onAddItem,
   onEditItem,
   onRemoveItem,
-  onToggleItem,
   onMoveItem,
 }: CategoryCardProps) {
   const [expanded, setExpanded] = useState(true);
@@ -54,8 +51,6 @@ export function CategoryCard({
   const [editItemText, setEditItemText] = useState("");
   const [generatingAI, setGeneratingAI] = useState(false);
   const [editGeneratingAI, setEditGeneratingAI] = useState(false);
-
-  const checkedCount = category.items.filter((i) => i.checked).length;
 
   const handleSaveCatName = () => {
     if (catName.trim()) {
@@ -139,7 +134,7 @@ export function CategoryCard({
         </button>
         <div className="flex items-center gap-2">
           <span className="text-sm text-muted-foreground">
-            {checkedCount}/{category.items.length}
+            {category.items.length} itens
           </span>
           {!editingName && (
             <>
@@ -164,7 +159,7 @@ export function CategoryCard({
         </div>
       </div>
 
-      {/* Items */}
+      {/* Items — all items are part of strategy, no checkboxes */}
       {expanded && (
         <div className="p-4 space-y-3">
           {category.items.map((item, index) =>
@@ -204,22 +199,15 @@ export function CategoryCard({
             ) : (
               <div
                 key={item.id}
-                className="flex items-start gap-3 p-3 rounded-lg hover:bg-muted/30 transition-colors group cursor-pointer"
-                onClick={() => onToggleItem(category.id, item.id)}
+                className="flex items-start gap-3 p-3 rounded-lg hover:bg-muted/30 transition-colors group"
               >
-                <Checkbox
-                  checked={item.checked}
-                  onCheckedChange={() => onToggleItem(category.id, item.id)}
-                  onClick={(e) => e.stopPropagation()}
-                  className="mt-0.5 border-muted-foreground data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-                />
                 <div className="flex-1 min-w-0">
-                  <p className={`font-medium text-sm ${item.checked ? "line-through text-muted-foreground" : "text-foreground"}`}>
+                  <p className="font-medium text-sm text-foreground">
                     - {item.name}
                   </p>
                   {item.text && <p className="text-xs text-muted-foreground mt-0.5">{item.text}</p>}
                 </div>
-                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
+                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                   {onMoveItem && (
                     <>
                       <Button
