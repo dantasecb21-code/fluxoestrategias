@@ -43,7 +43,7 @@ REGRAS OBRIGATÓRIAS:
 
 4. SEPARAR ITENS CORRETAMENTE. Se o texto mencionar mais de um assunto (ex: "categoria principal e nome"), crie um card/item SEPARADO para cada um. NUNCA junte dois temas diferentes em um único item.
 
-4. Cada item deve começar com "-" no nome (para formatação WhatsApp).
+5. Cada item deve começar com "-" no nome (para formatação WhatsApp).
 
 SOBRE CATEGORIA DA LOJA (Detalhes da loja):
 Sempre que houver informações como Categoria Principal, Subcategoria1, Subcategoria2 — isso faz parte de "Detalhes da loja".
