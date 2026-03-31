@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useDbStrategies } from "@/hooks/useDbStrategies";
 import { DEFAULT_CATEGORIES, StrategyCategory } from "@/types/strategy";
@@ -13,7 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
 import { Card } from "@/components/ui/card";
-import { FileText, Plus, Save, Check, X, UserCheck, Sparkles, Loader2, Mic, MicOff } from "lucide-react";
+import { FileText, Plus, Save, Check, X, UserCheck, Sparkles, Loader2, Mic, Square } from "lucide-react";
 import { toast } from "sonner";
 import { StrategyMeta } from "@/types/strategy";
 import { supabase } from "@/integrations/supabase/client";
@@ -72,8 +72,14 @@ export default function StrategyBuilderPage() {
   // Free-text AI
   const [freeText, setFreeText] = useState("");
   const [organizingAI, setOrganizingAI] = useState(false);
+
+  // Audio recording (record-then-process model)
   const [isRecording, setIsRecording] = useState(false);
-  const [recognition, setRecognition] = useState<any>(null);
+  const [isTranscribing, setIsTranscribing] = useState(false);
+  const [recordingTime, setRecordingTime] = useState(0);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const editor = useCategoryEditor(categories, setCategories);
 
@@ -107,6 +113,13 @@ export default function StrategyBuilderPage() {
       }
     }
     fetchManagers();
+  }, []);
+
+  // Cleanup timer on unmount
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
   }, []);
 
   const handleManagerSelect = (userId: string) => {
@@ -201,47 +214,111 @@ export default function StrategyBuilderPage() {
     }
   };
 
-  // Speech recognition
-  const toggleRecording = () => {
-    if (isRecording && recognition) {
-      recognition.stop();
-      setIsRecording(false);
-      return;
+  // Audio: Record first, then transcribe
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      audioChunksRef.current = [];
+
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data.size > 0) audioChunksRef.current.push(e.data);
+      };
+
+      mediaRecorder.onstop = () => {
+        stream.getTracks().forEach((t) => t.stop());
+        if (timerRef.current) {
+          clearInterval(timerRef.current);
+          timerRef.current = null;
+        }
+        transcribeAudio();
+      };
+
+      mediaRecorder.start(250);
+      mediaRecorderRef.current = mediaRecorder;
+      setIsRecording(true);
+      setRecordingTime(0);
+      timerRef.current = setInterval(() => setRecordingTime((t) => t + 1), 1000);
+    } catch {
+      toast.error("Não foi possível acessar o microfone.");
     }
+  };
 
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-      toast.error("Seu navegador não suporta gravação de áudio.");
-      return;
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
+      mediaRecorderRef.current.stop();
     }
+    setIsRecording(false);
+  };
 
-    const rec = new SpeechRecognition();
-    rec.lang = "pt-BR";
-    rec.continuous = true;
-    rec.interimResults = true;
+  const transcribeAudio = async () => {
+    const chunks = audioChunksRef.current;
+    if (chunks.length === 0) return;
 
-    rec.onresult = (event: any) => {
-      let transcript = "";
-      for (let i = 0; i < event.results.length; i++) {
-        transcript += event.results[i][0].transcript;
+    const audioBlob = new Blob(chunks, { type: "audio/webm" });
+    setIsTranscribing(true);
+
+    try {
+      // Use Web Speech API for transcription in a batch-like way
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        toast.error("Seu navegador não suporta transcrição de áudio.");
+        setIsTranscribing(false);
+        return;
       }
-      setFreeText((prev) => {
-        const base = prev.endsWith(" ") ? prev : prev ? prev + " " : "";
-        return base + transcript;
-      });
-    };
 
-    rec.onerror = () => {
-      setIsRecording(false);
-      toast.error("Erro na gravação.");
-    };
+      // Create an audio element to play back the recording through Speech Recognition
+      // Since Web Speech API works with live mic, we'll use a workaround:
+      // Re-record using SpeechRecognition but process the accumulated text
+      const rec = new SpeechRecognition();
+      rec.lang = "pt-BR";
+      rec.continuous = false;
+      rec.interimResults = false;
 
-    rec.onend = () => setIsRecording(false);
+      // Use the blob URL to play audio - but SpeechRecognition only works with mic
+      // So we'll do a hybrid: replay the audio and use SpeechRecognition simultaneously
+      // Actually, the best approach is to use the recorded audio with a server-side transcription
+      
+      // Fallback: use SpeechRecognition directly with a fresh session
+      // Record the text from the audio by replaying it
+      const audioUrl = URL.createObjectURL(audioBlob);
+      const audio = new Audio(audioUrl);
+      
+      // Since browser SpeechRecognition only works with live microphone,
+      // we'll send the audio to our edge function for transcription
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        const base64Audio = (reader.result as string).split(",")[1];
+        try {
+          const { data, error } = await supabase.functions.invoke("transcribe-audio", {
+            body: { audio: base64Audio, mimeType: audioBlob.type },
+          });
+          if (error) throw error;
+          if (data?.text) {
+            setFreeText((prev) => prev ? prev + " " + data.text : data.text);
+            toast.success("Áudio transcrito com sucesso!");
+          } else {
+            toast.error("Não foi possível transcrever o áudio.");
+          }
+        } catch (err) {
+          console.error("Transcription error:", err);
+          toast.error("Erro ao transcrever áudio. Tente novamente.");
+        } finally {
+          setIsTranscribing(false);
+          URL.revokeObjectURL(audioUrl);
+        }
+      };
+      reader.readAsDataURL(audioBlob);
+    } catch {
+      toast.error("Erro ao processar áudio.");
+      setIsTranscribing(false);
+    }
+  };
 
-    rec.start();
-    setRecognition(rec);
-    setIsRecording(true);
-    toast.info("Gravando... fale agora!");
+  const formatTime = (seconds: number) => {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m}:${s.toString().padStart(2, "0")}`;
   };
 
   const totalItems = categories.reduce((acc, c) => acc + c.items.length, 0);
@@ -267,7 +344,7 @@ export default function StrategyBuilderPage() {
           <Button variant="outline" size="sm" onClick={() => setShowReport(!showReport)}>
             <FileText className="h-4 w-4 mr-1" /> {showReport ? "Editor" : "Relatório"}
           </Button>
-          <Button size="sm" onClick={handleSave}>
+          <Button size="sm" onClick={handleSave} className="bg-primary text-primary-foreground hover:bg-primary/90">
             <Save className="h-4 w-4 mr-1" /> Salvar
           </Button>
         </div>
@@ -334,7 +411,7 @@ export default function StrategyBuilderPage() {
               <Label className="text-foreground font-heading font-semibold text-sm">Escreva livremente</Label>
             </div>
             <p className="text-xs text-muted-foreground">
-              Escreva ou fale o que precisa ser feito na loja. A IA vai organizar tudo em categorias automaticamente.
+              Escreva ou grave o que precisa ser feito na loja. A IA vai organizar tudo em categorias automaticamente.
             </p>
             <Textarea
               value={freeText}
@@ -343,23 +420,47 @@ export default function StrategyBuilderPage() {
               rows={4}
               className="bg-background"
             />
-            <div className="flex gap-2">
+            <div className="flex gap-2 items-center">
               <Button
                 size="sm"
                 onClick={handleOrganizeWithAI}
                 disabled={organizingAI || !freeText.trim()}
+                className="bg-primary text-primary-foreground hover:bg-primary/90"
               >
                 {organizingAI ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Sparkles className="h-4 w-4 mr-1" />}
                 {organizingAI ? "Organizando..." : "Organizar com IA"}
               </Button>
-              <Button
-                size="sm"
-                variant={isRecording ? "destructive" : "outline"}
-                onClick={toggleRecording}
-              >
-                {isRecording ? <MicOff className="h-4 w-4 mr-1" /> : <Mic className="h-4 w-4 mr-1" />}
-                {isRecording ? "Parar" : "Áudio"}
-              </Button>
+
+              {isRecording ? (
+                <Button
+                  size="sm"
+                  variant="destructive"
+                  onClick={stopRecording}
+                  className="animate-pulse"
+                >
+                  <Square className="h-4 w-4 mr-1 fill-current" />
+                  Parar ({formatTime(recordingTime)})
+                </Button>
+              ) : (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={startRecording}
+                  disabled={isTranscribing}
+                >
+                  {isTranscribing ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                      Transcrevendo...
+                    </>
+                  ) : (
+                    <>
+                      <Mic className="h-4 w-4 mr-1" />
+                      Gravar Áudio
+                    </>
+                  )}
+                </Button>
+              )}
             </div>
           </Card>
 
@@ -391,7 +492,7 @@ export default function StrategyBuilderPage() {
                 autoFocus
                 onKeyDown={(e) => e.key === "Enter" && handleAddCategory()}
               />
-              <Button size="sm" onClick={handleAddCategory} disabled={!newCatName.trim()}>
+              <Button size="sm" onClick={handleAddCategory} disabled={!newCatName.trim()} className="bg-primary text-primary-foreground hover:bg-primary/90">
                 <Check className="h-4 w-4 mr-1" /> Criar
               </Button>
               <Button size="sm" variant="ghost" onClick={() => { setAddingCategory(false); setNewCatName(""); }}>
