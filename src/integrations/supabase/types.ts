@@ -17,6 +17,8 @@ export type Database = {
       profiles: {
         Row: {
           approved: boolean
+          avatar_url: string
+          cover_url: string
           created_at: string
           display_name: string
           id: string
@@ -26,6 +28,8 @@ export type Database = {
         }
         Insert: {
           approved?: boolean
+          avatar_url?: string
+          cover_url?: string
           created_at?: string
           display_name?: string
           id?: string
@@ -35,6 +39,8 @@ export type Database = {
         }
         Update: {
           approved?: boolean
+          avatar_url?: string
+          cover_url?: string
           created_at?: string
           display_name?: string
           id?: string
