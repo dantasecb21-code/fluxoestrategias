@@ -108,7 +108,7 @@ export function AppSidebar() {
             <div className="mb-2">
               {displayName && <p className="text-xs text-foreground font-medium truncate">{displayName}</p>}
               <p className="text-xs text-muted-foreground">
-                {isOperational ? "Gestor Operacional" : "Administrador"}
+                {isOperational ? "Gestor Operacional" : "Gestor Estratégico"}
               </p>
             </div>
           )}

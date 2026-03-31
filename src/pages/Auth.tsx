@@ -39,7 +39,8 @@ export default function Auth() {
           },
         });
         if (error) throw error;
-        toast.success("Conta criada! Verifique seu email para confirmar.");
+        toast.success("Conta criada com sucesso!");
+        navigate("/");
       }
     } catch (err: any) {
       toast.error(err.message || "Erro na autenticação");
