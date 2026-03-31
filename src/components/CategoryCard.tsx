@@ -112,11 +112,20 @@ export function CategoryCard({
   };
 
   return (
-    <Card className="border-border bg-card overflow-hidden">
-      {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-border">
-        <button
-          onClick={() => setExpanded(!expanded)}
+    <Card
+      className={`border-border bg-card overflow-hidden transition-colors ${dragOverCat ? "ring-2 ring-primary/50 bg-primary/5" : ""}`}
+      onDragOver={(e) => { e.preventDefault(); setDragOverCat(true); }}
+      onDragLeave={() => setDragOverCat(false)}
+      onDrop={(e) => {
+        e.preventDefault();
+        setDragOverCat(false);
+        const fromCatId = e.dataTransfer.getData("fromCatId");
+        const itemId = e.dataTransfer.getData("itemId");
+        if (fromCatId && itemId && fromCatId !== category.id && onDropItem) {
+          onDropItem(fromCatId, itemId, category.id);
+        }
+      }}
+    >
           className="flex items-center gap-2 text-foreground font-heading font-semibold text-lg hover:text-primary transition-colors"
         >
           {expanded ? <ChevronDown className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />}
