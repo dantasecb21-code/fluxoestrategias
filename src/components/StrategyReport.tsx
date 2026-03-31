@@ -88,7 +88,7 @@ export function StrategyReport({ storeName, managerName, operationalManager, dea
               <div className="space-y-3">
                 {cat.items.map((item) => (
                   <p key={item.id} className="text-foreground text-sm leading-relaxed">
-                    - {item.name}: {item.text}
+                    {item.name}: {item.text}
                   </p>
                 ))}
               </div>

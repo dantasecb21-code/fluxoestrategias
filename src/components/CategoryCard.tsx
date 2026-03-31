@@ -209,7 +209,7 @@ export function CategoryCard({
               >
                 <div className="flex-1 min-w-0">
                   <p className="font-medium text-sm text-foreground">
-                    - {item.name}
+                    {item.name}
                   </p>
                   {item.text && <p className="text-xs text-muted-foreground mt-0.5">{item.text}</p>}
                 </div>
