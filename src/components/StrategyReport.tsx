@@ -10,7 +10,7 @@ interface StrategyReportProps {
   operationalManager: string;
   deadline: string;
   categories: StrategyCategory[];
-  whatsapp?: string;
+  }
 }
 
 export function StrategyReport({ storeName, managerName, operationalManager, deadline, categories, whatsapp }: StrategyReportProps) {
