@@ -148,10 +148,11 @@ export function AppSidebar() {
 
         {/* User info + logout */}
         <div className="mt-auto p-4 border-t border-sidebar-border">
-          {!collapsed && (
-            <div className="mb-2">
+          {!collapsed && user && (
+            <div className="mb-2 cursor-pointer hover:opacity-80" onClick={() => navigate(`/perfil/${user.id}`)}>
               {displayName && <p className="text-xs text-foreground font-medium truncate">{displayName}</p>}
               <p className="text-xs text-muted-foreground">{roleLabel}</p>
+              <p className="text-xs text-primary mt-0.5">Ver perfil →</p>
             </div>
           )}
           <Button
