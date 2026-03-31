@@ -8,11 +8,12 @@ import { StrategyReport } from "@/components/StrategyReport";
 import { useCategoryEditor } from "@/hooks/useStrategies";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
 import { Card } from "@/components/ui/card";
-import { FileText, Plus, Save, Check, X, UserCheck } from "lucide-react";
+import { FileText, Plus, Save, Check, X, UserCheck, Sparkles, Loader2, Mic, MicOff } from "lucide-react";
 import { toast } from "sonner";
 import { StrategyMeta } from "@/types/strategy";
 import { supabase } from "@/integrations/supabase/client";
@@ -36,7 +37,7 @@ interface Manager {
 }
 
 function calcProgress(categories: StrategyCategory[]) {
-  const allItems = categories.flatMap((c) => c.items).filter((i) => i.checked);
+  const allItems = categories.flatMap((c) => c.items);
   if (allItems.length === 0) return { percent: 0, completed: 0, inProgress: 0, pending: 0, total: 0 };
   const completed = allItems.filter((i) => i.status === "completed").length;
   const inProgress = allItems.filter((i) => i.status === "in_progress").length;
@@ -68,9 +69,14 @@ export default function StrategyBuilderPage() {
   const [savedId, setSavedId] = useState<string | null>(id || null);
   const [managers, setManagers] = useState<Manager[]>([]);
 
+  // Free-text AI
+  const [freeText, setFreeText] = useState("");
+  const [organizingAI, setOrganizingAI] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [recognition, setRecognition] = useState<any>(null);
+
   const editor = useCategoryEditor(categories, setCategories);
 
-  // Sync when existing strategy loads
   useEffect(() => {
     if (existing) {
       setMeta({
@@ -85,7 +91,6 @@ export default function StrategyBuilderPage() {
     }
   }, [existing?.id]);
 
-  // Fetch operational managers
   useEffect(() => {
     async function fetchManagers() {
       const { data: roles } = await supabase
@@ -104,7 +109,6 @@ export default function StrategyBuilderPage() {
     fetchManagers();
   }, []);
 
-  // When manager is selected, auto-fill the operationalManager name
   const handleManagerSelect = (userId: string) => {
     setAssignedTo(userId);
     if (userId && userId !== "none") {
@@ -161,9 +165,86 @@ export default function StrategyBuilderPage() {
     }
   };
 
-  const checkedTotal = categories.reduce((acc, c) => acc + c.items.filter((i) => i.checked).length, 0);
-  const totalItems = categories.reduce((acc, c) => acc + c.items.length, 0);
+  // Free-text AI: organize into categories
+  const handleOrganizeWithAI = async () => {
+    if (!freeText.trim()) {
+      toast.error("Escreva algo primeiro!");
+      return;
+    }
+    setOrganizingAI(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("organize-strategy", {
+        body: { freeText: freeText.trim(), storeName: meta.storeName },
+      });
+      if (error) throw error;
+      if (data?.categories && Array.isArray(data.categories)) {
+        const newCats: StrategyCategory[] = data.categories.map((cat: any) => ({
+          id: generateId(),
+          name: cat.name,
+          items: (cat.items || []).map((item: any) => ({
+            id: generateId(),
+            name: item.name || "",
+            text: item.text || "",
+            checked: false,
+            status: "pending" as const,
+          })),
+        }));
+        setCategories((prev) => [...prev, ...newCats]);
+        setFreeText("");
+        toast.success(`${newCats.length} categorias adicionadas pela IA!`);
+      }
+    } catch (err: any) {
+      console.error(err);
+      toast.error("Erro ao organizar com IA. Tente novamente.");
+    } finally {
+      setOrganizingAI(false);
+    }
+  };
 
+  // Speech recognition
+  const toggleRecording = () => {
+    if (isRecording && recognition) {
+      recognition.stop();
+      setIsRecording(false);
+      return;
+    }
+
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      toast.error("Seu navegador não suporta gravação de áudio.");
+      return;
+    }
+
+    const rec = new SpeechRecognition();
+    rec.lang = "pt-BR";
+    rec.continuous = true;
+    rec.interimResults = true;
+
+    rec.onresult = (event: any) => {
+      let transcript = "";
+      for (let i = 0; i < event.results.length; i++) {
+        transcript += event.results[i][0].transcript;
+      }
+      setFreeText((prev) => {
+        const base = prev.endsWith(" ") ? prev : prev ? prev + " " : "";
+        return base + transcript;
+      });
+    };
+
+    rec.onerror = () => {
+      setIsRecording(false);
+      toast.error("Erro na gravação.");
+    };
+
+    rec.onend = () => setIsRecording(false);
+
+    rec.start();
+    setRecognition(rec);
+    setIsRecording(true);
+    toast.info("Gravando... fale agora!");
+  };
+
+  const totalItems = categories.reduce((acc, c) => acc + c.items.length, 0);
   const progress = calcProgress(categories);
 
   if (loading && id) {
@@ -179,7 +260,7 @@ export default function StrategyBuilderPage() {
             {id ? meta.storeName || "Editar Estratégia" : "Nova Estratégia"}
           </h1>
           <p className="text-xs text-muted-foreground">
-            {checkedTotal}/{totalItems} itens selecionados
+            {totalItems} itens na estratégia
           </p>
         </div>
         <div className="flex gap-2">
@@ -221,7 +302,7 @@ export default function StrategyBuilderPage() {
         <>
           <StrategyMetaForm meta={meta} onChange={setMeta} />
 
-          {/* Assign to operational manager — single unified field */}
+          {/* Assign to operational manager */}
           <Card className="p-4 border-border bg-card space-y-2">
             <Label className="text-muted-foreground text-xs flex items-center gap-1">
               <UserCheck className="h-3 w-3" /> Gestor Operacional (obrigatório)
@@ -241,9 +322,45 @@ export default function StrategyBuilderPage() {
               </Select>
             ) : (
               <p className="text-xs text-muted-foreground">
-                Nenhum gestor operacional cadastrado. Peça ao gestor para criar uma conta como "Gestor Operacional".
+                Nenhum gestor operacional cadastrado.
               </p>
             )}
+          </Card>
+
+          {/* Free-text AI box */}
+          <Card className="p-4 border-border bg-card space-y-3">
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-primary" />
+              <Label className="text-foreground font-heading font-semibold text-sm">Escreva livremente</Label>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Escreva ou fale o que precisa ser feito na loja. A IA vai organizar tudo em categorias automaticamente.
+            </p>
+            <Textarea
+              value={freeText}
+              onChange={(e) => setFreeText(e.target.value)}
+              placeholder="Ex: a loja precisa trocar a foto de capa, criar um cupom novo, responder as avaliações negativas, colocar foto nos produtos..."
+              rows={4}
+              className="bg-background"
+            />
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                onClick={handleOrganizeWithAI}
+                disabled={organizingAI || !freeText.trim()}
+              >
+                {organizingAI ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Sparkles className="h-4 w-4 mr-1" />}
+                {organizingAI ? "Organizando..." : "Organizar com IA"}
+              </Button>
+              <Button
+                size="sm"
+                variant={isRecording ? "destructive" : "outline"}
+                onClick={toggleRecording}
+              >
+                {isRecording ? <MicOff className="h-4 w-4 mr-1" /> : <Mic className="h-4 w-4 mr-1" />}
+                {isRecording ? "Parar" : "Áudio"}
+              </Button>
+            </div>
           </Card>
 
           <div className="space-y-4">
@@ -256,7 +373,6 @@ export default function StrategyBuilderPage() {
                 onAddItem={editor.addItem}
                 onEditItem={editor.editItem}
                 onRemoveItem={editor.removeItem}
-                onToggleItem={editor.toggleItem}
                 onMoveItem={editor.moveItem}
               />
             ))}
