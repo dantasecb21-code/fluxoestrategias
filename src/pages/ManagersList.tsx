@@ -49,6 +49,7 @@ export default function ManagersList() {
   const [managers, setManagers] = useState<OperationalManager[]>([]);
   const [loading, setLoading] = useState(true);
   const { strategies } = useDbStrategies();
+  const navigate = useNavigate();
 
   const fetchManagers = async () => {
     const { data: roles } = await supabase
