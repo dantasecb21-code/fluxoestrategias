@@ -114,6 +114,20 @@ export function AppSidebar() {
                   </SidebarMenuItem>
                 </>
               )}
+              {canManage && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild>
+                    <NavLink
+                      to="/notas"
+                      className="hover:bg-sidebar-accent/50"
+                      activeClassName="bg-sidebar-accent text-primary font-medium"
+                    >
+                      <StickyNote className="mr-2 h-4 w-4" />
+                      {!collapsed && <span>Bloco de Notas</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
               {isAdmin && (
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild>

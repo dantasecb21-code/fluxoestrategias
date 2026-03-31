@@ -74,6 +74,7 @@ const App = () => (
             <Route path="/estrategia/:id" element={<ProtectedRoute allowedRoles={["admin", "strategic"]}><StrategyBuilderPage /></ProtectedRoute>} />
             <Route path="/gestores" element={<ProtectedRoute allowedRoles={["admin", "strategic"]}><ManagersList /></ProtectedRoute>} />
             <Route path="/pendentes" element={<ProtectedRoute allowedRoles={["admin", "strategic"]}><PendingStrategies /></ProtectedRoute>} />
+            <Route path="/notas" element={<ProtectedRoute allowedRoles={["admin", "strategic"]}><StrategyNotes /></ProtectedRoute>} />
             <Route path="/aprovacoes" element={<ProtectedRoute allowedRoles={["admin"]}><UserApproval /></ProtectedRoute>} />
             <Route path="/operacional/:id" element={<ProtectedRoute allowedRoles={["operational"]}><OperationalStrategyView /></ProtectedRoute>} />
             <Route path="/perfil/:userId" element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
