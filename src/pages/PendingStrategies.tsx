@@ -53,6 +53,7 @@ export default function PendingStrategies() {
         </Card>
       ) : (
         <div className="space-y-3">
+          <OverdueAlert strategies={pendingStrategies} />
           <p className="text-sm text-muted-foreground mb-4">{pendingStrategies.length} estratégia(s) em andamento</p>
           {pendingStrategies.map((s) => {
             const progress = calcProgress(s.categories);
