@@ -170,6 +170,7 @@ export default function StrategyBuilderPage() {
       toast.error("Preencha o nome da loja!");
       return;
     }
+    if (!window.confirm("Deseja salvar as alterações?")) return;
     if (!assignedTo || assignedTo === "none") {
       toast.error("Selecione um Gestor Operacional!");
       return;
