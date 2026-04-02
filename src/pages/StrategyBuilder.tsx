@@ -735,6 +735,13 @@ export default function StrategyBuilderPage() {
 
         </>
       )}
+      <AIFollowUpDialog
+        open={showFollowUp}
+        onClose={() => { setShowFollowUp(false); setAiDetection(null); }}
+        detection={aiDetection}
+        onSubmit={handleFollowUpSubmit}
+        loading={generatingFromFollowUp}
+      />
     </div>
   );
 }
