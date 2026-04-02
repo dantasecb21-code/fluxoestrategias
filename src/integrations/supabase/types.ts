@@ -161,6 +161,7 @@ export type Database = {
           created_at: string
           created_by: string
           id: string
+          images: Json
           order_index: number
           published: boolean
           title: string
@@ -171,6 +172,7 @@ export type Database = {
           created_at?: string
           created_by: string
           id?: string
+          images?: Json
           order_index?: number
           published?: boolean
           title?: string
@@ -181,6 +183,7 @@ export type Database = {
           created_at?: string
           created_by?: string
           id?: string
+          images?: Json
           order_index?: number
           published?: boolean
           title?: string
