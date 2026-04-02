@@ -8,6 +8,7 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   displayName: string;
+  avatarUrl: string;
   role: AppRole | null;
   approved: boolean;
   signOut: () => Promise<void>;
