@@ -137,6 +137,50 @@ export type Database = {
         }
         Relationships: []
       }
+      strategy_history: {
+        Row: {
+          action: string
+          created_at: string
+          field_changed: string
+          id: string
+          new_value: string
+          old_value: string
+          strategy_id: string
+          user_id: string
+          user_name: string
+        }
+        Insert: {
+          action?: string
+          created_at?: string
+          field_changed?: string
+          id?: string
+          new_value?: string
+          old_value?: string
+          strategy_id: string
+          user_id: string
+          user_name?: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          field_changed?: string
+          id?: string
+          new_value?: string
+          old_value?: string
+          strategy_id?: string
+          user_id?: string
+          user_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "strategy_history_strategy_id_fkey"
+            columns: ["strategy_id"]
+            isOneToOne: false
+            referencedRelation: "strategies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       strategy_notes: {
         Row: {
           content: string

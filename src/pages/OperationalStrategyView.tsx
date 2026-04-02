@@ -8,7 +8,8 @@ import { Progress } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, ChevronDown, ChevronRight, Save, MessageSquare, CheckCircle2, ShieldCheck, AlertCircle } from "lucide-react";
+import { ArrowLeft, ChevronDown, ChevronRight, Save, MessageSquare, CheckCircle2, ShieldCheck, AlertCircle, Clock } from "lucide-react";
+import { StrategyHistory } from "@/components/StrategyHistory";
 import { formatDateBR } from "@/lib/utils";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
@@ -201,6 +202,9 @@ export default function OperationalStrategyView() {
           <p className="text-sm text-success font-medium">✅ Estratégia aprovada!</p>
         </Card>
       )}
+
+      {/* Histórico */}
+      <StrategyHistory strategyId={strategy.id} />
 
       {/* Categories */}
       {visibleCategories.map((cat) => (
