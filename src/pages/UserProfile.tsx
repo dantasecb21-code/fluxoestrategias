@@ -104,6 +104,24 @@ export default function UserProfile() {
     return s.status === "approved";
   }) : [];
 
+  const handleChangePassword = async () => {
+    if (newPassword !== confirmPassword) { toast.error("As senhas não coincidem"); return; }
+    if (newPassword.length < 6) { toast.error("A senha deve ter pelo menos 6 caracteres"); return; }
+    setSavingPassword(true);
+    try {
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      if (error) throw error;
+      toast.success("Senha alterada com sucesso!");
+      setChangingPassword(false);
+      setNewPassword("");
+      setConfirmPassword("");
+    } catch (err: any) {
+      toast.error(err.message || "Erro ao alterar senha");
+    } finally {
+      setSavingPassword(false);
+    }
+  };
+
   // Stats
   const stats = userId ? calcManagerStats(strategies, userId) : null;
   const managerStats = stats ? { ...stats, rate: stats.completionRate } : null;

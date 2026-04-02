@@ -72,6 +72,7 @@ const App = () => (
         <AuthProvider>
           <Routes>
             <Route path="/auth" element={<AuthRoute />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/" element={<ProtectedRoute><HomeRedirect /></ProtectedRoute>} />
             <Route path="/nova" element={<ProtectedRoute allowedRoles={["admin", "strategic"]}><StrategyBuilderPage /></ProtectedRoute>} />
             <Route path="/estrategia/:id" element={<ProtectedRoute allowedRoles={["admin", "strategic"]}><StrategyBuilderPage /></ProtectedRoute>} />

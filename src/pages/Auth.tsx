@@ -193,13 +193,19 @@ export default function Auth() {
         </form>
 
         <p className="text-center text-sm text-muted-foreground mt-6">
-          {isLogin ? "Não tem conta?" : "Já tem conta?"}{" "}
-          <button
-            onClick={() => setIsLogin(!isLogin)}
-            className="text-primary hover:underline font-medium"
-          >
-            {isLogin ? "Criar conta" : "Fazer login"}
-          </button>
+          {isForgot ? (
+            <button onClick={() => setMode("login")} className="text-primary hover:underline font-medium">
+              Voltar ao login
+            </button>
+          ) : isLogin ? (
+            <>Não tem conta?{" "}
+              <button onClick={() => setMode("signup")} className="text-primary hover:underline font-medium">Criar conta</button>
+            </>
+          ) : (
+            <>Já tem conta?{" "}
+              <button onClick={() => setMode("login")} className="text-primary hover:underline font-medium">Fazer login</button>
+            </>
+          )}
         </p>
       </Card>
     </div>
