@@ -6,6 +6,42 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+function extractJsonArray(text: string): any[] {
+  // Remove markdown code blocks
+  let cleaned = text.replace(/^```json?\s*/i, "").replace(/\s*```$/i, "").trim();
+  
+  // Try direct parse
+  try { return JSON.parse(cleaned); } catch {}
+  
+  // Try to find JSON array in the text
+  const arrayMatch = cleaned.match(/\[[\s\S]*\]/);
+  if (arrayMatch) {
+    try { return JSON.parse(arrayMatch[0]); } catch {}
+  }
+  
+  // Try to fix common JSON issues: trailing commas, unescaped quotes
+  try {
+    cleaned = cleaned
+      .replace(/,\s*]/g, "]")
+      .replace(/,\s*}/g, "}")
+      .replace(/'/g, '"');
+    return JSON.parse(cleaned);
+  } catch {}
+  
+  // Last resort: try to extract from array match with fixes
+  if (arrayMatch) {
+    try {
+      const fixed = arrayMatch[0]
+        .replace(/,\s*]/g, "]")
+        .replace(/,\s*}/g, "}")
+        .replace(/\n/g, " ");
+      return JSON.parse(fixed);
+    } catch {}
+  }
+  
+  throw new Error("Não foi possível interpretar a resposta da IA. Tente novamente.");
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -36,7 +72,7 @@ serve(async (req) => {
       });
     }
 
-    // Fetch AI context history using service role for reading
+    // Fetch AI context history
     const serviceClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
     const { data: contextEntries } = await serviceClient
       .from("ai_context_entries")
@@ -46,29 +82,69 @@ serve(async (req) => {
 
     let contextBlock = "";
     if (contextEntries && contextEntries.length > 0) {
-      contextBlock = "\n\nHISTÓRICO DE ESTRATÉGIAS ANTERIORES (use para manter consistência e evitar repetição):\n" +
-        contextEntries.map((e: any, i: number) => `${i + 1}. Loja: ${e.category} | Input: ${e.content.substring(0, 200)} | Categorias geradas: ${e.structured_summary}`).join("\n");
+      contextBlock = "\n\nHISTORICO DE ESTRATEGIAS ANTERIORES (use para manter consistencia):\n" +
+        contextEntries.map((e: any, i: number) => `${i + 1}. Loja: ${e.category} | Input: ${e.content.substring(0, 150)}`).join("\n");
     }
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
-    // Build messages with optional image
-    const userContent: any[] = [];
+    const systemPrompt = `Voce e a IA Lavebo. Seu papel e organizar textos livres e analisar prints/imagens em estrategias estruturadas para lojas de delivery.
+
+CONTEXTO: O gestor operacional executa as acoes. O gestor estrategico define a direcao. Voce organiza tudo em plano de acao.
+
+REGRA DE TOM: Acao direta ao gestor, tom imperativo.
+Correto: "Verifique o telefone da loja junto ao cliente no grupo"
+Errado: "E importante verificar..." / "Seria interessante ajustar..."
+
+DETALHAMENTO: Cada item DEVE ter passo a passo numerado no campo "text".
+
+ANALISE PROATIVA DE IMAGENS/PRINTS:
+Quando receber uma imagem, voce DEVE ser PROATIVO:
+- Se vir tela de HORARIO DE FUNCIONAMENTO: crie item "- Horario de funcionamento" com passo a passo para verificar/ajustar horarios
+- Se vir tela de CARDAPIO: analise fotos, precos, descricoes e sugira melhorias especificas
+- Se vir tela de AVALIACOES: analise notas, comentarios e crie acoes de melhoria
+- Se vir tela de PROMOCOES: analise campanhas ativas e sugira otimizacoes
+- Se vir tela de DETALHES DA LOJA: verifique nome, categoria, endereco, telefone
+- Se vir tela de ENTREGA: analise raio, taxas, tempo estimado
+- Se vir QUALQUER PRINT da plataforma: identifique EXATAMENTE qual area e e crie acoes relevantes
+- Se vir dados numericos (vendas, pedidos): analise tendencias e sugira acoes
+
+IMPORTANTE: Mesmo sem texto do gestor, a imagem SOZINHA deve gerar acoes completas e detalhadas.
+
+REGRAS:
+1. NAO DUPLICAR CATEGORIAS
+2. RESPEITAR o texto enviado
+3. PASSO A PASSO numerado no "text"
+4. SEPARAR ITENS por assunto
+5. Nome do item comeca com "-"
+
+CATEGORIAS PADRAO (use quando aplicavel):
+1. Detalhes da loja
+2. Configuracao de entrega
+3. Minhas promocoes
+4. Avaliacoes
+5. Cardapio
+6. Estruturacao de categorias
+7. Reorganizacao de categorias
+${contextBlock}
+
+FORMATO DE SAIDA - retorne SOMENTE um array JSON valido, sem markdown, sem texto antes ou depois:
+[{"name":"Detalhes da loja","items":[{"name":"- Exemplo","text":"1. Faca X. 2. Faca Y. 3. Valide Z."}]}]`;
+
+    // Build user message
+    let userMessage: any;
     if (imageBase64) {
-      userContent.push({
-        type: "image_url",
-        image_url: { url: `data:image/png;base64,${imageBase64}` },
-      });
-      userContent.push({
-        type: "text",
-        text: `Analise esta imagem/print da loja "${storeName || "não informada"}". Identifique problemas, oportunidades de melhoria e crie ações estratégicas baseadas no que você vê.${freeText?.trim() ? `\n\nTexto adicional do gestor:\n${freeText.trim()}` : ""}`,
-      });
+      const textPart = freeText?.trim()
+        ? `Loja: ${storeName || "nao informada"}. Texto do gestor: ${freeText.trim()}`
+        : `Loja: ${storeName || "nao informada"}. Analise este print da plataforma e crie acoes estrategicas baseadas no que voce ve. Seja proativo e especifico.`;
+      
+      userMessage = [
+        { type: "image_url", image_url: { url: `data:image/png;base64,${imageBase64}` } },
+        { type: "text", text: textPart },
+      ];
     } else {
-      userContent.push({
-        type: "text",
-        text: `Loja: ${storeName || "não informada"}\n\nTexto do gestor:\n${freeText.trim()}`,
-      });
+      userMessage = `Loja: ${storeName || "nao informada"}\n\nTexto do gestor:\n${freeText.trim()}`;
     }
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -80,104 +156,20 @@ serve(async (req) => {
       body: JSON.stringify({
         model: imageBase64 ? "google/gemini-2.5-flash" : "google/gemini-3-flash-preview",
         messages: [
-          {
-            role: "system",
-            content: `Você é a IA Lavebo. Seu papel é organizar textos livres em estratégias estruturadas, claras e operacionais para lojas de delivery.
-
-CONTEXTO DO PROCESSO:
-- O cliente é o dono do restaurante.
-- O gestor operacional executa as ações.
-- O gestor estratégico define a direção.
-- Você (Lavebo) organiza e transforma as informações em plano de ação.
-
-⚠️ REGRA MAIS IMPORTANTE – TOM DE COMUNICAÇÃO:
-Sempre escrever no formato de AÇÃO DIRETA ao gestor, tom imperativo e operacional.
-✅ Correto: "Verifique o telefone da loja junto ao cliente no grupo"
-✅ Correto: "Inclua uma nova categoria no cardápio"
-❌ Errado: "É importante verificar…" / "Seria interessante ajustar…"
-
-📋 DETALHAMENTO OBRIGATÓRIO – PASSO A PASSO:
-Cada item DEVE conter um passo a passo detalhado para o gestor executar. O campo "text" deve ter uma sequência lógica de ações.
-Exemplo:
-- name: "- Foto de capa"
-- text: "1. Peça ao cliente uma foto profissional da fachada ou prato principal. 2. Acesse Detalhes da Loja > Foto de capa. 3. Faça o upload da imagem com resolução mínima 1200x400px. 4. Valide se a imagem está carregando corretamente no app."
-
-SOBRE CONTATO COM O CLIENTE:
-Sempre que envolver validação de informação, deixe claro que o gestor deve falar com o cliente no grupo.
-
-REGRAS OBRIGATÓRIAS:
-
-1. NÃO DUPLICAR CATEGORIAS. Se já existir uma categoria, adicione novas informações dentro dela.
-
-2. RESPEITAR EXATAMENTE o texto enviado. Manter fielmente, sem alterações de sentido.
-
-3. TEXTOS COM PASSO A PASSO. Cada item deve ter passos numerados e claros no campo "text".
-
-4. SEPARAR ITENS CORRETAMENTE. Se o texto mencionar mais de um assunto, crie um item SEPARADO para cada um.
-
-5. Cada item deve começar com "-" no nome (para formatação WhatsApp).
-
-SOBRE ANÁLISE DE IMAGENS/PRINTS:
-Se receber uma imagem, analise visualmente:
-- Identifique problemas (fotos ruins, preços incorretos, categorias erradas, falta de informação)
-- Sugira melhorias específicas baseadas no que vê
-- Cruze com o contexto e conhecimento da plataforma
-- Crie ações práticas com passo a passo
-
-SOBRE CATEGORIA DA LOJA (Detalhes da loja):
-Sempre que houver Categoria Principal, Subcategoria1, Subcategoria2 — agrupar em "Detalhes da loja" com a explicação:
-"Essas categorias funcionam como nichos dentro da plataforma e impactam diretamente na visibilidade da loja."
-
-ESTRUTURA PADRÃO DE CATEGORIAS (use EXATAMENTE estas quando aplicável, nesta ordem):
-1. Detalhes da loja
-2. Configuração de entrega
-3. Minhas promoções
-4. Avaliações
-5. Cardápio
-6. Estruturação de categorias
-7. Reorganização de categorias
-
-BASE DE CONHECIMENTO DA PLATAFORMA:
-
-COBERTURA DE IMAGEM:
-- Meta: 99-100% dos pratos com fotos. Fotos reais, iluminação natural, ângulos clássicos.
-- Score de Qualidade acima de 7 = créditos de publicidade grátis.
-
-AVALIAÇÕES (5 ESTRELAS):
-- Meta: acima de 4.5 estrelas. Responder avaliações, agradecer elogios, gerenciar críticas.
-- Incentivos: bilhetinho pedindo avaliação, mimos surpresa.
-
-GESTÃO DE CARDÁPIO:
-- Manter atualizado, fotos reais, preços corretos.
-- Títulos com palavras-chave. Combos aumentam ticket médio.
-${contextBlock}
-
-FORMATO DE SAÍDA — retorne APENAS um JSON válido, sem markdown, sem explicação:
-[
-  {
-    "name": "Detalhes da loja",
-    "items": [
-      { "name": "- Fotos dos produtos", "text": "1. Acesse o cardápio no painel. 2. Identifique itens sem foto. 3. Peça ao cliente fotos reais dos pratos. 4. Faça upload de cada foto. 5. Confirme que todas aparecem corretamente." }
-    ]
-  }
-]`
-          },
-          {
-            role: "user",
-            content: imageBase64 ? userContent : userContent[0].text,
-          }
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userMessage },
         ],
       }),
     });
 
     if (!response.ok) {
       if (response.status === 429) {
-        return new Response(JSON.stringify({ error: "Limite de requisições excedido." }), {
+        return new Response(JSON.stringify({ error: "Limite de requisicoes excedido. Aguarde um momento." }), {
           status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
       if (response.status === 402) {
-        return new Response(JSON.stringify({ error: "Créditos insuficientes." }), {
+        return new Response(JSON.stringify({ error: "Creditos insuficientes." }), {
           status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
@@ -187,19 +179,17 @@ FORMATO DE SAÍDA — retorne APENAS um JSON válido, sem markdown, sem explica�
     }
 
     const data = await response.json();
-    let content = data.choices?.[0]?.message?.content?.trim() || "[]";
+    const rawContent = data.choices?.[0]?.message?.content?.trim() || "[]";
+    console.log("AI raw response (first 500 chars):", rawContent.substring(0, 500));
     
-    // Clean markdown code blocks if present
-    content = content.replace(/^```json?\s*/i, "").replace(/\s*```$/i, "").trim();
-
-    const categories = JSON.parse(content);
+    const categories = extractJsonArray(rawContent);
 
     return new Response(JSON.stringify({ categories }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
     console.error("organize-strategy error:", e);
-    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }), {
+    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Erro desconhecido" }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
