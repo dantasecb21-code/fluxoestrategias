@@ -45,7 +45,7 @@ export default function OperationalDashboard() {
         </Card>
       ) : (
         <div className="space-y-4">
-          {strategies.map((s) => {
+          <OverdueAlert strategies={strategies} isOperational />
             const progress = calcProgress(s.categories);
             return (
               <Card
