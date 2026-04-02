@@ -396,7 +396,7 @@ export default function StrategyBuilderPage() {
           </Button>
         </div>
         {id && (
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             <Button variant="outline" size="sm" onClick={() => { setShowDetailedProgress(!showDetailedProgress); setShowReport(false); }}>
               <CheckCircle2 className="h-4 w-4 mr-1" /> {showDetailedProgress ? "Editor" : "Progresso"}
             </Button>
@@ -404,6 +404,11 @@ export default function StrategyBuilderPage() {
               <FileText className="h-4 w-4 mr-1" /> {showReport ? "Editor" : "Relatório"}
             </Button>
           </div>
+        )}
+
+        {/* Histórico */}
+        {id && savedId && (
+          <StrategyHistory strategyId={savedId} />
         )}
       </div>
 

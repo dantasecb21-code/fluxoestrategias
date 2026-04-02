@@ -203,6 +203,9 @@ export default function OperationalStrategyView() {
         </Card>
       )}
 
+      {/* Histórico */}
+      <StrategyHistory strategyId={strategy.id} />
+
       {/* Categories */}
       {visibleCategories.map((cat) => (
         <Card key={cat.id} className="overflow-hidden">
