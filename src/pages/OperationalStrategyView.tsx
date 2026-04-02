@@ -54,6 +54,17 @@ export default function OperationalStrategyView() {
   const [obsValue, setObsValue] = useState("");
   const [saving, setSaving] = useState(false);
   const [storeAccess, setStoreAccess] = useState(false);
+  const [history, setHistory] = useState<HistoryEntry[]>([]);
+  const [historyOpen, setHistoryOpen] = useState(false);
+
+  const fetchHistory = async (strategyId: string) => {
+    const { data } = await supabase
+      .from("strategy_history")
+      .select("*")
+      .eq("strategy_id", strategyId)
+      .order("created_at", { ascending: false });
+    if (data) setHistory(data as HistoryEntry[]);
+  };
 
   useEffect(() => {
     if (strategy) {
@@ -62,6 +73,7 @@ export default function OperationalStrategyView() {
       strategy.categories.forEach((c) => { expanded[c.id] = true; });
       setExpandedCats(expanded);
       setStoreAccess(strategy.store_access_confirmed || false);
+      fetchHistory(strategy.id);
     }
   }, [strategy]);
 
