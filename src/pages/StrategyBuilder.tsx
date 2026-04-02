@@ -332,7 +332,7 @@ export default function StrategyBuilderPage() {
                 {totalItems} itens na estratégia
               </p>
               {id && existing && (
-                <Badge variant={STATUS_BADGE_MAP[strategyStatus]?.variant || "secondary"} className="text-[10px]">
+                <Badge variant={STATUS_BADGE_MAP[strategyStatus]?.variant || "secondary"} className="text-[10px] py-0 px-1.5 h-4 leading-none">
                   {STATUS_BADGE_MAP[strategyStatus]?.label || "Em andamento"}
                 </Badge>
               )}
