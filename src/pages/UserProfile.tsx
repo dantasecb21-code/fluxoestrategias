@@ -92,7 +92,7 @@ export default function UserProfile() {
   // Completed strategies for this user
   const completedStrategies = userId ? strategies.filter((s) => {
     if (s.assigned_to !== userId) return false;
-    const items = (s.categories as any[]).flatMap((c: any) => c.items).filter((i: any) => i.checked);
+    const items = (s.categories as any[]).flatMap((c: any) => c.items);
     return items.length > 0 && items.every((i: any) => i.status === "completed");
   }) : [];
 
