@@ -8,6 +8,7 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   displayName: string;
+  avatarUrl: string;
   role: AppRole | null;
   approved: boolean;
   signOut: () => Promise<void>;
@@ -17,6 +18,7 @@ const AuthContext = createContext<AuthContextType>({
   user: null,
   loading: true,
   displayName: "",
+  avatarUrl: "",
   role: null,
   approved: false,
   signOut: async () => {},
@@ -26,6 +28,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [displayName, setDisplayName] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState("");
   const [role, setRole] = useState<AppRole | null>(null);
   const [approved, setApproved] = useState(false);
 
@@ -35,18 +38,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (session?.user) {
         setTimeout(async () => {
           const [profileRes, roleRes] = await Promise.all([
-            supabase.from("profiles").select("display_name, approved").eq("user_id", session.user.id).single(),
+            supabase.from("profiles").select("display_name, approved, avatar_url").eq("user_id", session.user.id).single(),
             supabase.from("user_roles").select("role").eq("user_id", session.user.id).single(),
           ]);
           if (profileRes.data) {
             setDisplayName(profileRes.data.display_name);
             setApproved(profileRes.data.approved ?? false);
+            setAvatarUrl(profileRes.data.avatar_url || "");
           }
           if (roleRes.data) setRole(roleRes.data.role as AppRole);
           setLoading(false);
         }, 0);
       } else {
         setDisplayName("");
+        setAvatarUrl("");
         setRole(null);
         setApproved(false);
         setLoading(false);
@@ -68,7 +73,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, displayName, role, approved, signOut }}>
+    <AuthContext.Provider value={{ user, loading, displayName, avatarUrl, role, approved, signOut }}>
       {children}
     </AuthContext.Provider>
   );
