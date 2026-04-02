@@ -13,6 +13,8 @@ export interface DbStrategy {
   operational_manager: string;
   deadline: string;
   categories: StrategyCategory[];
+  status: string;
+  store_access_confirmed: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -102,6 +104,8 @@ export function useDbStrategies() {
     deadline?: string;
     categories?: StrategyCategory[];
     assigned_to?: string | null;
+    status?: string;
+    store_access_confirmed?: boolean;
   }) => {
     const updateData: Record<string, unknown> = { ...params };
     if (params.categories) {

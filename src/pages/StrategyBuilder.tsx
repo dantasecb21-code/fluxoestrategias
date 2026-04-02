@@ -13,11 +13,14 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
 import { Card } from "@/components/ui/card";
-import { FileText, Plus, Save, Check, X, UserCheck, Sparkles, Loader2, ImagePlus, Mail } from "lucide-react";
+import { FileText, Plus, Save, Check, X, UserCheck, Sparkles, Loader2, ImagePlus, Mail, ChevronDown, ChevronRight, CheckCircle2, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import { StrategyMeta } from "@/types/strategy";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDateBR } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
+import { useAuth } from "@/hooks/useAuth";
 
 function generateId() {
   return Math.random().toString(36).substring(2, 10) + Date.now().toString(36);
@@ -74,6 +77,7 @@ export default function StrategyBuilderPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { strategies, createStrategy, updateStrategy, loading } = useDbStrategies();
+  const { role } = useAuth();
 
   const existing = id ? strategies.find((s) => s.id === id) : null;
   const draft = !id ? loadDraft() : null;
@@ -88,6 +92,8 @@ export default function StrategyBuilderPage() {
   );
   const [assignedTo, setAssignedTo] = useState<string>(existing?.assigned_to || draft?.assignedTo || "");
   const [showReport, setShowReport] = useState(false);
+  const [showDetailedProgress, setShowDetailedProgress] = useState(false);
+  const [expandedCats, setExpandedCats] = useState<Record<string, boolean>>({});
   const [addingCategory, setAddingCategory] = useState(false);
   const [newCatName, setNewCatName] = useState("");
   const [savedId, setSavedId] = useState<string | null>(id || null);
@@ -100,9 +106,11 @@ export default function StrategyBuilderPage() {
   // Image upload
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [storeAccess, setStoreAccess] = useState(existing?.store_access_confirmed || false);
   const imageInputRef = useRef<HTMLInputElement>(null);
 
   const editor = useCategoryEditor(categories, setCategories);
+  const strategyStatus = existing?.status || "in_progress";
 
   // Save draft to localStorage for new strategies
   useEffect(() => {
@@ -172,6 +180,7 @@ export default function StrategyBuilderPage() {
         deadline: meta.deadline,
         categories,
         assigned_to: assignedTo || null,
+        store_access_confirmed: storeAccess,
       });
       clearDraft();
       toast.success("Estratégia atualizada!");
@@ -274,6 +283,24 @@ export default function StrategyBuilderPage() {
   const totalItems = categories.reduce((acc, c) => acc + c.items.length, 0);
   const progress = calcProgress(categories);
 
+  const handleApprove = async () => {
+    if (!savedId) return;
+    await updateStrategy(savedId, { status: "approved" });
+    toast.success("Estratégia aprovada!");
+  };
+
+  const handleReject = async () => {
+    if (!savedId) return;
+    await updateStrategy(savedId, { status: "in_progress" });
+    toast.success("Estratégia devolvida para revisão.");
+  };
+
+  const STATUS_BADGE_MAP: Record<string, { label: string; variant: "default" | "secondary" | "outline" | "destructive" }> = {
+    in_progress: { label: "Em andamento", variant: "secondary" },
+    pending_approval: { label: "Aguardando aprovação", variant: "outline" },
+    approved: { label: "Aprovada ✓", variant: "default" },
+  };
+
   if (loading && id) {
     return <div className="flex items-center justify-center h-64 text-muted-foreground">Carregando...</div>;
   }
@@ -283,15 +310,25 @@ export default function StrategyBuilderPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-heading font-bold text-xl text-foreground">
+          <h1 className="font-heading font-bold text-xl text-foreground flex items-center gap-2">
             {id ? meta.storeName || "Editar Estratégia" : "Nova Estratégia"}
+            {id && existing && (
+              <Badge variant={STATUS_BADGE_MAP[strategyStatus]?.variant || "secondary"}>
+                {STATUS_BADGE_MAP[strategyStatus]?.label || "Em andamento"}
+              </Badge>
+            )}
           </h1>
           <p className="text-xs text-muted-foreground">
             {totalItems} itens na estratégia
           </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={() => setShowReport(!showReport)}>
+          {id && (
+            <Button variant="outline" size="sm" onClick={() => { setShowDetailedProgress(!showDetailedProgress); setShowReport(false); }}>
+              <CheckCircle2 className="h-4 w-4 mr-1" /> {showDetailedProgress ? "Editor" : "Progresso"}
+            </Button>
+          )}
+          <Button variant="outline" size="sm" onClick={() => { setShowReport(!showReport); setShowDetailedProgress(false); }}>
             <FileText className="h-4 w-4 mr-1" /> {showReport ? "Editor" : "Relatório"}
           </Button>
           <Button size="sm" onClick={handleSave} className="bg-primary text-primary-foreground hover:bg-primary/90">
@@ -316,7 +353,76 @@ export default function StrategyBuilderPage() {
         </Card>
       )}
 
-      {showReport ? (
+      {/* Store access + approval for pending_approval */}
+      {id && existing && strategyStatus === "pending_approval" && (
+        <Card className="p-4 border-warning/50 space-y-3">
+          <div className="flex items-center gap-2 text-sm">
+            <ShieldCheck className="h-4 w-4 text-primary" />
+            <span className="text-foreground font-medium">Acesso à loja confirmado pelo gestor:</span>
+            <span className={existing.store_access_confirmed ? "text-success" : "text-destructive"}>
+              {existing.store_access_confirmed ? "Sim ✓" : "Não ✗"}
+            </span>
+          </div>
+          <div className="flex gap-2">
+            <Button onClick={handleApprove} className="bg-success text-success-foreground hover:bg-success/90">
+              <CheckCircle2 className="h-4 w-4 mr-1" /> Aprovar Estratégia
+            </Button>
+            <Button variant="outline" onClick={handleReject}>
+              Devolver para Revisão
+            </Button>
+          </div>
+        </Card>
+      )}
+
+      {id && existing && strategyStatus === "approved" && (
+        <Card className="p-4 border-success/50 bg-success/10 text-center">
+          <p className="text-sm text-success font-medium">✅ Estratégia aprovada</p>
+        </Card>
+      )}
+
+      {/* Detailed progress view */}
+      {showDetailedProgress && id ? (
+        <div className="space-y-4">
+          {categories.filter((c) => c.items.length > 0).map((cat) => {
+            const isExpanded = expandedCats[cat.id] !== false;
+            const catCompleted = cat.items.filter((i) => i.status === "completed").length;
+            return (
+              <Card key={cat.id} className="overflow-hidden">
+                <button
+                  className="w-full flex items-center justify-between p-4 border-b border-border hover:bg-muted/30 transition-colors"
+                  onClick={() => setExpandedCats((prev) => ({ ...prev, [cat.id]: !isExpanded }))}
+                >
+                  <h3 className="font-heading font-semibold text-foreground flex items-center gap-2">
+                    {isExpanded ? <ChevronDown className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />}
+                    {cat.name}
+                  </h3>
+                  <span className="text-xs text-muted-foreground">{catCompleted}/{cat.items.length} concluídos</span>
+                </button>
+                {isExpanded && (
+                  <div className="divide-y divide-border">
+                    {cat.items.map((item) => {
+                      const st = item.status || "pending";
+                      const color = st === "completed" ? "text-success" : st === "in_progress" ? "text-primary" : "text-warning";
+                      const label = st === "completed" ? "Concluído" : st === "in_progress" ? "Em andamento" : "Pendente";
+                      return (
+                        <div key={item.id} className="p-4 flex items-start justify-between gap-4">
+                          <div className="flex-1">
+                            <p className="text-sm text-foreground leading-relaxed">{item.text}</p>
+                            {item.observation && (
+                              <p className="text-xs text-muted-foreground mt-1 italic">💬 {item.observation}</p>
+                            )}
+                          </div>
+                          <span className={`text-xs font-medium whitespace-nowrap ${color}`}>● {label}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </Card>
+            );
+          })}
+        </div>
+      ) : showReport ? (
         <StrategyReport
           storeName={meta.storeName}
           managerName={meta.managerName}
@@ -357,19 +463,22 @@ export default function StrategyBuilderPage() {
                   </SelectContent>
                 </Select>
                 {selectedManager && (
-                  <div className="flex items-center gap-3 p-2 rounded-lg bg-muted/30 text-xs text-muted-foreground">
-                    <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center overflow-hidden shrink-0">
-                      {selectedManager.avatar_url ? (
-                        <img src={selectedManager.avatar_url} alt="" className="h-full w-full object-cover" />
-                      ) : (
-                        <span className="text-xs font-bold">{selectedManager.display_name?.charAt(0)?.toUpperCase()}</span>
-                      )}
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/30 text-xs">
+                      <Mail className="h-3 w-3 text-muted-foreground" />
+                      <span className="text-foreground font-medium">E-mail:</span>
+                      <span className="text-muted-foreground">{selectedManager.email || "Não informado"}</span>
                     </div>
-                    <div>
-                      <p className="font-medium text-foreground">{selectedManager.display_name}</p>
-                      {selectedManager.email && (
-                        <p className="flex items-center gap-1"><Mail className="h-3 w-3" />{selectedManager.email}</p>
-                      )}
+                    <div className="flex items-center gap-3 p-2 rounded-lg bg-muted/30">
+                      <Checkbox
+                        id="store-access-admin"
+                        checked={storeAccess}
+                        onCheckedChange={(v) => setStoreAccess(!!v)}
+                      />
+                      <label htmlFor="store-access-admin" className="text-xs text-foreground font-medium cursor-pointer flex items-center gap-1">
+                        <ShieldCheck className="h-3 w-3 text-primary" />
+                        Gestor tem acesso à loja na plataforma
+                      </label>
                     </div>
                   </div>
                 )}

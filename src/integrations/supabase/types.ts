@@ -92,6 +92,8 @@ export type Database = {
           id: string
           manager_name: string
           operational_manager: string
+          status: string
+          store_access_confirmed: boolean
           store_name: string
           updated_at: string
           user_id: string
@@ -104,6 +106,8 @@ export type Database = {
           id?: string
           manager_name?: string
           operational_manager?: string
+          status?: string
+          store_access_confirmed?: boolean
           store_name?: string
           updated_at?: string
           user_id: string
@@ -116,6 +120,8 @@ export type Database = {
           id?: string
           manager_name?: string
           operational_manager?: string
+          status?: string
+          store_access_confirmed?: boolean
           store_name?: string
           updated_at?: string
           user_id?: string
