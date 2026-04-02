@@ -45,6 +45,16 @@ const TYPE_LABELS: Record<string, string> = {
   prep_time: "Tempo de Preparo",
   delivery_method: "Método de Entrega",
   payment_methods: "Formas de Pagamento",
+  business_hours: "Horário de Funcionamento",
+  item_photo: "Foto do Item",
+  promotion: "Promoção/Desconto",
+  store_rating: "Avaliações da Loja",
+  orders: "Pedidos",
+  delivery_fee: "Taxa de Entrega",
+  minimum_order: "Pedido Mínimo",
+  store_status: "Status da Loja",
+  featured_items: "Itens em Destaque",
+  store_info: "Informações da Loja",
   other: "Outro",
 };
 
