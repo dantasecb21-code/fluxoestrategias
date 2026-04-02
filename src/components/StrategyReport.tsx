@@ -21,7 +21,7 @@ export function StrategyReport({ storeName, managerName, operationalManager, dea
     let report = `*Estratégia Inicial – ${storeName}*\n\n`;
     report += `*Gestor Estratégico:* ${managerName}\n`;
     report += `*Gestor Operacional:* ${operationalManager}\n`;
-    report += `*Prazo:* ${deadline}\n\n`;
+    report += `*Prazo:* ${formatDateBR(deadline)}\n\n`;
 
     activeCategories.forEach((cat) => {
       report += `*${cat.name}*\n\n`;
