@@ -81,7 +81,7 @@ export default function Auth() {
         </div>
 
         <h2 className="font-heading font-semibold text-xl text-foreground text-center mb-6">
-          {isLogin ? "Entrar na sua conta" : "Criar nova conta"}
+          {isForgot ? "Recuperar senha" : isLogin ? "Entrar na sua conta" : "Criar nova conta"}
         </h2>
 
         <form onSubmit={handleSubmit} className="space-y-4">
