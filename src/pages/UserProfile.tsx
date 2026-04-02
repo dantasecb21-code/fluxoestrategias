@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
-import { ArrowLeft, Camera, Phone, Mail, Shield, CheckCircle, Clock, Edit2, Save, X, FileText } from "lucide-react";
+import { ArrowLeft, Camera, Phone, Mail, Shield, CheckCircle, Clock, Edit2, Save, X, FileText, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 interface ProfileData {
@@ -24,7 +24,7 @@ export default function UserProfile() {
   const { userId } = useParams();
   const navigate = useNavigate();
   const { user, role: myRole } = useAuth();
-  const { strategies } = useDbStrategies();
+  const { strategies, deleteStrategy } = useDbStrategies();
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [userRole, setUserRole] = useState("");
   const [userEmail, setUserEmail] = useState("");
@@ -93,6 +93,7 @@ export default function UserProfile() {
   // Completed strategies for this user
   const completedStrategies = userId ? strategies.filter((s) => {
     if (s.assigned_to !== userId) return false;
+    if ((s as any).status === "approved") return true;
     const items = (s.categories as any[]).flatMap((c: any) => c.items);
     return items.length > 0 && items.every((i: any) => i.status === "completed");
   }) : [];
@@ -265,9 +266,21 @@ export default function UserProfile() {
                     {(s.categories as any[]).flatMap((c: any) => c.items).length} itens • {new Date(s.created_at).toLocaleDateString("pt-BR")}
                   </p>
                 </div>
-                <Badge className="bg-success/20 text-success border-success/30 text-xs">
-                  <CheckCircle className="h-3 w-3 mr-1" /> Concluída
-                </Badge>
+                <div className="flex items-center gap-2">
+                  <Badge className="bg-success/20 text-success border-success/30 text-xs">
+                    <CheckCircle className="h-3 w-3 mr-1" /> Concluída
+                  </Badge>
+                  {canViewHistory && (
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                      onClick={(e) => { e.stopPropagation(); deleteStrategy(s.id); toast.success("Estratégia removida."); }}
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  )}
+                </div>
               </div>
             ))}
           </div>
