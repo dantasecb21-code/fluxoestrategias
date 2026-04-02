@@ -25,7 +25,7 @@ export default function UserProfile() {
   const { userId } = useParams();
   const navigate = useNavigate();
   const { user, role: myRole } = useAuth();
-  const { strategies } = useDbStrategies();
+  const { strategies, deleteStrategy } = useDbStrategies();
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [userRole, setUserRole] = useState("");
   const [userEmail, setUserEmail] = useState("");
