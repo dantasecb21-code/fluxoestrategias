@@ -100,17 +100,17 @@ export default function UserProfile() {
   const managerStats = userId ? (() => {
     const assigned = strategies.filter((s) => s.assigned_to === userId);
     const total = assigned.length;
-    let completed = 0, inProgress = 0;
+    let completed = 0, inProgress = 0, pendingApproval = 0;
     assigned.forEach((s) => {
       if (s.status === "approved") { completed++; return; }
+      if (s.status === "pending_approval") { pendingApproval++; return; }
       const items = (s.categories as any[]).flatMap((c: any) => c.items);
       if (items.length === 0) return;
-      if (items.every((i: any) => i.status === "completed")) completed++;
-      else if (items.some((i: any) => i.status === "in_progress" || i.status === "completed")) inProgress++;
+      if (items.some((i: any) => i.status === "in_progress" || i.status === "completed")) inProgress++;
     });
-    const pending = total - completed - inProgress;
+    const pending = total - completed - inProgress - pendingApproval;
     const rate = total > 0 ? Math.round((completed / total) * 100) : 0;
-    return { total, completed, inProgress, pending, rate };
+    return { total, completed, inProgress, pending, pendingApproval, rate };
   })() : null;
 
   if (loading) return <div className="flex items-center justify-center h-64 text-muted-foreground">Carregando...</div>;
@@ -222,10 +222,14 @@ export default function UserProfile() {
       {managerStats && managerStats.total > 0 && (
         <Card className="p-5 space-y-3">
           <h3 className="font-heading font-semibold text-foreground">Desempenho</h3>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-4 gap-3">
             <div className="text-center p-2.5 rounded-lg bg-success/10">
               <p className="font-heading font-bold text-xl text-success">{managerStats.completed}</p>
               <p className="text-xs text-muted-foreground">Concluídas</p>
+            </div>
+            <div className="text-center p-2.5 rounded-lg bg-blue-500/10">
+              <p className="font-heading font-bold text-xl text-blue-400">{managerStats.pendingApproval}</p>
+              <p className="text-xs text-muted-foreground">Aguardando</p>
             </div>
             <div className="text-center p-2.5 rounded-lg bg-primary/10">
               <p className="font-heading font-bold text-xl text-primary">{managerStats.inProgress}</p>

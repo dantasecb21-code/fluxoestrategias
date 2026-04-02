@@ -31,21 +31,21 @@ function calcManagerStats(strategies: any[], managerId: string) {
   const total = assigned.length;
   let completed = 0;
   let inProgress = 0;
+  let pendingApproval = 0;
 
   assigned.forEach((s) => {
     if (s.status === "approved") { completed++; return; }
+    if (s.status === "pending_approval") { pendingApproval++; return; }
     const allItems = s.categories.flatMap((c: any) => c.items);
     if (allItems.length === 0) return;
-    const allCompleted = allItems.every((i: any) => i.status === "completed");
     const hasStarted = allItems.some((i: any) => i.status === "in_progress" || i.status === "completed");
-    if (allCompleted) completed++;
-    else if (hasStarted) inProgress++;
+    if (hasStarted) inProgress++;
   });
 
-  const pending = total - completed - inProgress;
+  const pending = total - completed - inProgress - pendingApproval;
   const completionRate = total > 0 ? Math.round((completed / total) * 100) : 0;
 
-  return { total, completed, inProgress, pending, completionRate };
+  return { total, completed, inProgress, pending, pendingApproval, completionRate };
 }
 
 export default function ManagersList() {
@@ -185,10 +185,14 @@ export default function ManagersList() {
                 </div>
 
                 {/* Stats */}
-                <div className="grid grid-cols-3 gap-3 mb-3">
+                <div className="grid grid-cols-4 gap-3 mb-3">
                   <div className="text-center p-2 rounded-lg bg-success/10">
                     <p className="font-heading font-bold text-lg text-success">{stats.completed}</p>
                     <p className="text-xs text-muted-foreground">Concluídas</p>
+                  </div>
+                  <div className="text-center p-2 rounded-lg bg-blue-500/10">
+                    <p className="font-heading font-bold text-lg text-blue-400">{stats.pendingApproval}</p>
+                    <p className="text-xs text-muted-foreground">Aguardando</p>
                   </div>
                   <div className="text-center p-2 rounded-lg bg-primary/10">
                     <p className="font-heading font-bold text-lg text-primary">{stats.inProgress}</p>
