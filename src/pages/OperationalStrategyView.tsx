@@ -8,7 +8,7 @@ import { Progress } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, ChevronDown, ChevronRight, Save, MessageSquare, CheckCircle2, ShieldCheck } from "lucide-react";
+import { ArrowLeft, ChevronDown, ChevronRight, Save, MessageSquare, CheckCircle2, ShieldCheck, AlertCircle } from "lucide-react";
 import { formatDateBR } from "@/lib/utils";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
