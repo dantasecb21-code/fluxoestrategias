@@ -133,6 +133,8 @@ export default function StrategyBuilderPage() {
       });
       setCategories(existing.categories);
       setAssignedTo(existing.assigned_to || "");
+      setStrategyType((existing.strategy_type as StrategyType) || "initial");
+      setObservation(existing.observation || "");
       setSavedId(existing.id);
     }
   }, [existing?.id]);
