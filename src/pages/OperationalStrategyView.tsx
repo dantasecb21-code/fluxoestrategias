@@ -316,6 +316,59 @@ export default function OperationalStrategyView() {
           <p className="text-muted-foreground">Nenhum item selecionado nesta estratégia.</p>
         </Card>
       )}
+
+      {/* Histórico de alterações */}
+      <Collapsible open={historyOpen} onOpenChange={setHistoryOpen}>
+        <Card>
+          <CollapsibleTrigger className="w-full flex items-center justify-between p-4 hover:bg-muted/30 transition-colors">
+            <h3 className="font-heading font-semibold text-foreground flex items-center gap-2">
+              <History className="h-5 w-5 text-primary" />
+              Histórico de Alterações
+            </h3>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted-foreground">{history.length} registros</span>
+              {historyOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+            </div>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <div className="border-t border-border divide-y divide-border">
+              {history.length === 0 ? (
+                <p className="p-4 text-sm text-muted-foreground text-center">Nenhuma alteração registrada ainda.</p>
+              ) : (
+                history.map((entry) => {
+                  const date = new Date(entry.created_at);
+                  const statusLabels: Record<string, string> = {
+                    in_progress: "Em andamento",
+                    pending_approval: "Aguardando aprovação",
+                    approved: "Aprovada",
+                  };
+                  return (
+                    <div key={entry.id} className="p-4 flex items-start gap-3">
+                      <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
+                        <History className="h-4 w-4 text-primary" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm text-foreground">
+                          <span className="font-medium">{entry.user_name || "Usuário"}</span>
+                          {" alterou o status de "}
+                          <Badge variant="outline" className="text-xs mx-1">{statusLabels[entry.old_value] || entry.old_value}</Badge>
+                          {" para "}
+                          <Badge variant="secondary" className="text-xs mx-1">{statusLabels[entry.new_value] || entry.new_value}</Badge>
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {date.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" })}
+                          {" às "}
+                          {date.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </CollapsibleContent>
+        </Card>
+      </Collapsible>
     </div>
   );
 }
