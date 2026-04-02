@@ -114,6 +114,11 @@ export default function StrategyBuilderPage() {
   const [storeAccess, setStoreAccess] = useState(existing?.store_access_confirmed || false);
   const imageInputRef = useRef<HTMLInputElement>(null);
 
+  // AI follow-up dialog state
+  const [aiDetection, setAiDetection] = useState<any>(null);
+  const [showFollowUp, setShowFollowUp] = useState(false);
+  const [generatingFromFollowUp, setGeneratingFromFollowUp] = useState(false);
+
   const editor = useCategoryEditor(categories, setCategories);
   const strategyStatus = existing?.status || "in_progress";
 
