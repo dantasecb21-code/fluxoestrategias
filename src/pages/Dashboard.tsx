@@ -77,7 +77,6 @@ export default function Dashboard() {
                       {s.store_name || "Sem nome"}
                       <Badge variant={statusVariant} className="text-[10px]">{statusLabel}</Badge>
                     </h3>
-                    </h3>
                     <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground mt-1">
                       {s.operational_manager && (
                         <span className="flex items-center gap-1">
