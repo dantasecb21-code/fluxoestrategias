@@ -117,7 +117,7 @@ export default function OperationalStrategyView() {
           </Button>
           <div>
             <h1 className="font-heading font-bold text-xl text-foreground">
-              Estratégia Inicial – {strategy.store_name}
+              {STRATEGY_TYPE_LABELS[(strategy as any).strategy_type as StrategyType] || "Estratégia"} – {strategy.store_name}
             </h1>
             <div className="text-xs text-muted-foreground mt-0.5 flex items-center gap-2">
               Prazo: {formatDateBR(strategy.deadline)}
