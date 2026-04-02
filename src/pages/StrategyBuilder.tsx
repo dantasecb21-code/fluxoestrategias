@@ -92,6 +92,8 @@ export default function StrategyBuilderPage() {
   );
   const [assignedTo, setAssignedTo] = useState<string>(existing?.assigned_to || draft?.assignedTo || "");
   const [showReport, setShowReport] = useState(false);
+  const [showDetailedProgress, setShowDetailedProgress] = useState(false);
+  const [expandedCats, setExpandedCats] = useState<Record<string, boolean>>({});
   const [addingCategory, setAddingCategory] = useState(false);
   const [newCatName, setNewCatName] = useState("");
   const [savedId, setSavedId] = useState<string | null>(id || null);
