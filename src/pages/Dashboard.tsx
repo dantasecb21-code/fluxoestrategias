@@ -76,7 +76,7 @@ export default function Dashboard() {
                   <div className="min-w-0 flex-1">
                     <h3 className="font-heading font-semibold text-foreground text-lg truncate flex items-center gap-2">
                       {s.store_name || "Sem nome"}
-                      <Badge variant={statusVariant} className="text-[10px]">{statusLabel}</Badge>
+                      <Badge variant={statusVariant} className={`text-[10px] py-0 px-1.5 h-4 leading-none ${isApproved ? "bg-success/20 text-success border-success/30" : ""}`}>{statusLabel}</Badge>
                     </h3>
                     <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground mt-1">
                       {s.operational_manager && (
