@@ -63,10 +63,10 @@ export default function Dashboard() {
           </h2>
           {strategies.map((s) => {
             const progress = calcProgress(s.categories);
-            const status = (s as any).status || "in_progress";
-            const statusLabel = status === "pending_approval" ? "Aguardando aprovação" : status === "approved" ? "Concluída ✓" : "Em andamento";
-            const statusVariant = status === "pending_approval" ? "outline" as const : status === "approved" ? "default" as const : "secondary" as const;
-            const isApproved = status === "approved";
+            const displayStatus = deriveStrategyDisplayStatus(s);
+            const statusLabel = getStatusLabel(displayStatus);
+            const badgeProps = getStatusBadgeProps(displayStatus);
+            const isApproved = displayStatus === "completed";
             return (
               <Card
                 key={s.id}
