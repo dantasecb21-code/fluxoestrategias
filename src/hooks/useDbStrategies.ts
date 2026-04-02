@@ -85,6 +85,8 @@ export function useDbStrategies() {
     deadline: string;
     categories: StrategyCategory[];
     assigned_to?: string | null;
+    strategy_type?: string;
+    observation?: string;
   }): Promise<DbStrategy | null> => {
     if (!user) return null;
     const { data, error } = await supabase
@@ -97,6 +99,8 @@ export function useDbStrategies() {
         deadline: params.deadline,
         categories: params.categories as unknown as Json,
         assigned_to: params.assigned_to || null,
+        strategy_type: params.strategy_type || "initial",
+        observation: params.observation || "",
       })
       .select()
       .single();
