@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useDbStrategies } from "@/hooks/useDbStrategies";
+import { useDbStrategies, STRATEGY_TYPE_LABELS, StrategyType } from "@/hooks/useDbStrategies";
 import { StrategyCategory, ItemStatus } from "@/types/strategy";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
