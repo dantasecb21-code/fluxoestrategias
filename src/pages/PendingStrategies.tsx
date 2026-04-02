@@ -5,6 +5,7 @@ import { Progress } from "@/components/ui/progress";
 import { Clock, AlertTriangle, UserCheck, Eye } from "lucide-react";
 import { formatDateBR } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import OverdueAlert from "@/components/OverdueAlert";
 
 function calcProgress(categories: any[]) {
   const allItems = categories.flatMap((c: any) => c.items);
@@ -52,6 +53,7 @@ export default function PendingStrategies() {
         </Card>
       ) : (
         <div className="space-y-3">
+          <OverdueAlert strategies={pendingStrategies} />
           <p className="text-sm text-muted-foreground mb-4">{pendingStrategies.length} estratégia(s) em andamento</p>
           {pendingStrategies.map((s) => {
             const progress = calcProgress(s.categories);

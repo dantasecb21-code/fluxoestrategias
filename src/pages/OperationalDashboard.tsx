@@ -4,6 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { ClipboardList, Eye, Clock } from "lucide-react";
+import OverdueAlert from "@/components/OverdueAlert";
 
 function calcProgress(categories: any[]) {
   const allItems = categories.flatMap((c: any) => c.items);
@@ -44,6 +45,7 @@ export default function OperationalDashboard() {
         </Card>
       ) : (
         <div className="space-y-4">
+          <OverdueAlert strategies={strategies} isOperational />
           {strategies.map((s) => {
             const progress = calcProgress(s.categories);
             return (
