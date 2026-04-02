@@ -49,6 +49,7 @@ export default function UserProfile() {
         const p = profileRes.data as ProfileData;
         setProfile(p);
         setEditForm({ display_name: p.display_name, whatsapp: p.whatsapp, status_text: p.status_text || "" });
+        if ((p as any).email) setUserEmail((p as any).email);
       }
       if (roleRes.data) setUserRole(roleRes.data.role);
       setLoading(false);
