@@ -6,6 +6,7 @@ import { Progress } from "@/components/ui/progress";
 import { Plus, Copy, Pencil, Trash2, FileText, Zap, Clock, UserCheck } from "lucide-react";
 import { formatDateBR } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
+import { deriveStrategyDisplayStatus, getStatusLabel, getStatusBadgeProps } from "@/lib/strategyStatus";
 
 function calcProgress(categories: any[]) {
   const allItems = categories.flatMap((c: any) => c.items);
