@@ -672,6 +672,22 @@ export default function StrategyBuilderPage() {
               <Plus className="h-4 w-4 mr-2" /> Nova categoria
             </Button>
           )}
+
+          {/* Observações sobre a loja */}
+          <Card className="p-4 border-border bg-card space-y-3">
+            <Label className="text-foreground font-heading font-semibold text-sm flex items-center gap-2">
+              <FileText className="h-4 w-4 text-primary" /> Observações sobre a loja
+            </Label>
+            <p className="text-xs text-muted-foreground">
+              Espaço livre para anotar informações complementares sobre a loja.
+            </p>
+            <Textarea
+              value={observation}
+              onChange={(e) => setObservation(e.target.value)}
+              placeholder="Ex: loja tem dificuldade com entrega, dono viaja muito, equipe nova..."
+              className="bg-background min-h-[100px]"
+            />
+          </Card>
         </>
       )}
     </div>
