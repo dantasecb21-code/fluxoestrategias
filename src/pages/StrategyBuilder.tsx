@@ -553,7 +553,22 @@ export default function StrategyBuilderPage() {
             )}
           </Card>
 
-          {/* Free-text AI box */}
+          {/* Observação para o gestor */}
+          <Card className="p-4 border-warning/30 bg-warning/5 space-y-2">
+            <Label className="text-foreground font-heading font-semibold text-sm flex items-center gap-2">
+              <FileText className="h-4 w-4 text-warning" /> Observação para o gestor
+            </Label>
+            <p className="text-xs text-muted-foreground">
+              Informação importante que ficará em destaque para o gestor operacional.
+            </p>
+            <Textarea
+              value={observation}
+              onChange={(e) => setObservation(e.target.value)}
+              placeholder="Ex: loja tem dificuldade com entrega, dono viaja muito, equipe nova..."
+              className="bg-background min-h-[80px]"
+            />
+          </Card>
+
           <Card className="p-4 border-border bg-card space-y-3">
             <div className="flex items-center gap-2">
               <Sparkles className="h-4 w-4 text-primary" />
@@ -673,21 +688,6 @@ export default function StrategyBuilderPage() {
             </Button>
           )}
 
-          {/* Observações sobre a loja */}
-          <Card className="p-4 border-border bg-card space-y-3">
-            <Label className="text-foreground font-heading font-semibold text-sm flex items-center gap-2">
-              <FileText className="h-4 w-4 text-primary" /> Observações sobre a loja
-            </Label>
-            <p className="text-xs text-muted-foreground">
-              Espaço livre para anotar informações complementares sobre a loja.
-            </p>
-            <Textarea
-              value={observation}
-              onChange={(e) => setObservation(e.target.value)}
-              placeholder="Ex: loja tem dificuldade com entrega, dono viaja muito, equipe nova..."
-              className="bg-background min-h-[100px]"
-            />
-          </Card>
         </>
       )}
     </div>

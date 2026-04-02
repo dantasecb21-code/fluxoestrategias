@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useDbStrategies } from "@/hooks/useDbStrategies";
+import { useDbStrategies, STRATEGY_TYPE_LABELS, StrategyType } from "@/hooks/useDbStrategies";
 import { StrategyCategory, ItemStatus } from "@/types/strategy";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,7 +8,7 @@ import { Progress } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, ChevronDown, ChevronRight, Save, MessageSquare, CheckCircle2, ShieldCheck } from "lucide-react";
+import { ArrowLeft, ChevronDown, ChevronRight, Save, MessageSquare, CheckCircle2, ShieldCheck, AlertCircle } from "lucide-react";
 import { formatDateBR } from "@/lib/utils";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
@@ -117,7 +117,7 @@ export default function OperationalStrategyView() {
           </Button>
           <div>
             <h1 className="font-heading font-bold text-xl text-foreground">
-              Estratégia Inicial – {strategy.store_name}
+              {STRATEGY_TYPE_LABELS[(strategy as any).strategy_type as StrategyType] || "Estratégia"} – {strategy.store_name}
             </h1>
             <div className="text-xs text-muted-foreground mt-0.5 flex items-center gap-2">
               Prazo: {formatDateBR(strategy.deadline)}
@@ -133,6 +133,19 @@ export default function OperationalStrategyView() {
           )}
         </div>
       </div>
+
+      {/* Observation highlight */}
+      {(strategy as any).observation && (
+        <Card className="p-4 border-warning/30 bg-warning/5">
+          <div className="flex items-start gap-2">
+            <AlertCircle className="h-4 w-4 text-warning shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm font-medium text-foreground mb-1">Observação da liderança</p>
+              <p className="text-sm text-muted-foreground whitespace-pre-wrap">{(strategy as any).observation}</p>
+            </div>
+          </div>
+        </Card>
+      )}
 
       {/* Store access confirmation */}
       <Card className="p-4">
