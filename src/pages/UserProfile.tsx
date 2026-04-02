@@ -102,7 +102,7 @@ export default function UserProfile() {
     const total = assigned.length;
     let completed = 0, inProgress = 0;
     assigned.forEach((s) => {
-      const items = (s.categories as any[]).flatMap((c: any) => c.items).filter((i: any) => i.checked);
+      const items = (s.categories as any[]).flatMap((c: any) => c.items);
       if (items.length === 0) return;
       if (items.every((i: any) => i.status === "completed")) completed++;
       else if (items.some((i: any) => i.status === "in_progress" || i.status === "completed")) inProgress++;
