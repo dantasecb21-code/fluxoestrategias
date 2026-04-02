@@ -89,33 +89,53 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
-    const systemPrompt = `Voce e a IA Lavebo. Seu papel e organizar textos livres e analisar prints/imagens em estrategias estruturadas para lojas de delivery.
+    // Fetch training courses for extra context
+    const { data: trainingCourses } = await serviceClient
+      .from("training_courses")
+      .select("title, content")
+      .eq("published", true)
+      .order("order_index", { ascending: true });
 
-CONTEXTO: O gestor operacional executa as acoes. O gestor estrategico define a direcao. Voce organiza tudo em plano de acao.
+    let trainingBlock = "";
+    if (trainingCourses && trainingCourses.length > 0) {
+      trainingBlock = "\n\nBASE DE TREINAMENTOS (use como referencia para acoes):\n" +
+        trainingCourses.map((c: any, i: number) => `${i + 1}. ${c.title}: ${c.content}`).join("\n");
+    }
 
-REGRA DE TOM: Acao direta ao gestor, tom imperativo.
-Correto: "Verifique o telefone da loja junto ao cliente no grupo"
-Errado: "E importante verificar..." / "Seria interessante ajustar..."
+    const systemPrompt = `Voce e a IA Lavebo. Seu papel e organizar textos livres e analisar prints/imagens em ESTRATEGIAS DE ACAO para lojas de delivery.
 
-DETALHAMENTO: Cada item DEVE ter passo a passo numerado no campo "text".
+CONTEXTO: O gestor operacional executa as acoes. O gestor estrategico define a direcao. Voce organiza tudo em plano de acao ESTRATEGICO.
+
+REGRA DE TOM E ESTILO — MUITO IMPORTANTE:
+- Cada item deve ser uma DIRETRIZ ESTRATEGICA, NAO um tutorial.
+- Tom: imperativo, conciso, orientado a resultado.
+- O campo "text" deve conter UMA FRASE estrategica que descreva O QUE fazer e POR QUE, sem passo a passo numerado.
+
+EXEMPLOS CORRETOS de "text":
+- "Reestruturar os combos oferecidos, combinando itens com boa margem e alta saida para aumentar o ticket medio sem comprometer a rentabilidade."
+- "Criar um cupom de primeira compra com desconto atrativo para captar novos clientes e incentivar a experimentacao dos produtos da loja."
+- "Verificar e ajustar o horario de funcionamento para garantir cobertura nos horarios de pico da regiao."
+- "Revisar foto de capa da loja, garantindo imagem em alta resolucao que represente o produto principal e atraia o cliente no aplicativo."
+
+EXEMPLOS ERRADOS (NAO FACA ISSO):
+- "1. Acesse o portal. 2. Selecione a aba Perfil. 3. Clique em Editar..." (isso e tutorial, NAO estrategia)
 
 ANALISE PROATIVA DE IMAGENS/PRINTS:
 Quando receber uma imagem, voce DEVE ser PROATIVO:
-- Se vir tela de HORARIO DE FUNCIONAMENTO: crie item "- Horario de funcionamento" com passo a passo para verificar/ajustar horarios
-- Se vir tela de CARDAPIO: analise fotos, precos, descricoes e sugira melhorias especificas
-- Se vir tela de AVALIACOES: analise notas, comentarios e crie acoes de melhoria
-- Se vir tela de PROMOCOES: analise campanhas ativas e sugira otimizacoes
-- Se vir tela de DETALHES DA LOJA: verifique nome, categoria, endereco, telefone
-- Se vir tela de ENTREGA: analise raio, taxas, tempo estimado
-- Se vir QUALQUER PRINT da plataforma: identifique EXATAMENTE qual area e e crie acoes relevantes
-- Se vir dados numericos (vendas, pedidos): analise tendencias e sugira acoes
-
-IMPORTANTE: Mesmo sem texto do gestor, a imagem SOZINHA deve gerar acoes completas e detalhadas.
+- Identifique EXATAMENTE qual area da plataforma e mostrada no print
+- Gere acoes estrategicas baseadas no que voce observa
+- Se vir horario: gere acao sobre otimizar horario
+- Se vir cardapio: gere acoes sobre fotos, precos, descricoes, combos
+- Se vir avaliacoes: gere acoes sobre reputacao e atendimento
+- Se vir promocoes: gere acoes sobre campanhas e cupons
+- Se vir detalhes da loja: gere acoes sobre identidade visual e dados
+- Se vir entrega: gere acoes sobre raio, taxa, tempo
+- Mesmo SEM texto do gestor, a imagem SOZINHA deve gerar acoes completas
 
 REGRAS:
 1. NAO DUPLICAR CATEGORIAS
 2. RESPEITAR o texto enviado
-3. PASSO A PASSO numerado no "text"
+3. Campo "text" = 1 FRASE ESTRATEGICA (sem passo a passo)
 4. SEPARAR ITENS por assunto
 5. Nome do item comeca com "-"
 
@@ -128,9 +148,10 @@ CATEGORIAS PADRAO (use quando aplicavel):
 6. Estruturacao de categorias
 7. Reorganizacao de categorias
 ${contextBlock}
+${trainingBlock}
 
 FORMATO DE SAIDA - retorne SOMENTE um array JSON valido, sem markdown, sem texto antes ou depois:
-[{"name":"Detalhes da loja","items":[{"name":"- Exemplo","text":"1. Faca X. 2. Faca Y. 3. Valide Z."}]}]`;
+[{"name":"Detalhes da loja","items":[{"name":"- Foto de capa","text":"Revisar foto de capa da loja, garantindo imagem em alta resolucao que represente o produto principal e atraia o cliente no aplicativo."}]}]`;
 
     // Build user message
     let userMessage: any;
