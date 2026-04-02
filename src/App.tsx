@@ -16,6 +16,7 @@ import StrategyNotes from "./pages/StrategyNotes";
 import PendingStrategies from "./pages/PendingStrategies";
 import UserApproval from "./pages/UserApproval";
 import AssistantChat from "./pages/AssistantChat";
+import TrainingCourses from "./pages/TrainingCourses";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
