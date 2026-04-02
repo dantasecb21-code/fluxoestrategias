@@ -93,9 +93,7 @@ export default function UserProfile() {
   // Completed strategies for this user
   const completedStrategies = userId ? strategies.filter((s) => {
     if (s.assigned_to !== userId) return false;
-    if ((s as any).status === "approved") return true;
-    const items = (s.categories as any[]).flatMap((c: any) => c.items);
-    return items.length > 0 && items.every((i: any) => i.status === "completed");
+    return s.status === "approved";
   }) : [];
 
   // Stats
