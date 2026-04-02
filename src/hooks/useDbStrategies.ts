@@ -111,7 +111,10 @@ export function useDbStrategies() {
     if (params.categories) {
       updateData.categories = params.categories as unknown as Json;
     }
-    await supabase.from("strategies").update(updateData).eq("id", id);
+    const { error } = await supabase.from("strategies").update(updateData as any).eq("id", id);
+    if (error) {
+      console.error("Update strategy error:", error);
+    }
     fetchStrategies();
   };
 
