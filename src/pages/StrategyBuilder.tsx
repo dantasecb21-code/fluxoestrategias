@@ -368,10 +368,10 @@ export default function StrategyBuilderPage() {
             </span>
           </div>
           <div className="flex gap-2">
-            <Button onClick={handleApprove} className="bg-success text-success-foreground hover:bg-success/90">
-              <CheckCircle2 className="h-4 w-4 mr-1" /> Aprovar Estratégia
+            <Button size="sm" onClick={handleApprove} className="bg-success text-success-foreground hover:bg-success/90">
+              <CheckCircle2 className="h-3 w-3 mr-1" /> Aprovar
             </Button>
-            <Button variant="outline" onClick={handleReject}>
+            <Button size="sm" variant="outline" onClick={handleReject}>
               Devolver para Revisão
             </Button>
           </div>
