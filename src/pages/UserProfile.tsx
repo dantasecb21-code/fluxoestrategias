@@ -262,7 +262,7 @@ export default function UserProfile() {
                 <div>
                   <p className="text-sm font-medium text-foreground">{s.store_name || "Sem nome"}</p>
                   <p className="text-xs text-muted-foreground">
-                    {(s.categories as any[]).flatMap((c: any) => c.items).filter((i: any) => i.checked).length} itens • {new Date(s.created_at).toLocaleDateString("pt-BR")}
+                    {(s.categories as any[]).flatMap((c: any) => c.items).length} itens • {new Date(s.created_at).toLocaleDateString("pt-BR")}
                   </p>
                 </div>
                 <Badge className="bg-success/20 text-success border-success/30 text-xs">
