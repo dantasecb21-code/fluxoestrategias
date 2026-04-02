@@ -260,7 +260,7 @@ export default function TrainingCourses() {
               {editingId === course.id ? (
                 <div className="space-y-3">
                   <Input value={editTitle} onChange={(e) => setEditTitle(e.target.value)} />
-                  <Textarea value={editContent} onChange={(e) => setEditContent(e.target.value)} rows={6} />
+                  <Textarea value={editContent} onChange={(e) => setEditContent(e.target.value)} onPaste={(e) => handlePasteImage(e, "edit")} rows={6} />
                   <ImageGrid
                     images={editImages}
                     onRemove={(i) => setEditImages((prev) => prev.filter((_, idx) => idx !== i))}
