@@ -308,33 +308,37 @@ export default function StrategyBuilderPage() {
   return (
     <div className="max-w-4xl mx-auto px-4 py-6 space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="font-heading font-bold text-xl text-foreground flex items-center gap-2">
-            {id ? meta.storeName || "Editar Estratégia" : "Nova Estratégia"}
-            {id && existing && (
-              <Badge variant={STATUS_BADGE_MAP[strategyStatus]?.variant || "secondary"}>
-                {STATUS_BADGE_MAP[strategyStatus]?.label || "Em andamento"}
-              </Badge>
-            )}
-          </h1>
-          <p className="text-xs text-muted-foreground">
-            {totalItems} itens na estratégia
-          </p>
-        </div>
-        <div className="flex gap-2">
-          {id && (
-            <Button variant="outline" size="sm" onClick={() => { setShowDetailedProgress(!showDetailedProgress); setShowReport(false); }}>
-              <CheckCircle2 className="h-4 w-4 mr-1" /> {showDetailedProgress ? "Editor" : "Progresso"}
-            </Button>
-          )}
-          <Button variant="outline" size="sm" onClick={() => { setShowReport(!showReport); setShowDetailedProgress(false); }}>
-            <FileText className="h-4 w-4 mr-1" /> {showReport ? "Editor" : "Relatório"}
-          </Button>
-          <Button size="sm" onClick={handleSave} className="bg-primary text-primary-foreground hover:bg-primary/90">
+      <div className="space-y-3">
+        <div className="flex items-start justify-between gap-4">
+          <div className="min-w-0">
+            <h1 className="font-heading font-bold text-xl text-foreground">
+              {id ? `Estratégia Inicial - ${meta.storeName || ""}` : "Nova Estratégia"}
+            </h1>
+            <div className="flex items-center gap-2 mt-1">
+              <p className="text-xs text-muted-foreground">
+                {totalItems} itens na estratégia
+              </p>
+              {id && existing && (
+                <Badge variant={STATUS_BADGE_MAP[strategyStatus]?.variant || "secondary"} className="text-[10px]">
+                  {STATUS_BADGE_MAP[strategyStatus]?.label || "Em andamento"}
+                </Badge>
+              )}
+            </div>
+          </div>
+          <Button size="sm" onClick={handleSave} className="bg-primary text-primary-foreground hover:bg-primary/90 shrink-0">
             <Save className="h-4 w-4 mr-1" /> Salvar
           </Button>
         </div>
+        {id && (
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={() => { setShowDetailedProgress(!showDetailedProgress); setShowReport(false); }}>
+              <CheckCircle2 className="h-4 w-4 mr-1" /> {showDetailedProgress ? "Editor" : "Progresso"}
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => { setShowReport(!showReport); setShowDetailedProgress(false); }}>
+              <FileText className="h-4 w-4 mr-1" /> {showReport ? "Editor" : "Relatório"}
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* Progress bar for existing strategies */}
