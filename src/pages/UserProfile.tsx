@@ -102,6 +102,7 @@ export default function UserProfile() {
     const total = assigned.length;
     let completed = 0, inProgress = 0;
     assigned.forEach((s) => {
+      if (s.status === "approved") { completed++; return; }
       const items = (s.categories as any[]).flatMap((c: any) => c.items);
       if (items.length === 0) return;
       if (items.every((i: any) => i.status === "completed")) completed++;

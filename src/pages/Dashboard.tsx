@@ -63,19 +63,20 @@ export default function Dashboard() {
           {strategies.map((s) => {
             const progress = calcProgress(s.categories);
             const status = (s as any).status || "in_progress";
-            const statusLabel = status === "pending_approval" ? "Aguardando aprovação" : status === "approved" ? "Aprovada ✓" : "Em andamento";
+            const statusLabel = status === "pending_approval" ? "Aguardando aprovação" : status === "approved" ? "Concluída ✓" : "Em andamento";
             const statusVariant = status === "pending_approval" ? "outline" as const : status === "approved" ? "default" as const : "secondary" as const;
+            const isApproved = status === "approved";
             return (
               <Card
                 key={s.id}
-                className="p-5 hover:border-primary/30 transition-colors cursor-pointer"
+                className={`p-5 hover:border-primary/30 transition-colors cursor-pointer ${isApproved ? "border-success/30 bg-success/5" : ""}`}
                 onClick={() => navigate(`/estrategia/${s.id}`)}
               >
                 <div className="flex items-start justify-between mb-3">
                   <div className="min-w-0 flex-1">
                     <h3 className="font-heading font-semibold text-foreground text-lg truncate flex items-center gap-2">
                       {s.store_name || "Sem nome"}
-                      <Badge variant={statusVariant} className="text-[10px]">{statusLabel}</Badge>
+                      <Badge variant={statusVariant} className={`text-[10px] py-0 px-1.5 h-4 leading-none ${isApproved ? "bg-success/20 text-success border-success/30" : ""}`}>{statusLabel}</Badge>
                     </h3>
                     <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground mt-1">
                       {s.operational_manager && (
