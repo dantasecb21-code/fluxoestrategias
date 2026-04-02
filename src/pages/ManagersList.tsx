@@ -31,21 +31,21 @@ function calcManagerStats(strategies: any[], managerId: string) {
   const total = assigned.length;
   let completed = 0;
   let inProgress = 0;
+  let pendingApproval = 0;
 
   assigned.forEach((s) => {
     if (s.status === "approved") { completed++; return; }
+    if (s.status === "pending_approval") { pendingApproval++; return; }
     const allItems = s.categories.flatMap((c: any) => c.items);
     if (allItems.length === 0) return;
-    const allCompleted = allItems.every((i: any) => i.status === "completed");
     const hasStarted = allItems.some((i: any) => i.status === "in_progress" || i.status === "completed");
-    if (allCompleted) completed++;
-    else if (hasStarted) inProgress++;
+    if (hasStarted) inProgress++;
   });
 
-  const pending = total - completed - inProgress;
+  const pending = total - completed - inProgress - pendingApproval;
   const completionRate = total > 0 ? Math.round((completed / total) * 100) : 0;
 
-  return { total, completed, inProgress, pending, completionRate };
+  return { total, completed, inProgress, pending, pendingApproval, completionRate };
 }
 
 export default function ManagersList() {
