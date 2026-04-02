@@ -77,6 +77,7 @@ export default function StrategyBuilderPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { strategies, createStrategy, updateStrategy, loading } = useDbStrategies();
+  const { role } = useAuth();
 
   const existing = id ? strategies.find((s) => s.id === id) : null;
   const draft = !id ? loadDraft() : null;
