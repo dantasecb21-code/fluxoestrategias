@@ -3,6 +3,7 @@ import { useDbStrategies } from "@/hooks/useDbStrategies";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Clock, AlertTriangle, UserCheck, Eye } from "lucide-react";
+import { formatDateBR } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
 function calcProgress(categories: any[]) {
