@@ -75,6 +75,24 @@ export default function TrainingCourses() {
     }
   };
 
+  const handlePasteImage = async (e: React.ClipboardEvent, target: "new" | "edit") => {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+    for (const item of Array.from(items)) {
+      if (item.type.startsWith("image/")) {
+        e.preventDefault();
+        const file = item.getAsFile();
+        if (!file) return;
+        const url = await uploadImage(file);
+        if (url) {
+          if (target === "new") setNewImages((prev) => [...prev, url]);
+          else setEditImages((prev) => [...prev, url]);
+        }
+        return;
+      }
+    }
+  };
+
   const handleNewImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
