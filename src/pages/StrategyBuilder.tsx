@@ -492,6 +492,8 @@ export default function StrategyBuilderPage() {
           operationalManager={meta.operationalManager}
           deadline={meta.deadline}
           categories={categories}
+          strategyType={strategyType}
+          observation={observation}
         />
       ) : (
         <>
