@@ -47,12 +47,11 @@ export function useDbStrategies() {
   const fetchStrategies = useCallback(async () => {
     if (!user) { setStrategies([]); setLoading(false); return; }
 
-    let query = supabase.from("strategies").select("*");
+    let query = supabase.from("strategies").select("*").is("deleted_at", null);
 
     if (role === "operational") {
       query = query.eq("assigned_to", user.id);
     }
-    // admin and strategic users see ALL strategies (no filter needed, RLS handles access)
 
     const { data } = await query.order("updated_at", { ascending: false });
     if (data) setStrategies(data.map(mapRow));
