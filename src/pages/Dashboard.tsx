@@ -1,12 +1,14 @@
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useDbStrategies } from "@/hooks/useDbStrategies";
+import { useDbStrategies, DbStrategy } from "@/hooks/useDbStrategies";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Plus, Copy, Pencil, Trash2, FileText, Zap, Clock, UserCheck } from "lucide-react";
+import { Plus, Copy, Pencil, Trash2, FileText, Zap, Clock, UserCheck, Undo2, ChevronDown, ChevronRight } from "lucide-react";
 import { formatDateBR } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { deriveStrategyDisplayStatus, getStatusLabel, getStatusBadgeProps } from "@/lib/strategyStatus";
+import { toast } from "sonner";
 
 function calcProgress(categories: any[]) {
   const allItems = categories.flatMap((c: any) => c.items);
