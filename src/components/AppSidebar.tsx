@@ -173,11 +173,22 @@ export function AppSidebar() {
 
         {/* User info + logout */}
         <div className="mt-auto p-4 border-t border-sidebar-border">
-          {!collapsed && user && (
-            <div className="mb-2 cursor-pointer hover:opacity-80" onClick={() => navigate(`/perfil/${user.id}`)}>
-              {displayName && <p className="text-xs text-foreground font-medium truncate">{displayName}</p>}
-              <p className="text-xs text-muted-foreground">{roleLabel}</p>
-              <p className="text-xs text-primary mt-0.5">Ver perfil →</p>
+          {user && (
+            <div className="mb-2 cursor-pointer hover:opacity-80 flex items-center gap-2" onClick={() => navigate(`/perfil/${user.id}`)}>
+              <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center overflow-hidden shrink-0">
+                {avatarUrl ? (
+                  <img src={avatarUrl} alt="" className="h-full w-full object-cover" />
+                ) : (
+                  <span className="text-xs font-bold text-muted-foreground">{displayName?.charAt(0)?.toUpperCase() || "?"}</span>
+                )}
+              </div>
+              {!collapsed && (
+                <div className="min-w-0">
+                  {displayName && <p className="text-xs text-foreground font-medium truncate">{displayName}</p>}
+                  <p className="text-[10px] text-muted-foreground">{roleLabel}</p>
+                  <p className="text-[10px] text-primary">Ver perfil →</p>
+                </div>
+              )}
             </div>
           )}
           <Button
