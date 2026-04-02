@@ -4,6 +4,14 @@ import { useAuth } from "@/hooks/useAuth";
 import { StrategyCategory } from "@/types/strategy";
 import type { Json } from "@/integrations/supabase/types";
 
+export type StrategyType = "initial" | "alignment" | "retention";
+
+export const STRATEGY_TYPE_LABELS: Record<StrategyType, string> = {
+  initial: "Estratégia Inicial",
+  alignment: "Estratégia de Alinhamento",
+  retention: "Estratégia de Retenção",
+};
+
 export interface DbStrategy {
   id: string;
   user_id: string;
@@ -14,6 +22,8 @@ export interface DbStrategy {
   deadline: string;
   categories: StrategyCategory[];
   status: string;
+  strategy_type: StrategyType;
+  observation: string;
   store_access_confirmed: boolean;
   created_at: string;
   updated_at: string;
