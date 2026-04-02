@@ -18,8 +18,7 @@ export function deriveStrategyDisplayStatus(strategy: {
   );
 
   if (strategy.status === "pending_approval") {
-    // If sent back and items are in progress, treat as in_progress
-    return hasInProgress ? "in_progress" : "pending_approval";
+    return "pending_approval";
   }
 
   // Normal flow
