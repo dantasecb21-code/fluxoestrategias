@@ -380,20 +380,39 @@ export default function StrategyBuilderPage() {
               {existing.store_access_confirmed ? "Sim ✓" : "Não ✗"}
             </span>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             <Button size="sm" onClick={handleApprove} className="bg-success text-success-foreground hover:bg-success/90">
               <CheckCircle2 className="h-3 w-3 mr-1" /> Aprovar
             </Button>
-            <Button size="sm" variant="outline" onClick={handleReject}>
-              Devolver para Revisão
+            <Button size="sm" variant="outline" onClick={() => setShowRejectDialog(true)}>
+              Devolver com Novo Prazo
             </Button>
           </div>
+          {showRejectDialog && (
+            <div className="flex items-end gap-2 pt-2 border-t border-border">
+              <div className="flex-1">
+                <label className="text-xs text-muted-foreground mb-1 block">Novo prazo</label>
+                <Input type="date" value={newDeadline} onChange={(e) => setNewDeadline(e.target.value)} className="bg-background" />
+              </div>
+              <Button size="sm" variant="outline" onClick={handleReject} disabled={!newDeadline}>
+                Confirmar
+              </Button>
+              <Button size="sm" variant="ghost" onClick={() => setShowRejectDialog(false)}>
+                <X className="h-3 w-3" />
+              </Button>
+            </div>
+          )}
         </Card>
       )}
 
       {id && existing && strategyStatus === "approved" && (
-        <Card className="p-4 border-success/50 bg-success/10 text-center">
-          <p className="text-sm text-success font-medium">✅ Estratégia aprovada</p>
+        <Card className="p-4 border-success/50 bg-success/10 space-y-2">
+          <p className="text-sm text-success font-medium text-center">✅ Estratégia aprovada</p>
+          <div className="flex justify-center">
+            <Button size="sm" variant="outline" onClick={handleRevokeApproval} className="text-xs">
+              Remover aprovação
+            </Button>
+          </div>
         </Card>
       )}
 
