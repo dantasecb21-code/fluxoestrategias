@@ -85,7 +85,7 @@ export default function Auth() {
         </h2>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {!isLogin && (
+          {mode === "signup" && (
             <>
               <div className="space-y-1.5">
                 <Label className="text-muted-foreground text-xs">Nome</Label>
