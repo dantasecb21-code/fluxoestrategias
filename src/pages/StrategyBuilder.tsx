@@ -13,10 +13,11 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
 import { Card } from "@/components/ui/card";
-import { FileText, Plus, Save, Check, X, UserCheck, Sparkles, Loader2, Mic, Square } from "lucide-react";
+import { FileText, Plus, Save, Check, X, UserCheck, Sparkles, Loader2, ImagePlus, Mail } from "lucide-react";
 import { toast } from "sonner";
 import { StrategyMeta } from "@/types/strategy";
 import { supabase } from "@/integrations/supabase/client";
+import { formatDateBR } from "@/lib/utils";
 
 function generateId() {
   return Math.random().toString(36).substring(2, 10) + Date.now().toString(36);
@@ -34,6 +35,8 @@ interface Manager {
   user_id: string;
   display_name: string;
   whatsapp?: string;
+  avatar_url?: string;
+  email?: string;
 }
 
 function calcProgress(categories: StrategyCategory[]) {
@@ -94,13 +97,10 @@ export default function StrategyBuilderPage() {
   const [freeText, setFreeText] = useState(draft?.freeText || "");
   const [organizingAI, setOrganizingAI] = useState(false);
 
-  // Audio recording (record-then-process model)
-  const [isRecording, setIsRecording] = useState(false);
-  const [isTranscribing, setIsTranscribing] = useState(false);
-  const [recordingTime, setRecordingTime] = useState(0);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const audioChunksRef = useRef<Blob[]>([]);
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  // Image upload
+  const [uploadedImage, setUploadedImage] = useState<string | null>(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const imageInputRef = useRef<HTMLInputElement>(null);
 
   const editor = useCategoryEditor(categories, setCategories);
 
@@ -134,20 +134,13 @@ export default function StrategyBuilderPage() {
       if (roles && roles.length > 0) {
         const { data: profiles } = await supabase
           .from("profiles")
-          .select("user_id, display_name, whatsapp")
+          .select("user_id, display_name, whatsapp, avatar_url, email")
           .in("user_id", roles.map((r) => r.user_id))
           .eq("approved", true);
-        if (profiles) setManagers(profiles);
+        if (profiles) setManagers(profiles as Manager[]);
       }
     }
     fetchManagers();
-  }, []);
-
-  // Cleanup timer on unmount
-  useEffect(() => {
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-    };
   }, []);
 
   const handleManagerSelect = (userId: string) => {
@@ -208,16 +201,34 @@ export default function StrategyBuilderPage() {
     }
   };
 
+  // Image upload handler
+  const handleImageUpload = async (file: File) => {
+    setUploadingImage(true);
+    try {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64 = (reader.result as string).split(",")[1];
+        setUploadedImage(base64);
+        setUploadingImage(false);
+        toast.success("Imagem carregada! Clique em 'Organizar com IA' para analisar.");
+      };
+      reader.readAsDataURL(file);
+    } catch {
+      toast.error("Erro ao carregar imagem.");
+      setUploadingImage(false);
+    }
+  };
+
   // Free-text AI: organize into categories
   const handleOrganizeWithAI = async () => {
-    if (!freeText.trim()) {
-      toast.error("Escreva algo primeiro!");
+    if (!freeText.trim() && !uploadedImage) {
+      toast.error("Escreva algo ou envie uma imagem primeiro!");
       return;
     }
     setOrganizingAI(true);
     try {
       const { data, error } = await supabase.functions.invoke("organize-strategy", {
-        body: { freeText: freeText.trim(), storeName: meta.storeName },
+        body: { freeText: freeText.trim(), storeName: meta.storeName, imageBase64: uploadedImage || undefined },
       });
       if (error) throw error;
       if (data?.categories && Array.isArray(data.categories)) {
@@ -233,7 +244,22 @@ export default function StrategyBuilderPage() {
           })),
         }));
         setCategories((prev) => [...prev, ...newCats]);
+
+        // Save context for AI learning
+        if (freeText.trim()) {
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+            await supabase.from("ai_context_entries" as any).insert({
+              user_id: user.id,
+              content: freeText.trim(),
+              structured_summary: JSON.stringify(data.categories.map((c: any) => c.name)),
+              category: meta.storeName || "geral",
+            });
+          }
+        }
+
         setFreeText("");
+        setUploadedImage(null);
         toast.success(`${newCats.length} categorias adicionadas pela IA!`);
       }
     } catch (err: any) {
@@ -244,113 +270,7 @@ export default function StrategyBuilderPage() {
     }
   };
 
-  // Audio: Record first, then transcribe
-  const startRecording = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream);
-      audioChunksRef.current = [];
-
-      mediaRecorder.ondataavailable = (e) => {
-        if (e.data.size > 0) audioChunksRef.current.push(e.data);
-      };
-
-      mediaRecorder.onstop = () => {
-        stream.getTracks().forEach((t) => t.stop());
-        if (timerRef.current) {
-          clearInterval(timerRef.current);
-          timerRef.current = null;
-        }
-        transcribeAudio();
-      };
-
-      mediaRecorder.start(250);
-      mediaRecorderRef.current = mediaRecorder;
-      setIsRecording(true);
-      setRecordingTime(0);
-      timerRef.current = setInterval(() => setRecordingTime((t) => t + 1), 1000);
-    } catch {
-      toast.error("Não foi possível acessar o microfone.");
-    }
-  };
-
-  const stopRecording = () => {
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
-      mediaRecorderRef.current.stop();
-    }
-    setIsRecording(false);
-  };
-
-  const transcribeAudio = async () => {
-    const chunks = audioChunksRef.current;
-    if (chunks.length === 0) return;
-
-    const audioBlob = new Blob(chunks, { type: "audio/webm" });
-    setIsTranscribing(true);
-
-    try {
-      // Use Web Speech API for transcription in a batch-like way
-      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-      if (!SpeechRecognition) {
-        toast.error("Seu navegador não suporta transcrição de áudio.");
-        setIsTranscribing(false);
-        return;
-      }
-
-      // Create an audio element to play back the recording through Speech Recognition
-      // Since Web Speech API works with live mic, we'll use a workaround:
-      // Re-record using SpeechRecognition but process the accumulated text
-      const rec = new SpeechRecognition();
-      rec.lang = "pt-BR";
-      rec.continuous = false;
-      rec.interimResults = false;
-
-      // Use the blob URL to play audio - but SpeechRecognition only works with mic
-      // So we'll do a hybrid: replay the audio and use SpeechRecognition simultaneously
-      // Actually, the best approach is to use the recorded audio with a server-side transcription
-      
-      // Fallback: use SpeechRecognition directly with a fresh session
-      // Record the text from the audio by replaying it
-      const audioUrl = URL.createObjectURL(audioBlob);
-      const audio = new Audio(audioUrl);
-      
-      // Since browser SpeechRecognition only works with live microphone,
-      // we'll send the audio to our edge function for transcription
-      const reader = new FileReader();
-      reader.onloadend = async () => {
-        const base64Audio = (reader.result as string).split(",")[1];
-        try {
-          const { data, error } = await supabase.functions.invoke("transcribe-audio", {
-            body: { audio: base64Audio, mimeType: audioBlob.type },
-          });
-          if (error) throw error;
-          if (data?.text) {
-            setFreeText((prev) => prev ? prev + " " + data.text : data.text);
-            toast.success("Áudio transcrito com sucesso!");
-          } else {
-            toast.error("Não foi possível transcrever o áudio.");
-          }
-        } catch (err) {
-          console.error("Transcription error:", err);
-          toast.error("Erro ao transcrever áudio. Tente novamente.");
-        } finally {
-          setIsTranscribing(false);
-          URL.revokeObjectURL(audioUrl);
-        }
-      };
-      reader.readAsDataURL(audioBlob);
-    } catch {
-      toast.error("Erro ao processar áudio.");
-      setIsTranscribing(false);
-    }
-  };
-
-  const formatTime = (seconds: number) => {
-    const m = Math.floor(seconds / 60);
-    const s = seconds % 60;
-    return `${m}:${s.toString().padStart(2, "0")}`;
-  };
-
+  const selectedManager = managers.find((m) => m.user_id === assignedTo);
   const totalItems = categories.reduce((acc, c) => acc + c.items.length, 0);
   const progress = calcProgress(categories);
 
@@ -403,7 +323,6 @@ export default function StrategyBuilderPage() {
           operationalManager={meta.operationalManager}
           deadline={meta.deadline}
           categories={categories}
-          
         />
       ) : (
         <>
@@ -415,18 +334,46 @@ export default function StrategyBuilderPage() {
               <UserCheck className="h-3 w-3" /> Gestor Operacional (obrigatório)
             </Label>
             {managers.length > 0 ? (
-              <Select value={assignedTo} onValueChange={handleManagerSelect}>
-                <SelectTrigger className="bg-background">
-                  <SelectValue placeholder="Selecione o gestor operacional..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {managers.map((m) => (
-                    <SelectItem key={m.user_id} value={m.user_id}>
-                      {m.display_name || "Sem nome"}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <>
+                <Select value={assignedTo} onValueChange={handleManagerSelect}>
+                  <SelectTrigger className="bg-background">
+                    <SelectValue placeholder="Selecione o gestor operacional..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {managers.map((m) => (
+                      <SelectItem key={m.user_id} value={m.user_id}>
+                        <div className="flex items-center gap-2">
+                          <div className="h-5 w-5 rounded-full bg-muted flex items-center justify-center overflow-hidden shrink-0">
+                            {m.avatar_url ? (
+                              <img src={m.avatar_url} alt="" className="h-full w-full object-cover" />
+                            ) : (
+                              <span className="text-[10px] font-bold text-muted-foreground">{m.display_name?.charAt(0)?.toUpperCase()}</span>
+                            )}
+                          </div>
+                          <span>{m.display_name || "Sem nome"}</span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {selectedManager && (
+                  <div className="flex items-center gap-3 p-2 rounded-lg bg-muted/30 text-xs text-muted-foreground">
+                    <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center overflow-hidden shrink-0">
+                      {selectedManager.avatar_url ? (
+                        <img src={selectedManager.avatar_url} alt="" className="h-full w-full object-cover" />
+                      ) : (
+                        <span className="text-xs font-bold">{selectedManager.display_name?.charAt(0)?.toUpperCase()}</span>
+                      )}
+                    </div>
+                    <div>
+                      <p className="font-medium text-foreground">{selectedManager.display_name}</p>
+                      {selectedManager.email && (
+                        <p className="flex items-center gap-1"><Mail className="h-3 w-3" />{selectedManager.email}</p>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </>
             ) : (
               <p className="text-xs text-muted-foreground">
                 Nenhum gestor operacional cadastrado.
@@ -441,7 +388,7 @@ export default function StrategyBuilderPage() {
               <Label className="text-foreground font-heading font-semibold text-sm">Escreva livremente</Label>
             </div>
             <p className="text-xs text-muted-foreground">
-              Escreva ou grave o que precisa ser feito na loja. A IA vai organizar tudo em categorias automaticamente.
+              Escreva o que precisa ser feito na loja ou envie um print. A IA vai organizar tudo em categorias com passo a passo detalhado.
             </p>
             <Textarea
               value={freeText}
@@ -450,47 +397,51 @@ export default function StrategyBuilderPage() {
               rows={4}
               className="bg-background"
             />
+            {uploadedImage && (
+              <div className="relative inline-block">
+                <img src={`data:image/png;base64,${uploadedImage}`} alt="Preview" className="h-20 rounded-lg border border-border" />
+                <button
+                  onClick={() => setUploadedImage(null)}
+                  className="absolute -top-2 -right-2 h-5 w-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center text-xs"
+                >
+                  ✕
+                </button>
+              </div>
+            )}
             <div className="flex gap-2 items-center">
               <Button
                 size="sm"
                 onClick={handleOrganizeWithAI}
-                disabled={organizingAI || !freeText.trim()}
+                disabled={organizingAI || (!freeText.trim() && !uploadedImage)}
                 className="bg-primary text-primary-foreground hover:bg-primary/90"
               >
                 {organizingAI ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Sparkles className="h-4 w-4 mr-1" />}
                 {organizingAI ? "Organizando..." : "Organizar com IA"}
               </Button>
-
-              {isRecording ? (
-                <Button
-                  size="sm"
-                  variant="destructive"
-                  onClick={stopRecording}
-                  className="animate-pulse"
-                >
-                  <Square className="h-4 w-4 mr-1 fill-current" />
-                  Parar ({formatTime(recordingTime)})
-                </Button>
-              ) : (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={startRecording}
-                  disabled={isTranscribing}
-                >
-                  {isTranscribing ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-                      Transcrevendo...
-                    </>
-                  ) : (
-                    <>
-                      <Mic className="h-4 w-4 mr-1" />
-                      Gravar Áudio
-                    </>
-                  )}
-                </Button>
-              )}
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => imageInputRef.current?.click()}
+                disabled={uploadingImage}
+              >
+                {uploadingImage ? (
+                  <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                ) : (
+                  <ImagePlus className="h-4 w-4 mr-1" />
+                )}
+                Enviar Print
+              </Button>
+              <input
+                ref={imageInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) handleImageUpload(f);
+                  e.target.value = "";
+                }}
+              />
             </div>
           </Card>
 
@@ -507,7 +458,6 @@ export default function StrategyBuilderPage() {
                 onRemoveItem={editor.removeItem}
                 onMoveItem={editor.moveItem}
                 onMoveItemToCategory={editor.moveItemToCategory}
-                
               />
             ))}
           </div>
