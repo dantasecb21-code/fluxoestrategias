@@ -123,6 +123,28 @@ export function useDbStrategies() {
     observation?: string;
     store_access_confirmed?: boolean;
   }) => {
+    // Track status change in history
+    if (params.status && user) {
+      const oldStrategy = strategies.find((s) => s.id === id);
+      if (oldStrategy && oldStrategy.status !== params.status) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("display_name")
+          .eq("user_id", user.id)
+          .single();
+
+        await supabase.from("strategy_history").insert({
+          strategy_id: id,
+          user_id: user.id,
+          user_name: profile?.display_name || user.email || "",
+          action: "status_change",
+          field_changed: "status",
+          old_value: oldStrategy.status || "in_progress",
+          new_value: params.status,
+        });
+      }
+    }
+
     const updateData: Record<string, unknown> = { ...params };
     if (params.categories) {
       updateData.categories = params.categories as unknown as Json;
