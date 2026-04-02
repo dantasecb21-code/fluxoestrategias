@@ -23,7 +23,26 @@ function calcProgress(categories: any[]) {
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const { strategies, loading, deleteStrategy, duplicateStrategy } = useDbStrategies();
+  const { strategies, loading, deleteStrategy, duplicateStrategy, restoreStrategy, fetchDeletedStrategies } = useDbStrategies();
+  const [showTrash, setShowTrash] = useState(false);
+  const [deletedStrategies, setDeletedStrategies] = useState<DbStrategy[]>([]);
+  const [loadingTrash, setLoadingTrash] = useState(false);
+
+  const toggleTrash = async () => {
+    if (!showTrash) {
+      setLoadingTrash(true);
+      const deleted = await fetchDeletedStrategies();
+      setDeletedStrategies(deleted);
+      setLoadingTrash(false);
+    }
+    setShowTrash(!showTrash);
+  };
+
+  const handleRestore = async (id: string) => {
+    await restoreStrategy(id);
+    setDeletedStrategies((prev) => prev.filter((s) => s.id !== id));
+    toast.success("Estratégia restaurada!");
+  };
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
