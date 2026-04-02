@@ -13,7 +13,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
 import { Card } from "@/components/ui/card";
-import { FileText, Plus, Save, Check, X, UserCheck, Sparkles, Loader2, ImagePlus, Mail, ChevronDown, ChevronRight, CheckCircle2, ShieldCheck } from "lucide-react";
+import { FileText, Plus, Save, Check, X, UserCheck, Sparkles, Loader2, ImagePlus, Mail, ChevronDown, ChevronRight, CheckCircle2, ShieldCheck, History } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { AIFollowUpDialog } from "@/components/AIFollowUpDialog";
 import { toast } from "sonner";
 import { StrategyMeta } from "@/types/strategy";
@@ -119,8 +120,22 @@ export default function StrategyBuilderPage() {
   const [showFollowUp, setShowFollowUp] = useState(false);
   const [generatingFromFollowUp, setGeneratingFromFollowUp] = useState(false);
 
+  // History
+  const [history, setHistory] = useState<{ id: string; user_name: string; action: string; field_changed: string; old_value: string; new_value: string; created_at: string }[]>([]);
+  const [showHistory, setShowHistory] = useState(false);
+
   const editor = useCategoryEditor(categories, setCategories);
   const strategyStatus = existing?.status || "in_progress";
+
+  useEffect(() => {
+    if (!id) return;
+    supabase
+      .from("strategy_history")
+      .select("*")
+      .eq("strategy_id", id)
+      .order("created_at", { ascending: false })
+      .then(({ data }) => { if (data) setHistory(data as any); });
+  }, [id, strategyStatus]);
 
   // Save draft to localStorage for new strategies
   useEffect(() => {
@@ -734,6 +749,44 @@ export default function StrategyBuilderPage() {
           )}
 
         </>
+      )}
+      {/* Histórico de alterações */}
+      {id && history.length > 0 && (
+        <Collapsible open={showHistory} onOpenChange={setShowHistory}>
+          <CollapsibleTrigger asChild>
+            <Button variant="outline" className="w-full justify-between">
+              <span className="flex items-center gap-2">
+                <History className="h-4 w-4" /> Histórico de Alterações ({history.length})
+              </span>
+              {showHistory ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+            </Button>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <Card className="p-4 mt-2 space-y-3">
+              {history.map((h) => {
+                const date = new Date(h.created_at);
+                const STATUS_LABELS: Record<string, string> = {
+                  in_progress: "Em andamento",
+                  pending_approval: "Aguardando aprovação",
+                  approved: "Aprovada",
+                };
+                return (
+                  <div key={h.id} className="flex items-start gap-3 text-sm border-b border-border pb-2 last:border-0">
+                    <div className="flex-1">
+                      <p className="text-foreground font-medium">{h.user_name}</p>
+                      <p className="text-muted-foreground text-xs">
+                        {STATUS_LABELS[h.old_value] || h.old_value} → <Badge variant="outline" className="text-[10px] py-0 px-1">{STATUS_LABELS[h.new_value] || h.new_value}</Badge>
+                      </p>
+                    </div>
+                    <span className="text-xs text-muted-foreground whitespace-nowrap">
+                      {date.toLocaleDateString("pt-BR")} {date.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+                    </span>
+                  </div>
+                );
+              })}
+            </Card>
+          </CollapsibleContent>
+        </Collapsible>
       )}
       <AIFollowUpDialog
         open={showFollowUp}
