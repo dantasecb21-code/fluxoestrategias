@@ -495,7 +495,7 @@ export default function StrategyBuilderPage() {
         />
       ) : (
         <>
-          <StrategyMetaForm meta={meta} onChange={setMeta} />
+          <StrategyMetaForm meta={meta} onChange={setMeta} strategyType={strategyType} onTypeChange={setStrategyType} />
 
           {/* Assign to operational manager */}
           <Card className="p-4 border-border bg-card space-y-2">
