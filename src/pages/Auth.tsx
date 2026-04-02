@@ -5,13 +5,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
-import { Zap, LogIn, UserPlus, Eye, EyeOff } from "lucide-react";
+import { Zap, LogIn, UserPlus, Eye, EyeOff, KeyRound } from "lucide-react";
 import { toast } from "sonner";
 
 type UserType = "strategic" | "operational";
+type AuthMode = "login" | "signup" | "forgot";
 
 export default function Auth() {
-  const [isLogin, setIsLogin] = useState(true);
+  const [mode, setMode] = useState<AuthMode>("login");
+  const isLogin = mode === "login";
+  const isForgot = mode === "forgot";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -26,10 +29,16 @@ export default function Auth() {
     setLoading(true);
 
     try {
-      if (isLogin) {
+      if (isForgot) {
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: `${window.location.origin}/reset-password`,
+        });
+        if (error) throw error;
+        toast.success("Email de recuperação enviado! Verifique sua caixa de entrada.");
+        setMode("login");
+      } else if (isLogin) {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
-        
         const { data: { user: loggedUser } } = await supabase.auth.getUser();
         if (loggedUser) {
           const { data: profile } = await supabase.from("profiles").select("approved").eq("user_id", loggedUser.id).single();
@@ -41,7 +50,7 @@ export default function Auth() {
         }
         navigate("/");
       } else {
-        const { error, data: signUpData } = await supabase.auth.signUp({
+        const { error } = await supabase.auth.signUp({
           email,
           password,
           options: {
@@ -72,11 +81,11 @@ export default function Auth() {
         </div>
 
         <h2 className="font-heading font-semibold text-xl text-foreground text-center mb-6">
-          {isLogin ? "Entrar na sua conta" : "Criar nova conta"}
+          {isForgot ? "Recuperar senha" : isLogin ? "Entrar na sua conta" : "Criar nova conta"}
         </h2>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {!isLogin && (
+          {mode === "signup" && (
             <>
               <div className="space-y-1.5">
                 <Label className="text-muted-foreground text-xs">Nome</Label>
@@ -138,30 +147,44 @@ export default function Auth() {
               className="bg-background"
             />
           </div>
-          <div className="space-y-1.5">
-            <Label className="text-muted-foreground text-xs">Senha</Label>
-            <div className="relative">
-              <Input
-                type={showPassword ? "text" : "password"}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                required
-                minLength={6}
-                className="bg-background pr-10"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-              >
-                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              </button>
+          {!isForgot && (
+            <div className="space-y-1.5">
+              <Label className="text-muted-foreground text-xs">Senha</Label>
+              <div className="relative">
+                <Input
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  required
+                  minLength={6}
+                  className="bg-background pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
             </div>
-          </div>
+          )}
+
+          {isLogin && (
+            <button
+              type="button"
+              onClick={() => setMode("forgot")}
+              className="text-xs text-primary hover:underline"
+            >
+              Esqueceu sua senha?
+            </button>
+          )}
 
           <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? "Aguarde..." : isLogin ? (
+            {loading ? "Aguarde..." : isForgot ? (
+              <><KeyRound className="h-4 w-4 mr-2" /> Enviar link de recuperação</>
+            ) : isLogin ? (
               <><LogIn className="h-4 w-4 mr-2" /> Entrar</>
             ) : (
               <><UserPlus className="h-4 w-4 mr-2" /> Criar conta</>
@@ -170,13 +193,19 @@ export default function Auth() {
         </form>
 
         <p className="text-center text-sm text-muted-foreground mt-6">
-          {isLogin ? "Não tem conta?" : "Já tem conta?"}{" "}
-          <button
-            onClick={() => setIsLogin(!isLogin)}
-            className="text-primary hover:underline font-medium"
-          >
-            {isLogin ? "Criar conta" : "Fazer login"}
-          </button>
+          {isForgot ? (
+            <button onClick={() => setMode("login")} className="text-primary hover:underline font-medium">
+              Voltar ao login
+            </button>
+          ) : isLogin ? (
+            <>Não tem conta?{" "}
+              <button onClick={() => setMode("signup")} className="text-primary hover:underline font-medium">Criar conta</button>
+            </>
+          ) : (
+            <>Já tem conta?{" "}
+              <button onClick={() => setMode("login")} className="text-primary hover:underline font-medium">Fazer login</button>
+            </>
+          )}
         </p>
       </Card>
     </div>

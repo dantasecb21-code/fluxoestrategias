@@ -17,6 +17,7 @@ import PendingStrategies from "./pages/PendingStrategies";
 import UserApproval from "./pages/UserApproval";
 import AssistantChat from "./pages/AssistantChat";
 import TrainingCourses from "./pages/TrainingCourses";
+import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -71,6 +72,7 @@ const App = () => (
         <AuthProvider>
           <Routes>
             <Route path="/auth" element={<AuthRoute />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/" element={<ProtectedRoute><HomeRedirect /></ProtectedRoute>} />
             <Route path="/nova" element={<ProtectedRoute allowedRoles={["admin", "strategic"]}><StrategyBuilderPage /></ProtectedRoute>} />
             <Route path="/estrategia/:id" element={<ProtectedRoute allowedRoles={["admin", "strategic"]}><StrategyBuilderPage /></ProtectedRoute>} />

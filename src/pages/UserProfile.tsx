@@ -8,9 +8,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
-import { ArrowLeft, Camera, Phone, Mail, Shield, CheckCircle, Clock, Edit2, Save, X, FileText } from "lucide-react";
+import { ArrowLeft, Camera, Phone, Mail, Shield, CheckCircle, Clock, Edit2, Save, X, FileText, KeyRound, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { calcManagerStats } from "@/lib/strategyStatus";
+import { Label } from "@/components/ui/label";
 
 interface ProfileData {
   user_id: string;
@@ -33,6 +34,11 @@ export default function UserProfile() {
   const [editing, setEditing] = useState(false);
   const [editForm, setEditForm] = useState({ display_name: "", whatsapp: "", status_text: "" });
   const avatarInputRef = useRef<HTMLInputElement>(null);
+  const [changingPassword, setChangingPassword] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [savingPassword, setSavingPassword] = useState(false);
 
   const isOwnProfile = user?.id === userId;
   const isAdmin = myRole === "admin";
@@ -96,6 +102,24 @@ export default function UserProfile() {
     if (s.assigned_to !== userId) return false;
     return s.status === "approved";
   }) : [];
+
+  const handleChangePassword = async () => {
+    if (newPassword !== confirmPassword) { toast.error("As senhas não coincidem"); return; }
+    if (newPassword.length < 6) { toast.error("A senha deve ter pelo menos 6 caracteres"); return; }
+    setSavingPassword(true);
+    try {
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      if (error) throw error;
+      toast.success("Senha alterada com sucesso!");
+      setChangingPassword(false);
+      setNewPassword("");
+      setConfirmPassword("");
+    } catch (err: any) {
+      toast.error(err.message || "Erro ao alterar senha");
+    } finally {
+      setSavingPassword(false);
+    }
+  };
 
   // Stats
   const stats = userId ? calcManagerStats(strategies, userId) : null;
@@ -206,7 +230,61 @@ export default function UserProfile() {
         </div>
       </Card>
 
-      {/* Performance Stats */}
+      {/* Change Password - only own profile */}
+      {isOwnProfile && (
+        <Card className="p-5 space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="font-heading font-semibold text-foreground flex items-center gap-2">
+              <KeyRound className="h-4 w-4 text-primary" /> Segurança
+            </h3>
+            {!changingPassword && (
+              <Button size="sm" variant="outline" onClick={() => setChangingPassword(true)}>
+                Alterar senha
+              </Button>
+            )}
+          </div>
+          {changingPassword && (
+            <div className="space-y-3">
+              <div className="space-y-1.5">
+                <Label className="text-muted-foreground text-xs">Nova senha</Label>
+                <div className="relative">
+                  <Input
+                    type={showNewPassword ? "text" : "password"}
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder="••••••••"
+                    minLength={6}
+                    className="bg-background pr-10"
+                  />
+                  <button type="button" onClick={() => setShowNewPassword(!showNewPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                    {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-muted-foreground text-xs">Confirmar nova senha</Label>
+                <Input
+                  type={showNewPassword ? "text" : "password"}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="••••••••"
+                  minLength={6}
+                  className="bg-background"
+                />
+              </div>
+              <div className="flex gap-2">
+                <Button size="sm" onClick={handleChangePassword} disabled={savingPassword}>
+                  {savingPassword ? "Salvando..." : <><Save className="h-3.5 w-3.5 mr-1" /> Salvar</>}
+                </Button>
+                <Button size="sm" variant="ghost" onClick={() => { setChangingPassword(false); setNewPassword(""); setConfirmPassword(""); }}>
+                  <X className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            </div>
+          )}
+        </Card>
+      )}
+
       {managerStats && managerStats.total > 0 && (
         <Card className="p-5 space-y-3">
           <h3 className="font-heading font-semibold text-foreground">Desempenho</h3>
