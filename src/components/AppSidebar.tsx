@@ -195,7 +195,7 @@ export function AppSidebar() {
             variant="ghost"
             size={collapsed ? "icon" : "sm"}
             onClick={handleLogout}
-            className="w-full text-muted-foreground hover:text-destructive"
+            className="w-full text-muted-foreground hover:text-foreground hover:bg-muted"
           >
             <LogOut className="h-4 w-4" />
             {!collapsed && <span className="ml-2">Sair</span>}
