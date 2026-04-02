@@ -192,10 +192,18 @@ export default function UserProfile() {
                   className="h-8 text-sm"
                 />
               ) : (
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Phone className="h-3.5 w-3.5" />
-                  <span>{profile.whatsapp || "Não informado"}</span>
-                </div>
+                <>
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Phone className="h-3.5 w-3.5" />
+                    <span>{profile.whatsapp || "Não informado"}</span>
+                  </div>
+                  {userEmail && (
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Mail className="h-3.5 w-3.5" />
+                      <span>{userEmail}</span>
+                    </div>
+                  )}
+                </>
               )}
             </div>
 
