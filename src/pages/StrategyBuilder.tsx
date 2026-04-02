@@ -282,6 +282,24 @@ export default function StrategyBuilderPage() {
   const totalItems = categories.reduce((acc, c) => acc + c.items.length, 0);
   const progress = calcProgress(categories);
 
+  const handleApprove = async () => {
+    if (!savedId) return;
+    await updateStrategy(savedId, { status: "approved" });
+    toast.success("Estratégia aprovada!");
+  };
+
+  const handleReject = async () => {
+    if (!savedId) return;
+    await updateStrategy(savedId, { status: "in_progress" });
+    toast.success("Estratégia devolvida para revisão.");
+  };
+
+  const STATUS_BADGE_MAP: Record<string, { label: string; variant: "default" | "secondary" | "outline" | "destructive" }> = {
+    in_progress: { label: "Em andamento", variant: "secondary" },
+    pending_approval: { label: "Aguardando aprovação", variant: "outline" },
+    approved: { label: "Aprovada ✓", variant: "default" },
+  };
+
   if (loading && id) {
     return <div className="flex items-center justify-center h-64 text-muted-foreground">Carregando...</div>;
   }
