@@ -296,7 +296,14 @@ export default function TrainingCourses() {
       )}
 
       {lightboxImg && (
-        <ImageLightbox src={lightboxImg} alt="Print do treinamento" onClose={() => setLightboxImg(null)} />
+        <Dialog open={!!lightboxImg} onOpenChange={() => setLightboxImg(null)}>
+          <DialogContent className="max-w-[95vw] max-h-[95vh] p-2 bg-background/95 backdrop-blur-xl border-border">
+            <Button variant="ghost" size="icon" className="absolute top-2 right-2 z-10 h-8 w-8" onClick={() => setLightboxImg(null)}>
+              <X className="h-4 w-4" />
+            </Button>
+            <img src={lightboxImg} alt="Print" className="w-full h-full object-contain max-h-[90vh] rounded-lg" />
+          </DialogContent>
+        </Dialog>
       )}
     </div>
   );
