@@ -170,6 +170,7 @@ export default function StrategyBuilderPage() {
       toast.error("Preencha o nome da loja!");
       return;
     }
+    if (!window.confirm("Deseja salvar as alterações?")) return;
     if (!assignedTo || assignedTo === "none") {
       toast.error("Selecione um Gestor Operacional!");
       return;
@@ -376,7 +377,7 @@ export default function StrategyBuilderPage() {
           <div className="flex items-center gap-2 text-sm">
             <ShieldCheck className="h-4 w-4 text-primary" />
             <span className="text-foreground font-medium">Acesso à loja confirmado pelo gestor:</span>
-            <span className={existing.store_access_confirmed ? "text-success" : "text-destructive"}>
+            <span className={existing.store_access_confirmed ? "text-success" : "text-warning"}>
               {existing.store_access_confirmed ? "Sim ✓" : "Não ✗"}
             </span>
           </div>
@@ -419,11 +420,6 @@ export default function StrategyBuilderPage() {
       {/* Detailed progress view */}
       {showDetailedProgress && id ? (
         <div className="space-y-4">
-          <div className="flex justify-end">
-            <Button size="sm" onClick={handleSave} className="bg-primary text-primary-foreground hover:bg-primary/90">
-              <Save className="h-4 w-4 mr-1" /> Salvar Alterações
-            </Button>
-          </div>
           {categories.filter((c) => c.items.length > 0).map((cat) => {
             const isExpanded = expandedCats[cat.id] !== false;
             const catCompleted = cat.items.filter((i) => i.status === "completed").length;
