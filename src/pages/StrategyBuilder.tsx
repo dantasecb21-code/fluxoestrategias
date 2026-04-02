@@ -309,15 +309,25 @@ export default function StrategyBuilderPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-heading font-bold text-xl text-foreground">
+          <h1 className="font-heading font-bold text-xl text-foreground flex items-center gap-2">
             {id ? meta.storeName || "Editar Estratégia" : "Nova Estratégia"}
+            {id && existing && (
+              <Badge variant={STATUS_BADGE_MAP[strategyStatus]?.variant || "secondary"}>
+                {STATUS_BADGE_MAP[strategyStatus]?.label || "Em andamento"}
+              </Badge>
+            )}
           </h1>
           <p className="text-xs text-muted-foreground">
             {totalItems} itens na estratégia
           </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={() => setShowReport(!showReport)}>
+          {id && (
+            <Button variant="outline" size="sm" onClick={() => { setShowDetailedProgress(!showDetailedProgress); setShowReport(false); }}>
+              <CheckCircle2 className="h-4 w-4 mr-1" /> {showDetailedProgress ? "Editor" : "Progresso"}
+            </Button>
+          )}
+          <Button variant="outline" size="sm" onClick={() => { setShowReport(!showReport); setShowDetailedProgress(false); }}>
             <FileText className="h-4 w-4 mr-1" /> {showReport ? "Editor" : "Relatório"}
           </Button>
           <Button size="sm" onClick={handleSave} className="bg-primary text-primary-foreground hover:bg-primary/90">
@@ -342,7 +352,76 @@ export default function StrategyBuilderPage() {
         </Card>
       )}
 
-      {showReport ? (
+      {/* Store access + approval for pending_approval */}
+      {id && existing && strategyStatus === "pending_approval" && (
+        <Card className="p-4 border-warning/50 space-y-3">
+          <div className="flex items-center gap-2 text-sm">
+            <ShieldCheck className="h-4 w-4 text-primary" />
+            <span className="text-foreground font-medium">Acesso à loja confirmado pelo gestor:</span>
+            <span className={existing.store_access_confirmed ? "text-success" : "text-destructive"}>
+              {existing.store_access_confirmed ? "Sim ✓" : "Não ✗"}
+            </span>
+          </div>
+          <div className="flex gap-2">
+            <Button onClick={handleApprove} className="bg-success text-success-foreground hover:bg-success/90">
+              <CheckCircle2 className="h-4 w-4 mr-1" /> Aprovar Estratégia
+            </Button>
+            <Button variant="outline" onClick={handleReject}>
+              Devolver para Revisão
+            </Button>
+          </div>
+        </Card>
+      )}
+
+      {id && existing && strategyStatus === "approved" && (
+        <Card className="p-4 border-success/50 bg-success/10 text-center">
+          <p className="text-sm text-success font-medium">✅ Estratégia aprovada</p>
+        </Card>
+      )}
+
+      {/* Detailed progress view */}
+      {showDetailedProgress && id ? (
+        <div className="space-y-4">
+          {categories.filter((c) => c.items.length > 0).map((cat) => {
+            const isExpanded = expandedCats[cat.id] !== false;
+            const catCompleted = cat.items.filter((i) => i.status === "completed").length;
+            return (
+              <Card key={cat.id} className="overflow-hidden">
+                <button
+                  className="w-full flex items-center justify-between p-4 border-b border-border hover:bg-muted/30 transition-colors"
+                  onClick={() => setExpandedCats((prev) => ({ ...prev, [cat.id]: !isExpanded }))}
+                >
+                  <h3 className="font-heading font-semibold text-foreground flex items-center gap-2">
+                    {isExpanded ? <ChevronDown className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />}
+                    {cat.name}
+                  </h3>
+                  <span className="text-xs text-muted-foreground">{catCompleted}/{cat.items.length} concluídos</span>
+                </button>
+                {isExpanded && (
+                  <div className="divide-y divide-border">
+                    {cat.items.map((item) => {
+                      const st = item.status || "pending";
+                      const color = st === "completed" ? "text-success" : st === "in_progress" ? "text-primary" : "text-warning";
+                      const label = st === "completed" ? "Concluído" : st === "in_progress" ? "Em andamento" : "Pendente";
+                      return (
+                        <div key={item.id} className="p-4 flex items-start justify-between gap-4">
+                          <div className="flex-1">
+                            <p className="text-sm text-foreground leading-relaxed">{item.text}</p>
+                            {item.observation && (
+                              <p className="text-xs text-muted-foreground mt-1 italic">💬 {item.observation}</p>
+                            )}
+                          </div>
+                          <span className={`text-xs font-medium whitespace-nowrap ${color}`}>● {label}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </Card>
+            );
+          })}
+        </div>
+      ) : showReport ? (
         <StrategyReport
           storeName={meta.storeName}
           managerName={meta.managerName}
