@@ -5,6 +5,7 @@ import { Progress } from "@/components/ui/progress";
 import { Clock, AlertTriangle, UserCheck, Eye } from "lucide-react";
 import { formatDateBR } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import OverdueAlert from "@/components/OverdueAlert";
 
 function calcProgress(categories: any[]) {
   const allItems = categories.flatMap((c: any) => c.items);
