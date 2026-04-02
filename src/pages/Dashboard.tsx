@@ -63,12 +63,13 @@ export default function Dashboard() {
           {strategies.map((s) => {
             const progress = calcProgress(s.categories);
             const status = (s as any).status || "in_progress";
-            const statusLabel = status === "pending_approval" ? "Aguardando aprovação" : status === "approved" ? "Aprovada ✓" : "Em andamento";
+            const statusLabel = status === "pending_approval" ? "Aguardando aprovação" : status === "approved" ? "Concluída ✓" : "Em andamento";
             const statusVariant = status === "pending_approval" ? "outline" as const : status === "approved" ? "default" as const : "secondary" as const;
+            const isApproved = status === "approved";
             return (
               <Card
                 key={s.id}
-                className="p-5 hover:border-primary/30 transition-colors cursor-pointer"
+                className={`p-5 hover:border-primary/30 transition-colors cursor-pointer ${isApproved ? "border-success/30 bg-success/5" : ""}`}
                 onClick={() => navigate(`/estrategia/${s.id}`)}
               >
                 <div className="flex items-start justify-between mb-3">
