@@ -462,19 +462,22 @@ export default function StrategyBuilderPage() {
                   </SelectContent>
                 </Select>
                 {selectedManager && (
-                  <div className="flex items-center gap-3 p-2 rounded-lg bg-muted/30 text-xs text-muted-foreground">
-                    <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center overflow-hidden shrink-0">
-                      {selectedManager.avatar_url ? (
-                        <img src={selectedManager.avatar_url} alt="" className="h-full w-full object-cover" />
-                      ) : (
-                        <span className="text-xs font-bold">{selectedManager.display_name?.charAt(0)?.toUpperCase()}</span>
-                      )}
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/30 text-xs">
+                      <Mail className="h-3 w-3 text-muted-foreground" />
+                      <span className="text-foreground font-medium">E-mail:</span>
+                      <span className="text-muted-foreground">{selectedManager.email || "Não informado"}</span>
                     </div>
-                    <div>
-                      <p className="font-medium text-foreground">{selectedManager.display_name}</p>
-                      {selectedManager.email && (
-                        <p className="flex items-center gap-1"><Mail className="h-3 w-3" />{selectedManager.email}</p>
-                      )}
+                    <div className="flex items-center gap-3 p-2 rounded-lg bg-muted/30">
+                      <Checkbox
+                        id="store-access-admin"
+                        checked={storeAccess}
+                        onCheckedChange={(v) => setStoreAccess(!!v)}
+                      />
+                      <label htmlFor="store-access-admin" className="text-xs text-foreground font-medium cursor-pointer flex items-center gap-1">
+                        <ShieldCheck className="h-3 w-3 text-primary" />
+                        Gestor tem acesso à loja na plataforma
+                      </label>
                     </div>
                   </div>
                 )}
