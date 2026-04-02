@@ -44,6 +44,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           if (profileRes.data) {
             setDisplayName(profileRes.data.display_name);
             setApproved(profileRes.data.approved ?? false);
+            setAvatarUrl(profileRes.data.avatar_url || "");
           }
           if (roleRes.data) setRole(roleRes.data.role as AppRole);
           setLoading(false);
