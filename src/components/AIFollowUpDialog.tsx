@@ -55,6 +55,7 @@ const TYPE_LABELS: Record<string, string> = {
   store_status: "Status da Loja",
   featured_items: "Itens em Destaque",
   store_info: "Informações da Loja",
+  expensive_item_tag: "Item Mais Caro",
   other: "Outro",
 };
 
