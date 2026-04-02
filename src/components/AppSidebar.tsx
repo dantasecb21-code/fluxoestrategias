@@ -20,7 +20,7 @@ export function AppSidebar() {
   const { state, setOpenMobile } = useSidebar();
   const collapsed = state === "collapsed";
   const isMobile = useIsMobile();
-  const { user, displayName, role, signOut } = useAuth();
+  const { user, displayName, avatarUrl, role, signOut } = useAuth();
   const navigate = useNavigate();
 
   const handleNav = (path: string) => {
