@@ -180,6 +180,7 @@ export default function StrategyBuilderPage() {
         deadline: meta.deadline,
         categories,
         assigned_to: assignedTo || null,
+        store_access_confirmed: storeAccess,
       });
       clearDraft();
       toast.success("Estratégia atualizada!");
