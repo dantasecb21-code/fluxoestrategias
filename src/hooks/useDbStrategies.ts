@@ -27,6 +27,7 @@ export interface DbStrategy {
   store_access_confirmed: boolean;
   created_at: string;
   updated_at: string;
+  deleted_at: string | null;
 }
 
 function jsonToCategories(json: Json): StrategyCategory[] {
