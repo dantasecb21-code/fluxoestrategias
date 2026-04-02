@@ -91,10 +91,12 @@ export type Database = {
           deadline: string
           id: string
           manager_name: string
+          observation: string
           operational_manager: string
           status: string
           store_access_confirmed: boolean
           store_name: string
+          strategy_type: string
           updated_at: string
           user_id: string
         }
@@ -105,10 +107,12 @@ export type Database = {
           deadline?: string
           id?: string
           manager_name?: string
+          observation?: string
           operational_manager?: string
           status?: string
           store_access_confirmed?: boolean
           store_name?: string
+          strategy_type?: string
           updated_at?: string
           user_id: string
         }
@@ -119,10 +123,12 @@ export type Database = {
           deadline?: string
           id?: string
           manager_name?: string
+          observation?: string
           operational_manager?: string
           status?: string
           store_access_confirmed?: boolean
           store_name?: string
+          strategy_type?: string
           updated_at?: string
           user_id?: string
         }
