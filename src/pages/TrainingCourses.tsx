@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -6,12 +6,14 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Plus, Trash2, GripVertical, Pencil, Check, X, BookOpen, Eye, EyeOff } from "lucide-react";
+import { Plus, Trash2, GripVertical, Pencil, Check, X, BookOpen, Eye, EyeOff, ImagePlus, Loader2 } from "lucide-react";
+import { ImageLightbox } from "@/components/ImageLightbox";
 
 type Course = {
   id: string;
   title: string;
   content: string;
+  images: string[];
   order_index: number;
   published: boolean;
   created_at: string;
@@ -24,9 +26,15 @@ export default function TrainingCourses() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState("");
   const [editContent, setEditContent] = useState("");
+  const [editImages, setEditImages] = useState<string[]>([]);
   const [newTitle, setNewTitle] = useState("");
   const [newContent, setNewContent] = useState("");
+  const [newImages, setNewImages] = useState<string[]>([]);
   const [showAdd, setShowAdd] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const newImageRef = useRef<HTMLInputElement>(null);
+  const editImageRef = useRef<HTMLInputElement>(null);
+  const [lightboxImg, setLightboxImg] = useState<string | null>(null);
 
   const canManage = role === "admin" || role === "strategic";
 
@@ -38,12 +46,50 @@ export default function TrainingCourses() {
     if (error) {
       toast.error("Erro ao carregar treinamentos");
     } else {
-      setCourses((data as Course[]) || []);
+      setCourses(
+        (data || []).map((d: any) => ({
+          ...d,
+          images: Array.isArray(d.images) ? d.images : [],
+        }))
+      );
     }
     setLoading(false);
   };
 
   useEffect(() => { fetchCourses(); }, []);
+
+  const uploadImage = async (file: File): Promise<string | null> => {
+    setUploading(true);
+    try {
+      const ext = file.name.split(".").pop() || "png";
+      const path = `training/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+      const { error } = await supabase.storage.from("strategy-images").upload(path, file);
+      if (error) throw error;
+      const { data: urlData } = supabase.storage.from("strategy-images").getPublicUrl(path);
+      return urlData.publicUrl;
+    } catch {
+      toast.error("Erro ao enviar imagem");
+      return null;
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleNewImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const url = await uploadImage(file);
+    if (url) setNewImages((prev) => [...prev, url]);
+    e.target.value = "";
+  };
+
+  const handleEditImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const url = await uploadImage(file);
+    if (url) setEditImages((prev) => [...prev, url]);
+    e.target.value = "";
+  };
 
   const handleAdd = async () => {
     if (!newTitle.trim()) return;
@@ -52,6 +98,7 @@ export default function TrainingCourses() {
     const { error } = await supabase.from("training_courses").insert({
       title: newTitle.trim(),
       content: newContent.trim(),
+      images: newImages,
       order_index: courses.length,
       created_by: user.id,
     } as any);
@@ -61,6 +108,7 @@ export default function TrainingCourses() {
       toast.success("Treinamento criado!");
       setNewTitle("");
       setNewContent("");
+      setNewImages([]);
       setShowAdd(false);
       fetchCourses();
     }
@@ -76,7 +124,7 @@ export default function TrainingCourses() {
     if (!editingId) return;
     const { error } = await supabase
       .from("training_courses")
-      .update({ title: editTitle.trim(), content: editContent.trim() } as any)
+      .update({ title: editTitle.trim(), content: editContent.trim(), images: editImages } as any)
       .eq("id", editingId);
     if (error) toast.error("Erro ao salvar");
     else {
@@ -98,9 +146,35 @@ export default function TrainingCourses() {
     setEditingId(course.id);
     setEditTitle(course.title);
     setEditContent(course.content);
+    setEditImages(course.images || []);
   };
 
   if (loading) return <div className="flex items-center justify-center py-16 text-muted-foreground">Carregando...</div>;
+
+  const ImageGrid = ({ images, onRemove, onView }: { images: string[]; onRemove?: (i: number) => void; onView: (url: string) => void }) => (
+    images.length > 0 ? (
+      <div className="flex flex-wrap gap-2 mt-2">
+        {images.map((url, i) => (
+          <div key={i} className="relative group">
+            <img
+              src={url}
+              alt={`Print ${i + 1}`}
+              className="h-20 rounded-lg border border-border cursor-pointer hover:opacity-80 transition-opacity"
+              onClick={() => onView(url)}
+            />
+            {onRemove && (
+              <button
+                onClick={(e) => { e.stopPropagation(); onRemove(i); }}
+                className="absolute -top-2 -right-2 h-5 w-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+        ))}
+      </div>
+    ) : null
+  );
 
   return (
     <div className="max-w-4xl mx-auto p-4 space-y-6">
@@ -134,11 +208,21 @@ export default function TrainingCourses() {
             onChange={(e) => setNewContent(e.target.value)}
             rows={6}
           />
+          <ImageGrid
+            images={newImages}
+            onRemove={(i) => setNewImages((prev) => prev.filter((_, idx) => idx !== i))}
+            onView={(url) => setLightboxImg(url)}
+          />
           <div className="flex gap-2">
             <Button size="sm" onClick={handleAdd} disabled={!newTitle.trim()}>
               <Check className="h-4 w-4 mr-1" /> Salvar
             </Button>
-            <Button size="sm" variant="ghost" onClick={() => setShowAdd(false)}>
+            <Button size="sm" variant="outline" onClick={() => newImageRef.current?.click()} disabled={uploading}>
+              {uploading ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <ImagePlus className="h-4 w-4 mr-1" />}
+              Anexar Print
+            </Button>
+            <input ref={newImageRef} type="file" accept="image/*" className="hidden" onChange={handleNewImageUpload} />
+            <Button size="sm" variant="ghost" onClick={() => { setShowAdd(false); setNewImages([]); }}>
               <X className="h-4 w-4 mr-1" /> Cancelar
             </Button>
           </div>
@@ -158,8 +242,18 @@ export default function TrainingCourses() {
                 <div className="space-y-3">
                   <Input value={editTitle} onChange={(e) => setEditTitle(e.target.value)} />
                   <Textarea value={editContent} onChange={(e) => setEditContent(e.target.value)} rows={6} />
+                  <ImageGrid
+                    images={editImages}
+                    onRemove={(i) => setEditImages((prev) => prev.filter((_, idx) => idx !== i))}
+                    onView={(url) => setLightboxImg(url)}
+                  />
                   <div className="flex gap-2">
                     <Button size="sm" onClick={handleSaveEdit}><Check className="h-4 w-4 mr-1" /> Salvar</Button>
+                    <Button size="sm" variant="outline" onClick={() => editImageRef.current?.click()} disabled={uploading}>
+                      {uploading ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <ImagePlus className="h-4 w-4 mr-1" />}
+                      Anexar Print
+                    </Button>
+                    <input ref={editImageRef} type="file" accept="image/*" className="hidden" onChange={handleEditImageUpload} />
                     <Button size="sm" variant="ghost" onClick={() => setEditingId(null)}><X className="h-4 w-4 mr-1" /> Cancelar</Button>
                   </div>
                 </div>
@@ -176,6 +270,10 @@ export default function TrainingCourses() {
                     {course.content && (
                       <p className="text-sm text-muted-foreground mt-1 line-clamp-3 whitespace-pre-wrap">{course.content}</p>
                     )}
+                    <ImageGrid
+                      images={course.images}
+                      onView={(url) => setLightboxImg(url)}
+                    />
                   </div>
                   {canManage && (
                     <div className="flex items-center gap-1 shrink-0">
@@ -195,6 +293,10 @@ export default function TrainingCourses() {
             </Card>
           ))}
         </div>
+      )}
+
+      {lightboxImg && (
+        <ImageLightbox src={lightboxImg} alt="Print do treinamento" onClose={() => setLightboxImg(null)} />
       )}
     </div>
   );
