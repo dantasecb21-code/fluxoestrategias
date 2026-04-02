@@ -51,6 +51,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }, 0);
       } else {
         setDisplayName("");
+        setAvatarUrl("");
         setRole(null);
         setApproved(false);
         setLoading(false);
