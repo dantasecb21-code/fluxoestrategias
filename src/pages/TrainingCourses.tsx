@@ -197,6 +197,61 @@ export default function TrainingCourses() {
     ) : null
   );
 
+  // Viewing a single course
+  if (viewingCourse) {
+    return (
+      <div className="max-w-4xl mx-auto p-4 space-y-6">
+        <div className="flex items-center gap-3">
+          <Button variant="ghost" size="sm" onClick={() => setViewingCourse(null)}>
+            <ArrowLeft className="h-4 w-4 mr-1" /> Voltar
+          </Button>
+        </div>
+        <Card className="p-6 space-y-4">
+          <div className="flex items-center gap-3 border-b border-border pb-4">
+            <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
+              <BookOpen className="h-5 w-5 text-primary" />
+            </div>
+            <h1 className="font-heading font-bold text-xl text-foreground">{viewingCourse.title}</h1>
+          </div>
+          {viewingCourse.content && (
+            <div className="prose prose-sm dark:prose-invert max-w-none">
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                {viewingCourse.content}
+              </ReactMarkdown>
+            </div>
+          )}
+          {viewingCourse.images.length > 0 && (
+            <div className="space-y-2 pt-4 border-t border-border">
+              <p className="text-sm font-medium text-muted-foreground">Prints de referência:</p>
+              <div className="flex flex-wrap gap-3">
+                {viewingCourse.images.map((url, i) => (
+                  <img
+                    key={i}
+                    src={url}
+                    alt={`Print ${i + 1}`}
+                    className="max-h-48 rounded-lg border border-border cursor-pointer hover:opacity-80 transition-opacity"
+                    onClick={() => setLightboxImg(url)}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+        </Card>
+
+        {lightboxImg && (
+          <Dialog open={!!lightboxImg} onOpenChange={() => setLightboxImg(null)}>
+            <DialogContent className="max-w-[95vw] max-h-[95vh] p-2 bg-background/95 backdrop-blur-xl border-border">
+              <Button variant="ghost" size="icon" className="absolute top-2 right-2 z-10 h-8 w-8" onClick={() => setLightboxImg(null)}>
+                <X className="h-4 w-4" />
+              </Button>
+              <img src={lightboxImg} alt="Print" className="w-full h-full object-contain max-h-[90vh] rounded-lg" />
+            </DialogContent>
+          </Dialog>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-4xl mx-auto p-4 space-y-6">
       <div className="flex items-center justify-between">
@@ -280,7 +335,10 @@ export default function TrainingCourses() {
                   </div>
                 </div>
               ) : (
-                <div className="flex items-start gap-3">
+                <div
+                  className="flex items-start gap-3 cursor-pointer"
+                  onClick={() => setViewingCourse(course)}
+                >
                   <GripVertical className="h-5 w-5 text-muted-foreground mt-0.5 shrink-0" />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
@@ -290,15 +348,11 @@ export default function TrainingCourses() {
                       )}
                     </div>
                     {course.content && (
-                      <p className="text-sm text-muted-foreground mt-1 line-clamp-3 whitespace-pre-wrap">{course.content}</p>
+                      <p className="text-sm text-muted-foreground mt-1 line-clamp-2 whitespace-pre-wrap">{course.content}</p>
                     )}
-                    <ImageGrid
-                      images={course.images}
-                      onView={(url) => setLightboxImg(url)}
-                    />
                   </div>
                   {canManage && (
-                    <div className="flex items-center gap-1 shrink-0">
+                    <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
                       <Button size="icon" variant="ghost" onClick={() => handleTogglePublish(course)} title={course.published ? "Despublicar" : "Publicar"}>
                         {course.published ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
                       </Button>
