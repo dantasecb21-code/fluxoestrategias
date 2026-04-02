@@ -393,7 +393,19 @@ export default function StrategyBuilderPage() {
             <Textarea
               value={freeText}
               onChange={(e) => setFreeText(e.target.value)}
-              placeholder="Ex: a loja precisa trocar a foto de capa, criar um cupom novo, responder as avaliações negativas, colocar foto nos produtos..."
+              onPaste={(e) => {
+                const items = e.clipboardData?.items;
+                if (!items) return;
+                for (const item of Array.from(items)) {
+                  if (item.type.startsWith("image/")) {
+                    e.preventDefault();
+                    const file = item.getAsFile();
+                    if (file) handleImageUpload(file);
+                    return;
+                  }
+                }
+              }}
+              placeholder="Ex: a loja precisa trocar a foto de capa, criar um cupom novo... (ou cole um print com Ctrl+V)"
               rows={4}
               className="bg-background"
             />
