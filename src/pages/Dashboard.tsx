@@ -1,12 +1,14 @@
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useDbStrategies } from "@/hooks/useDbStrategies";
+import { useDbStrategies, DbStrategy } from "@/hooks/useDbStrategies";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Plus, Copy, Pencil, Trash2, FileText, Zap, Clock, UserCheck } from "lucide-react";
+import { Plus, Copy, Pencil, Trash2, FileText, Zap, Clock, UserCheck, Undo2, ChevronDown, ChevronRight } from "lucide-react";
 import { formatDateBR } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { deriveStrategyDisplayStatus, getStatusLabel, getStatusBadgeProps } from "@/lib/strategyStatus";
+import { toast } from "sonner";
 
 function calcProgress(categories: any[]) {
   const allItems = categories.flatMap((c: any) => c.items);
@@ -21,7 +23,26 @@ function calcProgress(categories: any[]) {
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const { strategies, loading, deleteStrategy, duplicateStrategy } = useDbStrategies();
+  const { strategies, loading, deleteStrategy, duplicateStrategy, restoreStrategy, fetchDeletedStrategies } = useDbStrategies();
+  const [showTrash, setShowTrash] = useState(false);
+  const [deletedStrategies, setDeletedStrategies] = useState<DbStrategy[]>([]);
+  const [loadingTrash, setLoadingTrash] = useState(false);
+
+  const toggleTrash = async () => {
+    if (!showTrash) {
+      setLoadingTrash(true);
+      const deleted = await fetchDeletedStrategies();
+      setDeletedStrategies(deleted);
+      setLoadingTrash(false);
+    }
+    setShowTrash(!showTrash);
+  };
+
+  const handleRestore = async (id: string) => {
+    await restoreStrategy(id);
+    setDeletedStrategies((prev) => prev.filter((s) => s.id !== id));
+    toast.success("Estratégia restaurada!");
+  };
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
@@ -135,6 +156,41 @@ export default function Dashboard() {
           })}
         </div>
       )}
+
+      {/* Lixeira */}
+      <div className="mt-8">
+        <Button variant="ghost" onClick={toggleTrash} className="text-muted-foreground hover:text-foreground gap-2">
+          {showTrash ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+          <Trash2 className="h-4 w-4" />
+          Lixeira
+        </Button>
+
+        {showTrash && (
+          <div className="mt-3 space-y-2">
+            {loadingTrash ? (
+              <p className="text-sm text-muted-foreground pl-4">Carregando...</p>
+            ) : deletedStrategies.length === 0 ? (
+              <p className="text-sm text-muted-foreground pl-4">Nenhuma estratégia na lixeira.</p>
+            ) : (
+              deletedStrategies.map((s) => (
+                <Card key={s.id} className="p-4 border-dashed opacity-70">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="font-medium text-foreground">{s.store_name || "Sem nome"}</h4>
+                      <p className="text-xs text-muted-foreground">
+                        Excluída em {s.deleted_at ? new Date(s.deleted_at).toLocaleDateString("pt-BR") : "—"}
+                      </p>
+                    </div>
+                    <Button size="sm" variant="outline" onClick={() => handleRestore(s.id)} className="gap-1.5">
+                      <Undo2 className="h-3.5 w-3.5" /> Restaurar
+                    </Button>
+                  </div>
+                </Card>
+              ))
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

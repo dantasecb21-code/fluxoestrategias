@@ -27,6 +27,7 @@ export interface DbStrategy {
   store_access_confirmed: boolean;
   created_at: string;
   updated_at: string;
+  deleted_at: string | null;
 }
 
 function jsonToCategories(json: Json): StrategyCategory[] {
@@ -46,12 +47,11 @@ export function useDbStrategies() {
   const fetchStrategies = useCallback(async () => {
     if (!user) { setStrategies([]); setLoading(false); return; }
 
-    let query = supabase.from("strategies").select("*");
+    let query = supabase.from("strategies").select("*").is("deleted_at", null);
 
     if (role === "operational") {
       query = query.eq("assigned_to", user.id);
     }
-    // admin and strategic users see ALL strategies (no filter needed, RLS handles access)
 
     const { data } = await query.order("updated_at", { ascending: false });
     if (data) setStrategies(data.map(mapRow));
@@ -135,8 +135,23 @@ export function useDbStrategies() {
   };
 
   const deleteStrategy = async (id: string) => {
-    await supabase.from("strategies").delete().eq("id", id);
+    await supabase.from("strategies").update({ deleted_at: new Date().toISOString() } as any).eq("id", id);
     setStrategies((prev) => prev.filter((s) => s.id !== id));
+  };
+
+  const restoreStrategy = async (id: string) => {
+    await supabase.from("strategies").update({ deleted_at: null } as any).eq("id", id);
+    fetchStrategies();
+  };
+
+  const fetchDeletedStrategies = async (): Promise<DbStrategy[]> => {
+    if (!user) return [];
+    let query = supabase.from("strategies").select("*").not("deleted_at", "is", null);
+    if (role === "operational") {
+      query = query.eq("assigned_to", user.id);
+    }
+    const { data } = await query.order("deleted_at", { ascending: false });
+    return data ? data.map(mapRow) : [];
   };
 
   const duplicateStrategy = async (id: string): Promise<DbStrategy | null> => {
@@ -152,5 +167,5 @@ export function useDbStrategies() {
     });
   };
 
-  return { strategies, loading, createStrategy, updateStrategy, deleteStrategy, duplicateStrategy, refetch: fetchStrategies };
+  return { strategies, loading, createStrategy, updateStrategy, deleteStrategy, duplicateStrategy, restoreStrategy, fetchDeletedStrategies, refetch: fetchStrategies };
 }
