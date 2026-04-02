@@ -146,6 +146,9 @@ export function useDbStrategies() {
     observation?: string;
     store_access_confirmed?: boolean;
   }) => {
+    // Find current strategy for comparison
+    const current = strategies.find(s => s.id === id);
+    
     const updateData: Record<string, unknown> = { ...params };
     if (params.categories) {
       updateData.categories = params.categories as unknown as Json;
@@ -153,6 +156,31 @@ export function useDbStrategies() {
     const { error } = await supabase.from("strategies").update(updateData as any).eq("id", id);
     if (error) {
       console.error("Update strategy error:", error);
+    } else if (current) {
+      // Log status changes
+      if (params.status && params.status !== current.status) {
+        let action = "status_changed";
+        if (params.status === "approved") action = "approved";
+        else if (params.status === "pending_approval") action = current.status === "approved" ? "revoked" : "submitted";
+        else if (params.status === "in_progress" && current.status === "pending_approval") action = "rejected";
+        await logHistory(id, action, "status", current.status, params.status);
+      }
+      // Log assignment changes
+      if (params.assigned_to !== undefined && params.assigned_to !== current.assigned_to) {
+        await logHistory(id, "assigned", "assigned_to", current.operational_manager || "", params.operational_manager || "");
+      }
+      // Log deadline changes
+      if (params.deadline && params.deadline !== current.deadline) {
+        await logHistory(id, "field_updated", "deadline", current.deadline, params.deadline);
+      }
+      // Log categories update (simplified)
+      if (params.categories) {
+        const oldItemCount = current.categories.flatMap(c => c.items).length;
+        const newItemCount = params.categories.flatMap(c => c.items).length;
+        if (oldItemCount !== newItemCount) {
+          await logHistory(id, "categories_updated", "itens", String(oldItemCount), String(newItemCount));
+        }
+      }
     }
     fetchStrategies();
   };
