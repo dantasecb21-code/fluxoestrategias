@@ -221,9 +221,10 @@ export default function TrainingCourses() {
             onChange={(e) => setNewTitle(e.target.value)}
           />
           <Textarea
-            placeholder="Conteúdo detalhado do treinamento... (esse conteúdo será usado como base de conhecimento pelo Assistente)"
+            placeholder="Conteúdo detalhado do treinamento... (cole prints com Ctrl+V)"
             value={newContent}
             onChange={(e) => setNewContent(e.target.value)}
+            onPaste={(e) => handlePasteImage(e, "new")}
             rows={6}
           />
           <ImageGrid
