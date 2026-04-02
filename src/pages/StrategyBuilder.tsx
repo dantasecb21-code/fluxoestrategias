@@ -106,9 +106,11 @@ export default function StrategyBuilderPage() {
   // Image upload
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [storeAccess, setStoreAccess] = useState(existing?.store_access_confirmed || false);
   const imageInputRef = useRef<HTMLInputElement>(null);
 
   const editor = useCategoryEditor(categories, setCategories);
+  const strategyStatus = existing?.status || "in_progress";
 
   // Save draft to localStorage for new strategies
   useEffect(() => {
