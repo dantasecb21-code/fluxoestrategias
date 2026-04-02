@@ -38,7 +38,7 @@ export default function TrainingCourses() {
   const newImageRef = useRef<HTMLInputElement>(null);
   const editImageRef = useRef<HTMLInputElement>(null);
   const [lightboxImg, setLightboxImg] = useState<string | null>(null);
-
+  const [viewingCourse, setViewingCourse] = useState<Course | null>(null);
   const canManage = role === "admin" || role === "strategic";
 
   const fetchCourses = async () => {
