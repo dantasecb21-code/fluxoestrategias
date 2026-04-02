@@ -6,8 +6,11 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
-import { Plus, Trash2, GripVertical, Pencil, Check, X, BookOpen, Eye, EyeOff, ImagePlus, Loader2 } from "lucide-react";
+import { Plus, Trash2, GripVertical, Pencil, Check, X, BookOpen, Eye, EyeOff, ImagePlus, Loader2, ArrowLeft } from "lucide-react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 type Course = {
   id: string;
