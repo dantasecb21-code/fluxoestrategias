@@ -18,6 +18,7 @@ const AuthContext = createContext<AuthContextType>({
   user: null,
   loading: true,
   displayName: "",
+  avatarUrl: "",
   role: null,
   approved: false,
   signOut: async () => {},
