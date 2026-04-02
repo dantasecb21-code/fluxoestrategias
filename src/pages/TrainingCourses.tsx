@@ -75,6 +75,24 @@ export default function TrainingCourses() {
     }
   };
 
+  const handlePasteImage = async (e: React.ClipboardEvent, target: "new" | "edit") => {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+    for (const item of Array.from(items)) {
+      if (item.type.startsWith("image/")) {
+        e.preventDefault();
+        const file = item.getAsFile();
+        if (!file) return;
+        const url = await uploadImage(file);
+        if (url) {
+          if (target === "new") setNewImages((prev) => [...prev, url]);
+          else setEditImages((prev) => [...prev, url]);
+        }
+        return;
+      }
+    }
+  };
+
   const handleNewImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -203,9 +221,10 @@ export default function TrainingCourses() {
             onChange={(e) => setNewTitle(e.target.value)}
           />
           <Textarea
-            placeholder="Conteúdo detalhado do treinamento... (esse conteúdo será usado como base de conhecimento pelo Assistente)"
+            placeholder="Conteúdo detalhado do treinamento... (cole prints com Ctrl+V)"
             value={newContent}
             onChange={(e) => setNewContent(e.target.value)}
+            onPaste={(e) => handlePasteImage(e, "new")}
             rows={6}
           />
           <ImageGrid
@@ -241,7 +260,7 @@ export default function TrainingCourses() {
               {editingId === course.id ? (
                 <div className="space-y-3">
                   <Input value={editTitle} onChange={(e) => setEditTitle(e.target.value)} />
-                  <Textarea value={editContent} onChange={(e) => setEditContent(e.target.value)} rows={6} />
+                  <Textarea value={editContent} onChange={(e) => setEditContent(e.target.value)} onPaste={(e) => handlePasteImage(e, "edit")} rows={6} />
                   <ImageGrid
                     images={editImages}
                     onRemove={(i) => setEditImages((prev) => prev.filter((_, idx) => idx !== i))}
