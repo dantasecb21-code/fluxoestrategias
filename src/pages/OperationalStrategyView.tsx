@@ -2,16 +2,28 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useDbStrategies, STRATEGY_TYPE_LABELS, StrategyType } from "@/hooks/useDbStrategies";
 import { StrategyCategory, ItemStatus } from "@/types/strategy";
+import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, ChevronDown, ChevronRight, Save, MessageSquare, CheckCircle2, ShieldCheck, AlertCircle } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { ArrowLeft, ChevronDown, ChevronRight, Save, MessageSquare, CheckCircle2, ShieldCheck, AlertCircle, History } from "lucide-react";
 import { formatDateBR } from "@/lib/utils";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
+
+interface HistoryEntry {
+  id: string;
+  user_name: string;
+  action: string;
+  field_changed: string;
+  old_value: string;
+  new_value: string;
+  created_at: string;
+}
 
 function calcProgress(categories: StrategyCategory[]) {
   const allItems = categories.flatMap((c) => c.items);
