@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Users, UserCheck, Trophy, Trash2, AlertTriangle, Eye } from "lucide-react";
 import { toast } from "sonner";
+import { calcManagerStats } from "@/lib/strategyStatus";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,27 +27,7 @@ interface OperationalManager {
   avatar_url: string;
 }
 
-function calcManagerStats(strategies: any[], managerId: string) {
-  const assigned = strategies.filter((s) => s.assigned_to === managerId);
-  const total = assigned.length;
-  let completed = 0;
-  let inProgress = 0;
-  let pendingApproval = 0;
-
-  assigned.forEach((s) => {
-    if (s.status === "approved") { completed++; return; }
-    if (s.status === "pending_approval") { pendingApproval++; return; }
-    const allItems = s.categories.flatMap((c: any) => c.items);
-    if (allItems.length === 0) return;
-    const hasStarted = allItems.some((i: any) => i.status === "in_progress" || i.status === "completed");
-    if (hasStarted) inProgress++;
-  });
-
-  const pending = total - completed - inProgress - pendingApproval;
-  const completionRate = total > 0 ? Math.round((completed / total) * 100) : 0;
-
-  return { total, completed, inProgress, pending, pendingApproval, completionRate };
-}
+// calcManagerStats imported from @/lib/strategyStatus
 
 export default function ManagersList() {
   const [managers, setManagers] = useState<OperationalManager[]>([]);

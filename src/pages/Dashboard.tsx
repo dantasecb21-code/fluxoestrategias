@@ -6,6 +6,7 @@ import { Progress } from "@/components/ui/progress";
 import { Plus, Copy, Pencil, Trash2, FileText, Zap, Clock, UserCheck } from "lucide-react";
 import { formatDateBR } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
+import { deriveStrategyDisplayStatus, getStatusLabel, getStatusBadgeProps } from "@/lib/strategyStatus";
 
 function calcProgress(categories: any[]) {
   const allItems = categories.flatMap((c: any) => c.items);
@@ -62,10 +63,10 @@ export default function Dashboard() {
           </h2>
           {strategies.map((s) => {
             const progress = calcProgress(s.categories);
-            const status = (s as any).status || "in_progress";
-            const statusLabel = status === "pending_approval" ? "Aguardando aprovação" : status === "approved" ? "Concluída ✓" : "Em andamento";
-            const statusVariant = status === "pending_approval" ? "outline" as const : status === "approved" ? "default" as const : "secondary" as const;
-            const isApproved = status === "approved";
+            const displayStatus = deriveStrategyDisplayStatus(s);
+            const statusLabel = getStatusLabel(displayStatus);
+            const badgeProps = getStatusBadgeProps(displayStatus);
+            const isApproved = displayStatus === "completed";
             return (
               <Card
                 key={s.id}
@@ -76,7 +77,7 @@ export default function Dashboard() {
                   <div className="min-w-0 flex-1">
                     <h3 className="font-heading font-semibold text-foreground text-lg truncate flex items-center gap-2">
                       {s.store_name || "Sem nome"}
-                      <Badge variant={statusVariant} className={`text-[10px] py-0 px-1.5 h-4 leading-none ${isApproved ? "bg-success/20 text-success border-success/30" : ""}`}>{statusLabel}</Badge>
+                      <Badge variant={badgeProps.variant} className={`text-[10px] py-0 px-1.5 h-4 leading-none ${badgeProps.className}`}>{statusLabel}</Badge>
                     </h3>
                     <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground mt-1">
                       {s.operational_manager && (

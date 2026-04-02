@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { ArrowLeft, Camera, Phone, Mail, Shield, CheckCircle, Clock, Edit2, Save, X, FileText } from "lucide-react";
 import { toast } from "sonner";
+import { calcManagerStats } from "@/lib/strategyStatus";
 
 interface ProfileData {
   user_id: string;
@@ -97,21 +98,8 @@ export default function UserProfile() {
   }) : [];
 
   // Stats
-  const managerStats = userId ? (() => {
-    const assigned = strategies.filter((s) => s.assigned_to === userId);
-    const total = assigned.length;
-    let completed = 0, inProgress = 0, pendingApproval = 0;
-    assigned.forEach((s) => {
-      if (s.status === "approved") { completed++; return; }
-      if (s.status === "pending_approval") { pendingApproval++; return; }
-      const items = (s.categories as any[]).flatMap((c: any) => c.items);
-      if (items.length === 0) return;
-      if (items.some((i: any) => i.status === "in_progress" || i.status === "completed")) inProgress++;
-    });
-    const pending = total - completed - inProgress - pendingApproval;
-    const rate = total > 0 ? Math.round((completed / total) * 100) : 0;
-    return { total, completed, inProgress, pending, pendingApproval, rate };
-  })() : null;
+  const stats = userId ? calcManagerStats(strategies, userId) : null;
+  const managerStats = stats ? { ...stats, rate: stats.completionRate } : null;
 
   if (loading) return <div className="flex items-center justify-center h-64 text-muted-foreground">Carregando...</div>;
   if (!profile) return <div className="flex items-center justify-center h-64 text-muted-foreground">Perfil não encontrado</div>;
