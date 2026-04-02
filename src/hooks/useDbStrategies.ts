@@ -4,6 +4,14 @@ import { useAuth } from "@/hooks/useAuth";
 import { StrategyCategory } from "@/types/strategy";
 import type { Json } from "@/integrations/supabase/types";
 
+export type StrategyType = "initial" | "alignment" | "retention";
+
+export const STRATEGY_TYPE_LABELS: Record<StrategyType, string> = {
+  initial: "Estratégia Inicial",
+  alignment: "Estratégia de Alinhamento",
+  retention: "Estratégia de Retenção",
+};
+
 export interface DbStrategy {
   id: string;
   user_id: string;
@@ -14,6 +22,8 @@ export interface DbStrategy {
   deadline: string;
   categories: StrategyCategory[];
   status: string;
+  strategy_type: StrategyType;
+  observation: string;
   store_access_confirmed: boolean;
   created_at: string;
   updated_at: string;
@@ -75,6 +85,8 @@ export function useDbStrategies() {
     deadline: string;
     categories: StrategyCategory[];
     assigned_to?: string | null;
+    strategy_type?: string;
+    observation?: string;
   }): Promise<DbStrategy | null> => {
     if (!user) return null;
     const { data, error } = await supabase
@@ -87,6 +99,8 @@ export function useDbStrategies() {
         deadline: params.deadline,
         categories: params.categories as unknown as Json,
         assigned_to: params.assigned_to || null,
+        strategy_type: params.strategy_type || "initial",
+        observation: params.observation || "",
       })
       .select()
       .single();
@@ -105,6 +119,8 @@ export function useDbStrategies() {
     categories?: StrategyCategory[];
     assigned_to?: string | null;
     status?: string;
+    strategy_type?: string;
+    observation?: string;
     store_access_confirmed?: boolean;
   }) => {
     const updateData: Record<string, unknown> = { ...params };

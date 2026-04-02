@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useDbStrategies } from "@/hooks/useDbStrategies";
+import { useDbStrategies, StrategyType, STRATEGY_TYPE_LABELS } from "@/hooks/useDbStrategies";
 import { DEFAULT_CATEGORIES, StrategyCategory } from "@/types/strategy";
 import { StrategyMetaForm } from "@/components/StrategyMetaForm";
 import { CategoryCard } from "@/components/CategoryCard";
@@ -91,6 +91,8 @@ export default function StrategyBuilderPage() {
     existing?.categories?.length ? existing.categories : draft?.categories?.length ? draft.categories : initCategories()
   );
   const [assignedTo, setAssignedTo] = useState<string>(existing?.assigned_to || draft?.assignedTo || "");
+  const [strategyType, setStrategyType] = useState<StrategyType>((existing?.strategy_type as StrategyType) || "initial");
+  const [observation, setObservation] = useState<string>(existing?.observation || "");
   const [showReport, setShowReport] = useState(false);
   const [showDetailedProgress, setShowDetailedProgress] = useState(false);
   const [expandedCats, setExpandedCats] = useState<Record<string, boolean>>({});
@@ -131,6 +133,8 @@ export default function StrategyBuilderPage() {
       });
       setCategories(existing.categories);
       setAssignedTo(existing.assigned_to || "");
+      setStrategyType((existing.strategy_type as StrategyType) || "initial");
+      setObservation(existing.observation || "");
       setSavedId(existing.id);
     }
   }, [existing?.id]);
@@ -184,6 +188,8 @@ export default function StrategyBuilderPage() {
         categories,
         assigned_to: assignedTo || null,
         store_access_confirmed: storeAccess,
+        strategy_type: strategyType,
+        observation,
       });
       clearDraft();
       toast.success("Estratégia atualizada!");
@@ -195,6 +201,8 @@ export default function StrategyBuilderPage() {
         deadline: meta.deadline,
         categories,
         assigned_to: assignedTo || null,
+        strategy_type: strategyType,
+        observation,
       });
       if (created) {
         setSavedId(created.id);
@@ -326,7 +334,7 @@ export default function StrategyBuilderPage() {
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">
             <h1 className="font-heading font-bold text-xl text-foreground">
-              {id ? `Estratégia Inicial - ${meta.storeName || ""}` : "Nova Estratégia"}
+              {id ? `${STRATEGY_TYPE_LABELS[strategyType] || "Estratégia"} - ${meta.storeName || ""}` : "Nova Estratégia"}
             </h1>
             <div className="flex items-center gap-2 mt-1">
               <p className="text-xs text-muted-foreground">
@@ -487,7 +495,7 @@ export default function StrategyBuilderPage() {
         />
       ) : (
         <>
-          <StrategyMetaForm meta={meta} onChange={setMeta} />
+          <StrategyMetaForm meta={meta} onChange={setMeta} strategyType={strategyType} onTypeChange={setStrategyType} />
 
           {/* Assign to operational manager */}
           <Card className="p-4 border-border bg-card space-y-2">
@@ -664,6 +672,22 @@ export default function StrategyBuilderPage() {
               <Plus className="h-4 w-4 mr-2" /> Nova categoria
             </Button>
           )}
+
+          {/* Observações sobre a loja */}
+          <Card className="p-4 border-border bg-card space-y-3">
+            <Label className="text-foreground font-heading font-semibold text-sm flex items-center gap-2">
+              <FileText className="h-4 w-4 text-primary" /> Observações sobre a loja
+            </Label>
+            <p className="text-xs text-muted-foreground">
+              Espaço livre para anotar informações complementares sobre a loja.
+            </p>
+            <Textarea
+              value={observation}
+              onChange={(e) => setObservation(e.target.value)}
+              placeholder="Ex: loja tem dificuldade com entrega, dono viaja muito, equipe nova..."
+              className="bg-background min-h-[100px]"
+            />
+          </Card>
         </>
       )}
     </div>
