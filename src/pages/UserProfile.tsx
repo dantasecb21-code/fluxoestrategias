@@ -9,9 +9,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
-import { ArrowLeft, Camera, Phone, Mail, Shield, CheckCircle, Clock, Edit2, Save, X, FileText } from "lucide-react";
+import { ArrowLeft, Camera, Phone, Mail, Shield, CheckCircle, Clock, Edit2, Save, X, FileText, KeyRound, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { calcManagerStats } from "@/lib/strategyStatus";
+import { Label } from "@/components/ui/label";
 
 interface ProfileData {
   user_id: string;
