@@ -188,6 +188,8 @@ export default function StrategyBuilderPage() {
         categories,
         assigned_to: assignedTo || null,
         store_access_confirmed: storeAccess,
+        strategy_type: strategyType,
+        observation,
       });
       clearDraft();
       toast.success("Estratégia atualizada!");
@@ -199,6 +201,8 @@ export default function StrategyBuilderPage() {
         deadline: meta.deadline,
         categories,
         assigned_to: assignedTo || null,
+        strategy_type: strategyType,
+        observation,
       });
       if (created) {
         setSavedId(created.id);
