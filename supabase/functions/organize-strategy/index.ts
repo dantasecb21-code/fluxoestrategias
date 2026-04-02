@@ -227,7 +227,10 @@ TIPOS DE PRINT E ACOES OBRIGATORIAS:
 24. INFORMACOES DA LOJA: Se mostra informacoes gerais (CNPJ, endereco, telefone, etc)
     → Retorne: {"type":"store_info","detected":"[informacoes visiveis]","questions":[],"directAction":"Confirmar com o cliente no grupo se as informacoes cadastrais da loja estao corretas e atualizadas."}
 
-25. OUTRO (nao listado acima): Qualquer print nao identificado nos tipos acima
+25. TAG "ITEM MAIS CARO": Se o print mostra um item com a tag/etiqueta "Item mais caro" (tag vermelha indicando que o preco esta acima da concorrencia)
+    → Retorne: {"type":"expensive_item_tag","detected":"[nome do item e preco visivel]","questions":[],"directAction":"Ajustar o preco do item para ficar competitivo e remover a tag 'Item mais caro'. A tag indica que o preco esta acima da media da concorrencia na plataforma, o que prejudica o posicionamento e as vendas."}
+
+26. OUTRO (nao listado acima): Qualquer print nao identificado nos tipos acima
     → Use sua inteligencia para ENTENDER o contexto do print e SUGERIR uma acao proativa
     → Retorne: {"type":"other","detected":"[descricao detalhada do que esta visivel]","questions":[],"directAction":"[acao proativa baseada no que voce identificou no print - seja especifico e util]"}
 
