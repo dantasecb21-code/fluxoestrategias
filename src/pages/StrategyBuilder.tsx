@@ -419,6 +419,11 @@ export default function StrategyBuilderPage() {
       {/* Detailed progress view */}
       {showDetailedProgress && id ? (
         <div className="space-y-4">
+          <div className="flex justify-end">
+            <Button size="sm" onClick={handleSave} className="bg-primary text-primary-foreground hover:bg-primary/90">
+              <Save className="h-4 w-4 mr-1" /> Salvar Alterações
+            </Button>
+          </div>
           {categories.filter((c) => c.items.length > 0).map((cat) => {
             const isExpanded = expandedCats[cat.id] !== false;
             const catCompleted = cat.items.filter((i) => i.status === "completed").length;
@@ -438,8 +443,6 @@ export default function StrategyBuilderPage() {
                   <div className="divide-y divide-border">
                     {cat.items.map((item) => {
                       const st = item.status || "pending";
-                      const color = st === "completed" ? "text-success" : st === "in_progress" ? "text-primary" : "text-warning";
-                      const label = st === "completed" ? "Concluído" : st === "in_progress" ? "Em andamento" : "Pendente";
                       return (
                         <div key={item.id} className="p-4 flex items-start justify-between gap-4">
                           <div className="flex-1">
@@ -448,7 +451,27 @@ export default function StrategyBuilderPage() {
                               <p className="text-xs text-muted-foreground mt-1 italic">💬 {item.observation}</p>
                             )}
                           </div>
-                          <span className={`text-xs font-medium whitespace-nowrap ${color}`}>● {label}</span>
+                          <Select
+                            value={st}
+                            onValueChange={(v) => {
+                              setCategories((prev) =>
+                                prev.map((c) =>
+                                  c.id === cat.id
+                                    ? { ...c, items: c.items.map((i) => (i.id === item.id ? { ...i, status: v as any } : i)) }
+                                    : c
+                                )
+                              );
+                            }}
+                          >
+                            <SelectTrigger className="w-36 h-8 text-xs shrink-0">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="pending"><span className="text-warning">● </span>Pendente</SelectItem>
+                              <SelectItem value="in_progress"><span className="text-primary">● </span>Em andamento</SelectItem>
+                              <SelectItem value="completed"><span className="text-success">● </span>Concluído</SelectItem>
+                            </SelectContent>
+                          </Select>
                         </div>
                       );
                     })}
