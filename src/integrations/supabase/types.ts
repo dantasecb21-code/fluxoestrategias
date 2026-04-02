@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_context_entries: {
+        Row: {
+          category: string
+          content: string
+          created_at: string
+          id: string
+          structured_summary: string
+          user_id: string
+        }
+        Insert: {
+          category?: string
+          content?: string
+          created_at?: string
+          id?: string
+          structured_summary?: string
+          user_id: string
+        }
+        Update: {
+          category?: string
+          content?: string
+          created_at?: string
+          id?: string
+          structured_summary?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           approved: boolean
@@ -21,6 +48,7 @@ export type Database = {
           cover_url: string
           created_at: string
           display_name: string
+          email: string
           id: string
           status_text: string
           updated_at: string
@@ -33,6 +61,7 @@ export type Database = {
           cover_url?: string
           created_at?: string
           display_name?: string
+          email?: string
           id?: string
           status_text?: string
           updated_at?: string
@@ -45,6 +74,7 @@ export type Database = {
           cover_url?: string
           created_at?: string
           display_name?: string
+          email?: string
           id?: string
           status_text?: string
           updated_at?: string
