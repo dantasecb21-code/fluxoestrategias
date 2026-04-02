@@ -62,6 +62,9 @@ export default function Dashboard() {
           </h2>
           {strategies.map((s) => {
             const progress = calcProgress(s.categories);
+            const status = (s as any).status || "in_progress";
+            const statusLabel = status === "pending_approval" ? "Aguardando aprovação" : status === "approved" ? "Aprovada ✓" : "Em andamento";
+            const statusVariant = status === "pending_approval" ? "outline" as const : status === "approved" ? "default" as const : "secondary" as const;
             return (
               <Card
                 key={s.id}
@@ -70,8 +73,10 @@ export default function Dashboard() {
               >
                 <div className="flex items-start justify-between mb-3">
                   <div className="min-w-0 flex-1">
-                    <h3 className="font-heading font-semibold text-foreground text-lg truncate">
+                    <h3 className="font-heading font-semibold text-foreground text-lg truncate flex items-center gap-2">
                       {s.store_name || "Sem nome"}
+                      <Badge variant={statusVariant} className="text-[10px]">{statusLabel}</Badge>
+                    </h3>
                     </h3>
                     <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground mt-1">
                       {s.operational_manager && (
