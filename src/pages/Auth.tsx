@@ -12,7 +12,9 @@ type UserType = "strategic" | "operational";
 type AuthMode = "login" | "signup" | "forgot";
 
 export default function Auth() {
-  const [isLogin, setIsLogin] = useState(true);
+  const [mode, setMode] = useState<AuthMode>("login");
+  const isLogin = mode === "login";
+  const isForgot = mode === "forgot";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
