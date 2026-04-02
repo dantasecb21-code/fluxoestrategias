@@ -142,6 +142,32 @@ Como se cadastrar: Acesse OFERTAS → Central de ofertas → Escolha campanha �
 - Combos aumentam ticket médio
 - Reduzir excesso de opções
 
+## COMBOS COM COCA-COLA
+Combos com Coca-Cola aumentam o ticket médio em até 20%. 50% das vendas de bebidas Coca-Cola são via combos.
+
+### 3 Modelos de Combos Universais (aplicáveis a qualquer nicho):
+
+**Combo 1 — Prato + Coca-Cola 350ml (10% off)**
+- Qualquer item principal + Coca-Cola Lata 350ml
+- Desconto de 10% sobre a soma dos itens
+- Ex: Hambúrguer R$25 + Coca 350ml R$5 = R$27 (em vez de R$30)
+- Nome: "- Combo [Item] + Coca-Cola 350ml"
+
+**Combo 2 — Prato + Acompanhamento + Coca-Cola 600ml (10% off)**
+- Item + acompanhamento + Coca-Cola PET 600ml
+- Ex: Executivo R$22 + Farofa R$5 + Coca 600ml R$6 = R$29,70 (em vez de R$33)
+- Nome: "- Combo [Item] Completo + Coca-Cola 600ml"
+
+**Combo 3 — 2 Itens + Coca-Cola 2L (10% off)**
+- 2 itens principais + Coca-Cola PET 2L
+- Ex: 2 Pizzas R$60 + Coca 2L R$11 = R$63,90 (em vez de R$71)
+- Nome: "- Combo Casal/Família + Coca-Cola 2L"
+
+Preços sugeridos bebidas: Lata 220ml R$3 | Lata 350ml R$5 | PET 600ml R$6 | PET 1,5L R$10 | PET 2L R$11
+Sempre colocar "Coca-Cola" no título do combo para busca e campanhas.
+Fotos: usar kombo.coca-cola.com para gerar imagens profissionais.
+Variações: Café da manhã→Del Valle | Saladerias/Japonesa→Chá Leão | Fast food→Coca-Cola | Pizzaria→Fanta/Kuat | Sobremesa→Água Crystal
+
 === FIM DA BASE ===
 
 INSTRUÇÕES DE RESPOSTA:
