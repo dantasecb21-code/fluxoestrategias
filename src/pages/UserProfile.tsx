@@ -264,21 +264,9 @@ export default function UserProfile() {
                     {(s.categories as any[]).flatMap((c: any) => c.items).length} itens • {new Date(s.created_at).toLocaleDateString("pt-BR")}
                   </p>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Badge className="bg-success/20 text-success border-success/30 text-xs">
-                    <CheckCircle className="h-3 w-3 mr-1" /> Concluída
-                  </Badge>
-                  {canViewHistory && (
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="h-7 w-7 text-muted-foreground hover:text-foreground"
-                      onClick={(e) => { e.stopPropagation(); deleteStrategy(s.id); toast.success("Estratégia removida."); }}
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </Button>
-                  )}
-                </div>
+                <Badge className="bg-success/20 text-success border-success/30 text-xs">
+                  <CheckCircle className="h-3 w-3 mr-1" /> Concluída
+                </Badge>
               </div>
             ))}
           </div>
