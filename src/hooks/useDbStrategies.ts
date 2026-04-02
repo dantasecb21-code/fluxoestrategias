@@ -119,6 +119,8 @@ export function useDbStrategies() {
     categories?: StrategyCategory[];
     assigned_to?: string | null;
     status?: string;
+    strategy_type?: string;
+    observation?: string;
     store_access_confirmed?: boolean;
   }) => {
     const updateData: Record<string, unknown> = { ...params };
