@@ -3,13 +3,12 @@ import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useDbStrategies } from "@/hooks/useDbStrategies";
-import { Trash2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
-import { ArrowLeft, Camera, Phone, Mail, Shield, CheckCircle, Clock, Edit2, Save, X, FileText } from "lucide-react";
+import { ArrowLeft, Camera, Phone, Mail, Shield, CheckCircle, Clock, Edit2, Save, X, FileText, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 interface ProfileData {
