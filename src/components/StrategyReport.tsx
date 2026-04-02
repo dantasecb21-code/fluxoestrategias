@@ -3,6 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Copy, FileText } from "lucide-react";
 import { toast } from "sonner";
+import { formatDateBR } from "@/lib/utils";
 
 interface StrategyReportProps {
   storeName: string;
