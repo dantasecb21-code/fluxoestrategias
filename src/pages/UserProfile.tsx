@@ -222,10 +222,14 @@ export default function UserProfile() {
       {managerStats && managerStats.total > 0 && (
         <Card className="p-5 space-y-3">
           <h3 className="font-heading font-semibold text-foreground">Desempenho</h3>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-4 gap-3">
             <div className="text-center p-2.5 rounded-lg bg-success/10">
               <p className="font-heading font-bold text-xl text-success">{managerStats.completed}</p>
               <p className="text-xs text-muted-foreground">Concluídas</p>
+            </div>
+            <div className="text-center p-2.5 rounded-lg bg-blue-500/10">
+              <p className="font-heading font-bold text-xl text-blue-400">{managerStats.pendingApproval}</p>
+              <p className="text-xs text-muted-foreground">Aguardando</p>
             </div>
             <div className="text-center p-2.5 rounded-lg bg-primary/10">
               <p className="font-heading font-bold text-xl text-primary">{managerStats.inProgress}</p>
