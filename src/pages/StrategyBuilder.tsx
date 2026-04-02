@@ -5,7 +5,6 @@ import { DEFAULT_CATEGORIES, StrategyCategory } from "@/types/strategy";
 import { StrategyMetaForm } from "@/components/StrategyMetaForm";
 import { CategoryCard } from "@/components/CategoryCard";
 import { StrategyReport } from "@/components/StrategyReport";
-import { StrategyHistory } from "@/components/StrategyHistory";
 import { useCategoryEditor } from "@/hooks/useStrategies";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -396,7 +395,7 @@ export default function StrategyBuilderPage() {
           </Button>
         </div>
         {id && (
-          <div className="flex gap-2 flex-wrap">
+          <div className="flex gap-2">
             <Button variant="outline" size="sm" onClick={() => { setShowDetailedProgress(!showDetailedProgress); setShowReport(false); }}>
               <CheckCircle2 className="h-4 w-4 mr-1" /> {showDetailedProgress ? "Editor" : "Progresso"}
             </Button>
@@ -404,11 +403,6 @@ export default function StrategyBuilderPage() {
               <FileText className="h-4 w-4 mr-1" /> {showReport ? "Editor" : "Relatório"}
             </Button>
           </div>
-        )}
-
-        {/* Histórico */}
-        {id && savedId && (
-          <StrategyHistory strategyId={savedId} />
         )}
       </div>
 
