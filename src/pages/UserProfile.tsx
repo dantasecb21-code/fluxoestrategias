@@ -42,13 +42,14 @@ export default function UserProfile() {
     async function fetchProfile() {
       if (!userId) return;
       const [profileRes, roleRes] = await Promise.all([
-        supabase.from("profiles").select("user_id, display_name, whatsapp, approved, avatar_url, status_text").eq("user_id", userId).single(),
+        supabase.from("profiles").select("user_id, display_name, whatsapp, approved, avatar_url, status_text, email").eq("user_id", userId).single(),
         supabase.from("user_roles").select("role").eq("user_id", userId).single(),
       ]);
       if (profileRes.data) {
         const p = profileRes.data as ProfileData;
         setProfile(p);
         setEditForm({ display_name: p.display_name, whatsapp: p.whatsapp, status_text: p.status_text || "" });
+        if ((p as any).email) setUserEmail((p as any).email);
       }
       if (roleRes.data) setUserRole(roleRes.data.role);
       setLoading(false);
@@ -92,7 +93,7 @@ export default function UserProfile() {
   // Completed strategies for this user
   const completedStrategies = userId ? strategies.filter((s) => {
     if (s.assigned_to !== userId) return false;
-    const items = (s.categories as any[]).flatMap((c: any) => c.items).filter((i: any) => i.checked);
+    const items = (s.categories as any[]).flatMap((c: any) => c.items);
     return items.length > 0 && items.every((i: any) => i.status === "completed");
   }) : [];
 
@@ -102,7 +103,7 @@ export default function UserProfile() {
     const total = assigned.length;
     let completed = 0, inProgress = 0;
     assigned.forEach((s) => {
-      const items = (s.categories as any[]).flatMap((c: any) => c.items).filter((i: any) => i.checked);
+      const items = (s.categories as any[]).flatMap((c: any) => c.items);
       if (items.length === 0) return;
       if (items.every((i: any) => i.status === "completed")) completed++;
       else if (items.some((i: any) => i.status === "in_progress" || i.status === "completed")) inProgress++;
@@ -192,10 +193,18 @@ export default function UserProfile() {
                   className="h-8 text-sm"
                 />
               ) : (
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Phone className="h-3.5 w-3.5" />
-                  <span>{profile.whatsapp || "Não informado"}</span>
-                </div>
+                <>
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Phone className="h-3.5 w-3.5" />
+                    <span>{profile.whatsapp || "Não informado"}</span>
+                  </div>
+                  {userEmail && (
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Mail className="h-3.5 w-3.5" />
+                      <span>{userEmail}</span>
+                    </div>
+                  )}
+                </>
               )}
             </div>
 
@@ -253,7 +262,7 @@ export default function UserProfile() {
                 <div>
                   <p className="text-sm font-medium text-foreground">{s.store_name || "Sem nome"}</p>
                   <p className="text-xs text-muted-foreground">
-                    {(s.categories as any[]).flatMap((c: any) => c.items).filter((i: any) => i.checked).length} itens • {new Date(s.created_at).toLocaleDateString("pt-BR")}
+                    {(s.categories as any[]).flatMap((c: any) => c.items).length} itens • {new Date(s.created_at).toLocaleDateString("pt-BR")}
                   </p>
                 </div>
                 <Badge className="bg-success/20 text-success border-success/30 text-xs">

@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Plus, Copy, Pencil, Trash2, FileText, Zap, Clock, UserCheck } from "lucide-react";
+import { formatDateBR } from "@/lib/utils";
 
 function calcProgress(categories: any[]) {
   const allItems = categories.flatMap((c: any) => c.items);
@@ -79,7 +80,7 @@ export default function Dashboard() {
                       )}
                       {s.deadline && (
                         <span className="flex items-center gap-1">
-                          <Clock className="h-3 w-3" /> Prazo: {s.deadline}
+                          <Clock className="h-3 w-3" /> Prazo: {formatDateBR(s.deadline)}
                         </span>
                       )}
                       <span>{new Date(s.updated_at).toLocaleDateString("pt-BR")}</span>

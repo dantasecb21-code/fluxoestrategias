@@ -8,6 +8,7 @@ import { Progress } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft, ChevronDown, ChevronRight, Save, MessageSquare } from "lucide-react";
+import { formatDateBR } from "@/lib/utils";
 import { toast } from "sonner";
 
 function calcProgress(categories: StrategyCategory[]) {
@@ -90,7 +91,7 @@ export default function OperationalStrategyView() {
               Estratégia Inicial – {strategy.store_name}
             </h1>
             <div className="text-xs text-muted-foreground mt-0.5">
-              Administrador: {strategy.manager_name} • Prazo: {strategy.deadline}
+              Administrador: {strategy.manager_name} • Prazo: {formatDateBR(strategy.deadline)}
             </div>
           </div>
         </div>

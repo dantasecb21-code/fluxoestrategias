@@ -3,6 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Copy, FileText } from "lucide-react";
 import { toast } from "sonner";
+import { formatDateBR } from "@/lib/utils";
 
 interface StrategyReportProps {
   storeName: string;
@@ -20,7 +21,7 @@ export function StrategyReport({ storeName, managerName, operationalManager, dea
     let report = `*Estratégia Inicial – ${storeName}*\n\n`;
     report += `*Gestor Estratégico:* ${managerName}\n`;
     report += `*Gestor Operacional:* ${operationalManager}\n`;
-    report += `*Prazo:* ${deadline}\n\n`;
+    report += `*Prazo:* ${formatDateBR(deadline)}\n\n`;
 
     activeCategories.forEach((cat) => {
       report += `*${cat.name}*\n\n`;
@@ -62,7 +63,7 @@ export function StrategyReport({ storeName, managerName, operationalManager, dea
           <div className="text-sm text-muted-foreground space-y-0.5">
             <p>Gestor Estratégico: {managerName}</p>
             <p>Gestor Operacional: {operationalManager}</p>
-            <p>Prazo: {deadline}</p>
+            <p>Prazo: {formatDateBR(deadline)}</p>
           </div>
         </div>
 

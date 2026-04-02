@@ -23,6 +23,7 @@ interface OperationalManager {
   user_id: string;
   display_name: string;
   whatsapp: string;
+  avatar_url: string;
 }
 
 function calcManagerStats(strategies: any[], managerId: string) {
@@ -32,7 +33,7 @@ function calcManagerStats(strategies: any[], managerId: string) {
   let inProgress = 0;
 
   assigned.forEach((s) => {
-    const allItems = s.categories.flatMap((c: any) => c.items).filter((i: any) => i.checked);
+    const allItems = s.categories.flatMap((c: any) => c.items);
     if (allItems.length === 0) return;
     const allCompleted = allItems.every((i: any) => i.status === "completed");
     const hasStarted = allItems.some((i: any) => i.status === "in_progress" || i.status === "completed");
@@ -62,7 +63,7 @@ export default function ManagersList() {
       const userIds = roles.map((r) => r.user_id);
       const { data: profiles } = await supabase
         .from("profiles")
-        .select("user_id, display_name, whatsapp")
+        .select("user_id, display_name, whatsapp, avatar_url")
         .in("user_id", userIds);
 
       if (profiles) {
@@ -70,6 +71,7 @@ export default function ManagersList() {
           user_id: p.user_id,
           display_name: p.display_name,
           whatsapp: p.whatsapp || "",
+          avatar_url: p.avatar_url || "",
         })));
       }
     } else {
@@ -136,13 +138,14 @@ export default function ManagersList() {
               <Card key={m.user_id} className="p-5">
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center gap-3">
-                    <div className={`h-10 w-10 rounded-full flex items-center justify-center font-bold text-sm ${
-                      index === 0 ? "bg-yellow-500/20 text-yellow-500" :
-                      index === 1 ? "bg-gray-400/20 text-gray-400" :
-                      index === 2 ? "bg-amber-700/20 text-amber-700" :
-                      "bg-primary/10 text-primary"
-                    }`}>
-                      {index < 3 ? <Trophy className="h-5 w-5" /> : `#${index + 1}`}
+                    <div className="h-10 w-10 rounded-full border-2 border-border bg-muted flex items-center justify-center overflow-hidden shrink-0">
+                      {m.avatar_url ? (
+                        <img src={m.avatar_url} alt={m.display_name} className="h-full w-full object-cover" />
+                      ) : (
+                        <span className="text-sm font-bold text-muted-foreground">
+                          {m.display_name?.charAt(0)?.toUpperCase() || "?"}
+                        </span>
+                      )}
                     </div>
                      <div>
                        <p className="font-heading font-semibold text-foreground">{m.display_name || "Sem nome"}</p>

@@ -163,7 +163,7 @@ export default function AssistantChat() {
             <Bot className="h-5 w-5 text-primary-foreground" />
           </div>
           <div>
-            <h1 className="font-heading font-bold text-lg text-foreground">Chatinho Gepeto - 99Food</h1>
+            <h1 className="font-heading font-bold text-lg text-foreground">Chatinho Gepeto</h1>
             <p className="text-xs text-muted-foreground">Tire dúvidas sobre a plataforma com prints e passo a passo</p>
           </div>
         </div>

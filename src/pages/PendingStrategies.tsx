@@ -3,6 +3,7 @@ import { useDbStrategies } from "@/hooks/useDbStrategies";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Clock, AlertTriangle, UserCheck, Eye } from "lucide-react";
+import { formatDateBR } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
 function calcProgress(categories: any[]) {
@@ -73,7 +74,7 @@ export default function PendingStrategies() {
                       )}
                       {s.deadline && (
                         <span className="flex items-center gap-1">
-                          <Clock className="h-3 w-3" /> Prazo: {s.deadline}
+                          <Clock className="h-3 w-3" /> Prazo: {formatDateBR(s.deadline)}
                         </span>
                       )}
                     </div>
