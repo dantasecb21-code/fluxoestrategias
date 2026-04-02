@@ -100,17 +100,17 @@ export default function UserProfile() {
   const managerStats = userId ? (() => {
     const assigned = strategies.filter((s) => s.assigned_to === userId);
     const total = assigned.length;
-    let completed = 0, inProgress = 0;
+    let completed = 0, inProgress = 0, pendingApproval = 0;
     assigned.forEach((s) => {
       if (s.status === "approved") { completed++; return; }
+      if (s.status === "pending_approval") { pendingApproval++; return; }
       const items = (s.categories as any[]).flatMap((c: any) => c.items);
       if (items.length === 0) return;
-      if (items.every((i: any) => i.status === "completed")) completed++;
-      else if (items.some((i: any) => i.status === "in_progress" || i.status === "completed")) inProgress++;
+      if (items.some((i: any) => i.status === "in_progress" || i.status === "completed")) inProgress++;
     });
-    const pending = total - completed - inProgress;
+    const pending = total - completed - inProgress - pendingApproval;
     const rate = total > 0 ? Math.round((completed / total) * 100) : 0;
-    return { total, completed, inProgress, pending, rate };
+    return { total, completed, inProgress, pending, pendingApproval, rate };
   })() : null;
 
   if (loading) return <div className="flex items-center justify-center h-64 text-muted-foreground">Carregando...</div>;
