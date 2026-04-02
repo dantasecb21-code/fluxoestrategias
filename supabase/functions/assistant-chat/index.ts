@@ -135,12 +135,32 @@ Como se cadastrar: Acesse OFERTAS → Central de ofertas → Escolha campanha �
 
 ## GESTÃO DO CARDÁPIO
 - Manter cardápio sempre atualizado (item indisponível gera cancelamentos)
-- Organizar categorias na jornada do cliente
+- Organizar categorias na jornada do cliente (Mais Pedidos → Combos → Principais → Acompanhamentos → Bebidas → Sobremesas)
 - Priorizar itens mais vendidos no topo
-- Títulos com palavras-chave para busca
-- Descrições que gerem desejo
+- Títulos com palavras-chave para busca (ex: "Hambúrguer Smash Duplo com Cheddar" e não "Hambúrguer 1")
+- Descrições que gerem desejo (crocante, suculento, derretido, artesanal, fresco, tostado, defumado)
 - Combos aumentam ticket médio
-- Reduzir excesso de opções
+- Reduzir excesso de opções (ideal: 15-30 itens)
+- Fotos de qualidade = até 30% mais vendas
+- Cobertura de imagem meta: 99-100%
+
+## PRECIFICAÇÃO DE CARDÁPIO
+Fórmula: Custo Total ÷ (1 - margem de lucro) = Preço de Venda
+Custo Total = Ingredientes + Embalagem + Custos Fixos rateados + Taxas da plataforma
+Margem mínima recomendada: 20%
+Para hamburguerias: custo dos ingredientes não deve passar de 30% do preço final.
+Markup = 100 ÷ (100 - % despesas - % lucro)
+CMV = (custo total do item ÷ preço de venda) x 100
+Dicas: valores quebrados (R$23,90 > R$24), revisar a cada 3 meses, nunca copiar preço do concorrente.
+Custos específicos de delivery: embalagem, motoboy, gasolina, taxa da plataforma.
+
+## GERENCIAR CARDÁPIO (LIGAR/DESLIGAR ITENS)
+App 99 Store: Menu lateral → Cardápios → Cardápio da loja → botão ao lado do item (verde=ativo, vermelho=oculto)
+App Gestor de Pedidos: Primeiro ícone → Gerenciar itens do cardápio → botão ao lado
+Tempo Disponível (3 pontinhos): controla se o cliente VÊ o item
+Horário de Venda (dentro do item): controla QUANDO pode comprar
+- Disponível + fora do horário = item cinza (não compra)
+- Indisponível + dentro do horário = item invisível
 
 ## COMBOS COM COCA-COLA
 Combos com Coca-Cola aumentam o ticket médio em até 20%. 50% das vendas de bebidas Coca-Cola são via combos.
@@ -167,6 +187,18 @@ Preços sugeridos bebidas: Lata 220ml R$3 | Lata 350ml R$5 | PET 600ml R$6 | PET
 Sempre colocar "Coca-Cola" no título do combo para busca e campanhas.
 Fotos: usar kombo.coca-cola.com para gerar imagens profissionais.
 Variações: Café da manhã→Del Valle | Saladerias/Japonesa→Chá Leão | Fast food→Coca-Cola | Pizzaria→Fanta/Kuat | Sobremesa→Água Crystal
+
+## CRIAR COMBOS NA PLATAFORMA
+Passo 1: Menu à esquerda → "Cardápio da loja"
+Passo 2: Aba "Itens" → "Adicione item/combo"
+Passo 3: Preencha nome, preço, descrição e foto. Defina grupo de itens adicionais e horário.
+
+## 5 PILARES DO SUCESSO NO DELIVERY
+1. PRECIFICAÇÃO — custo real + margem + taxas (nunca achismo)
+2. CARDÁPIO — simples, organizado, focado em conversão
+3. DESCRIÇÃO E APRESENTAÇÃO — palavras que geram desejo + fotos boas
+4. ESTRATÉGIA DE VENDA — combos, destaque nos mais lucrativos
+5. OPERAÇÃO — cardápio atualizado, evitar cancelamentos, tempo de preparo realista
 
 === FIM DA BASE ===
 
