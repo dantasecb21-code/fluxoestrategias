@@ -147,30 +147,44 @@ export default function Auth() {
               className="bg-background"
             />
           </div>
-          <div className="space-y-1.5">
-            <Label className="text-muted-foreground text-xs">Senha</Label>
-            <div className="relative">
-              <Input
-                type={showPassword ? "text" : "password"}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                required
-                minLength={6}
-                className="bg-background pr-10"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-              >
-                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              </button>
+          {!isForgot && (
+            <div className="space-y-1.5">
+              <Label className="text-muted-foreground text-xs">Senha</Label>
+              <div className="relative">
+                <Input
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  required
+                  minLength={6}
+                  className="bg-background pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
             </div>
-          </div>
+          )}
+
+          {isLogin && (
+            <button
+              type="button"
+              onClick={() => setMode("forgot")}
+              className="text-xs text-primary hover:underline"
+            >
+              Esqueceu sua senha?
+            </button>
+          )}
 
           <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? "Aguarde..." : isLogin ? (
+            {loading ? "Aguarde..." : isForgot ? (
+              <><KeyRound className="h-4 w-4 mr-2" /> Enviar link de recuperação</>
+            ) : isLogin ? (
               <><LogIn className="h-4 w-4 mr-2" /> Entrar</>
             ) : (
               <><UserPlus className="h-4 w-4 mr-2" /> Criar conta</>
