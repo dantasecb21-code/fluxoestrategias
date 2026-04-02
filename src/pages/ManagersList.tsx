@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Users, UserCheck, Trophy, Trash2, AlertTriangle, Eye } from "lucide-react";
 import { toast } from "sonner";
+import { calcManagerStats } from "@/lib/strategyStatus";
 import {
   AlertDialog,
   AlertDialogAction,
