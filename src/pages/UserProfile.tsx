@@ -35,6 +35,11 @@ export default function UserProfile() {
   const [editing, setEditing] = useState(false);
   const [editForm, setEditForm] = useState({ display_name: "", whatsapp: "", status_text: "" });
   const avatarInputRef = useRef<HTMLInputElement>(null);
+  const [changingPassword, setChangingPassword] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [savingPassword, setSavingPassword] = useState(false);
 
   const isOwnProfile = user?.id === userId;
   const isAdmin = myRole === "admin";
