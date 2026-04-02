@@ -80,7 +80,7 @@ export default function Dashboard() {
                       )}
                       {s.deadline && (
                         <span className="flex items-center gap-1">
-                          <Clock className="h-3 w-3" /> Prazo: {s.deadline}
+                          <Clock className="h-3 w-3" /> Prazo: {formatDateBR(s.deadline)}
                         </span>
                       )}
                       <span>{new Date(s.updated_at).toLocaleDateString("pt-BR")}</span>

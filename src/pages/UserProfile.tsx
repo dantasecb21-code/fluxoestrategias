@@ -42,7 +42,7 @@ export default function UserProfile() {
     async function fetchProfile() {
       if (!userId) return;
       const [profileRes, roleRes] = await Promise.all([
-        supabase.from("profiles").select("user_id, display_name, whatsapp, approved, avatar_url, status_text").eq("user_id", userId).single(),
+        supabase.from("profiles").select("user_id, display_name, whatsapp, approved, avatar_url, status_text, email").eq("user_id", userId).single(),
         supabase.from("user_roles").select("role").eq("user_id", userId).single(),
       ]);
       if (profileRes.data) {

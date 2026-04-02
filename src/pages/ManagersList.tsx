@@ -138,13 +138,14 @@ export default function ManagersList() {
               <Card key={m.user_id} className="p-5">
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center gap-3">
-                    <div className={`h-10 w-10 rounded-full flex items-center justify-center font-bold text-sm ${
-                      index === 0 ? "bg-yellow-500/20 text-yellow-500" :
-                      index === 1 ? "bg-gray-400/20 text-gray-400" :
-                      index === 2 ? "bg-amber-700/20 text-amber-700" :
-                      "bg-primary/10 text-primary"
-                    }`}>
-                      {index < 3 ? <Trophy className="h-5 w-5" /> : `#${index + 1}`}
+                    <div className="h-10 w-10 rounded-full border-2 border-border bg-muted flex items-center justify-center overflow-hidden shrink-0">
+                      {m.avatar_url ? (
+                        <img src={m.avatar_url} alt={m.display_name} className="h-full w-full object-cover" />
+                      ) : (
+                        <span className="text-sm font-bold text-muted-foreground">
+                          {m.display_name?.charAt(0)?.toUpperCase() || "?"}
+                        </span>
+                      )}
                     </div>
                      <div>
                        <p className="font-heading font-semibold text-foreground">{m.display_name || "Sem nome"}</p>

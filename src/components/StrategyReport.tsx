@@ -63,7 +63,7 @@ export function StrategyReport({ storeName, managerName, operationalManager, dea
           <div className="text-sm text-muted-foreground space-y-0.5">
             <p>Gestor Estratégico: {managerName}</p>
             <p>Gestor Operacional: {operationalManager}</p>
-            <p>Prazo: {deadline}</p>
+            <p>Prazo: {formatDateBR(deadline)}</p>
           </div>
         </div>
 

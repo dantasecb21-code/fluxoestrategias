@@ -91,7 +91,7 @@ export default function OperationalStrategyView() {
               Estratégia Inicial – {strategy.store_name}
             </h1>
             <div className="text-xs text-muted-foreground mt-0.5">
-              Administrador: {strategy.manager_name} • Prazo: {strategy.deadline}
+              Administrador: {strategy.manager_name} • Prazo: {formatDateBR(strategy.deadline)}
             </div>
           </div>
         </div>
