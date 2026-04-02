@@ -157,7 +157,7 @@ TIPOS DE PRINT E ACOES OBRIGATORIAS:
    → Retorne: {"type":"store_name","detected":"[nome atual visivel]","questions":[{"id":"new_name","label":"Qual será o novo nome da loja?","type":"text"}]}
 
 2. AREA DE ENTREGA: Se mostra mapa, raio, configuracao de entrega
-   → Retorne: {"type":"delivery_area","detected":"area de entrega","questions":[],"directAction":"Confirmar area de entrega com o cliente no grupo: km, minutos e tempo de entrega."}
+   → Retorne: {"type":"delivery_area","detected":"[detalhes visiveis da area]","questions":[],"directAction":"Confirmar area de entrega com o cliente no grupo: km, minutos e tempo de entrega."}
 
 3. CATEGORIA DA LOJA: Se mostra categoria principal, subcategorias da loja
    → Retorne: {"type":"store_category","detected":"[categorias atuais visiveis]","questions":[{"id":"action","label":"O que precisa ser feito?","type":"select","options":["Alterar categoria existente","Inserir nova categoria"]},{"id":"which","label":"Qual categoria alterar?","type":"select","options":["Categoria principal","Subcategoria 1","Subcategoria 2"]},{"id":"new_value","label":"Qual a nova categoria?","type":"text"}]}
@@ -197,14 +197,47 @@ TIPOS DE PRINT E ACOES OBRIGATORIAS:
 14. FORMAS DE PAGAMENTO: Se mostra formas de pagamento aceitas
     → Retorne: {"type":"payment_methods","detected":"[formas atuais visiveis]","questions":[],"directAction":"Compartilhar print no grupo e confirmar com o cliente quais formas de pagamento a loja aceita."}
 
-15. OUTRO (nao listado acima): Qualquer print nao identificado nos tipos acima
-    → Retorne: {"type":"other","detected":"[o que esta visivel]","questions":[{"id":"custom_action","label":"O que precisa ser feito neste print?","type":"text"}]}
+15. HORARIO DE FUNCIONAMENTO: Se mostra horarios de abertura/fechamento da loja
+    → Retorne: {"type":"business_hours","detected":"[horarios visiveis]","questions":[],"directAction":"Confirmar com o cliente no grupo se os horarios de funcionamento estao corretos e realizar a alteracao caso necessario."}
+
+16. FOTO DE ITEM/PRODUTO: Se mostra a foto de um item do cardapio (sem foto, foto ruim, etc)
+    → Retorne: {"type":"item_photo","detected":"[problema visivel]","questions":[],"directAction":"Solicitar ao cliente uma foto de qualidade do produto para melhorar a atratividade no cardapio."}
+
+17. DESCONTO/CUPOM/PROMOCAO: Se mostra configuracao de desconto, cupom ou promocao
+    → Retorne: {"type":"promotion","detected":"[detalhes da promocao visivel]","questions":[],"directAction":"Confirmar com o cliente no grupo se a promocao/desconto esta configurada corretamente e ajustar se necessario."}
+
+18. AVALIACAO/NOTA DA LOJA: Se mostra avaliacoes, nota, comentarios de clientes
+    → Retorne: {"type":"store_rating","detected":"[nota e detalhes visiveis]","questions":[],"directAction":"Verificar avaliacoes negativas e orientar o gestor a responder os comentarios e trabalhar melhorias nos pontos criticados."}
+
+19. PEDIDO/HISTORICO DE PEDIDOS: Se mostra pedidos, historico, status de pedidos
+    → Retorne: {"type":"orders","detected":"[detalhes visiveis]","questions":[],"directAction":"Verificar o status dos pedidos e confirmar com o cliente se ha alguma pendencia ou problema a resolver."}
+
+20. TAXA DE ENTREGA: Se mostra configuracao de taxa de entrega, frete
+    → Retorne: {"type":"delivery_fee","detected":"[taxas visiveis]","questions":[],"directAction":"Confirmar com o cliente no grupo se as taxas de entrega estao corretas e competitivas para a regiao."}
+
+21. PEDIDO MINIMO: Se mostra valor de pedido minimo
+    → Retorne: {"type":"minimum_order","detected":"[valor visivel]","questions":[],"directAction":"Confirmar com o cliente se o valor minimo do pedido esta adequado para a operacao da loja."}
+
+22. STATUS DA LOJA: Se mostra loja aberta/fechada, pausada, indisponivel
+    → Retorne: {"type":"store_status","detected":"[status visivel]","questions":[],"directAction":"Verificar por que a loja esta com esse status e orientar o gestor a resolver para manter a loja ativa."}
+
+23. DESTAQUE/ITEM EM DESTAQUE: Se mostra itens em destaque ou vitrine da loja
+    → Retorne: {"type":"featured_items","detected":"[itens em destaque visiveis]","questions":[],"directAction":"Verificar se os itens em destaque sao os mais estrategicos e sugerir alteracoes para maximizar vendas."}
+
+24. INFORMACOES DA LOJA: Se mostra informacoes gerais (CNPJ, endereco, telefone, etc)
+    → Retorne: {"type":"store_info","detected":"[informacoes visiveis]","questions":[],"directAction":"Confirmar com o cliente no grupo se as informacoes cadastrais da loja estao corretas e atualizadas."}
+
+25. OUTRO (nao listado acima): Qualquer print nao identificado nos tipos acima
+    → Use sua inteligencia para ENTENDER o contexto do print e SUGERIR uma acao proativa
+    → Retorne: {"type":"other","detected":"[descricao detalhada do que esta visivel]","questions":[],"directAction":"[acao proativa baseada no que voce identificou no print - seja especifico e util]"}
 
 REGRAS:
 - Retorne SOMENTE o JSON, sem markdown, sem texto antes ou depois
 - Identifique com precisao o tipo do print
 - Se o gestor escreveu algo junto com o print, considere o texto tambem
-- O campo "detected" deve descrever o que voce ve no print`;
+- O campo "detected" deve descrever o que voce ve no print
+- PRIORIZE tipos especificos (1-24) antes de usar "other"
+- Mesmo para "other", SEMPRE sugira uma acao proativa em directAction baseada no que viu`;
 
   const textPart = freeText?.trim()
     ? `Loja: ${storeName || "nao informada"}. Texto do gestor: ${freeText.trim()}`
