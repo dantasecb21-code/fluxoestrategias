@@ -156,6 +156,41 @@ export default function Dashboard() {
           })}
         </div>
       )}
+
+      {/* Lixeira */}
+      <div className="mt-8">
+        <Button variant="ghost" onClick={toggleTrash} className="text-muted-foreground hover:text-foreground gap-2">
+          {showTrash ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+          <Trash2 className="h-4 w-4" />
+          Lixeira
+        </Button>
+
+        {showTrash && (
+          <div className="mt-3 space-y-2">
+            {loadingTrash ? (
+              <p className="text-sm text-muted-foreground pl-4">Carregando...</p>
+            ) : deletedStrategies.length === 0 ? (
+              <p className="text-sm text-muted-foreground pl-4">Nenhuma estratégia na lixeira.</p>
+            ) : (
+              deletedStrategies.map((s) => (
+                <Card key={s.id} className="p-4 border-dashed opacity-70">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="font-medium text-foreground">{s.store_name || "Sem nome"}</h4>
+                      <p className="text-xs text-muted-foreground">
+                        Excluída em {s.deleted_at ? new Date(s.deleted_at).toLocaleDateString("pt-BR") : "—"}
+                      </p>
+                    </div>
+                    <Button size="sm" variant="outline" onClick={() => handleRestore(s.id)} className="gap-1.5">
+                      <Undo2 className="h-3.5 w-3.5" /> Restaurar
+                    </Button>
+                  </div>
+                </Card>
+              ))
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
