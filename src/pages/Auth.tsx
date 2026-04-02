@@ -29,10 +29,16 @@ export default function Auth() {
     setLoading(true);
 
     try {
-      if (isLogin) {
+      if (isForgot) {
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: `${window.location.origin}/reset-password`,
+        });
+        if (error) throw error;
+        toast.success("Email de recuperação enviado! Verifique sua caixa de entrada.");
+        setMode("login");
+      } else if (isLogin) {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
-        
         const { data: { user: loggedUser } } = await supabase.auth.getUser();
         if (loggedUser) {
           const { data: profile } = await supabase.from("profiles").select("approved").eq("user_id", loggedUser.id).single();
@@ -44,7 +50,7 @@ export default function Auth() {
         }
         navigate("/");
       } else {
-        const { error, data: signUpData } = await supabase.auth.signUp({
+        const { error } = await supabase.auth.signUp({
           email,
           password,
           options: {
