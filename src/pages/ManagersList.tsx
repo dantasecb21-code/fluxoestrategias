@@ -23,6 +23,7 @@ interface OperationalManager {
   user_id: string;
   display_name: string;
   whatsapp: string;
+  avatar_url: string;
 }
 
 function calcManagerStats(strategies: any[], managerId: string) {
