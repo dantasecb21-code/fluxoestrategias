@@ -162,11 +162,10 @@ serve(async (req) => {
         status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_ANON_KEY")!,
-      { global: { headers: { Authorization: authHeader } } }
-    );
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabase = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!, {
+      global: { headers: { Authorization: authHeader } },
+    });
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
       return new Response(JSON.stringify({ error: "Não autorizado" }), {
@@ -182,6 +181,23 @@ serve(async (req) => {
       });
     }
 
+    // Fetch training courses to augment knowledge base
+    const serviceClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+    const { data: trainingCourses } = await serviceClient
+      .from("training_courses")
+      .select("title, content")
+      .eq("published", true)
+      .order("order_index", { ascending: true });
+
+    let trainingBlock = "";
+    if (trainingCourses && trainingCourses.length > 0) {
+      trainingBlock = "\n\n=== TREINAMENTOS INTERNOS ===\n" +
+        trainingCourses.map((c: any) => `## ${c.title}\n${c.content}`).join("\n\n") +
+        "\n=== FIM DOS TREINAMENTOS ===\n";
+    }
+
+    const fullKnowledge = KNOWLEDGE_BASE.replace("=== FIM DA BASE ===", trainingBlock + "\n=== FIM DA BASE ===");
+
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
@@ -194,7 +210,7 @@ serve(async (req) => {
       body: JSON.stringify({
         model: "google/gemini-3-flash-preview",
         messages: [
-          { role: "system", content: KNOWLEDGE_BASE },
+          { role: "system", content: fullKnowledge },
           ...messages.map((m: { role: string; content: string }) => ({
             role: m.role,
             content: m.content,

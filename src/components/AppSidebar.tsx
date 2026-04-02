@@ -12,7 +12,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { NavLink } from "@/components/NavLink";
-import { Home, Plus, LogOut, Zap, ClipboardList, Users, AlertTriangle, ShieldCheck, MessageCircleQuestion } from "lucide-react";
+import { Home, Plus, LogOut, Zap, ClipboardList, Users, AlertTriangle, ShieldCheck, MessageCircleQuestion, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -135,6 +135,21 @@ export function AppSidebar() {
                     >
                       <ShieldCheck className="mr-2 h-4 w-4" />
                       {!collapsed && <span>Aprovações</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
+              {canManage && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild>
+                    <NavLink
+                      to="/treinamentos"
+                      onClick={() => handleNav("/treinamentos")}
+                      className="hover:bg-sidebar-accent/50"
+                      activeClassName="bg-sidebar-accent text-primary font-medium"
+                    >
+                      <BookOpen className="mr-2 h-4 w-4" />
+                      {!collapsed && <span>Treinamentos</span>}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
