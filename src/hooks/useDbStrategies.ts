@@ -13,6 +13,8 @@ export interface DbStrategy {
   operational_manager: string;
   deadline: string;
   categories: StrategyCategory[];
+  status: string;
+  store_access_confirmed: boolean;
   created_at: string;
   updated_at: string;
 }

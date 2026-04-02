@@ -1,15 +1,17 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useDbStrategies } from "@/hooks/useDbStrategies";
-import { StrategyCategory, ItemStatus, STATUS_LABELS, STATUS_COLORS } from "@/types/strategy";
+import { StrategyCategory, ItemStatus } from "@/types/strategy";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, ChevronDown, ChevronRight, Save, MessageSquare } from "lucide-react";
+import { ArrowLeft, ChevronDown, ChevronRight, Save, MessageSquare, CheckCircle2, ShieldCheck } from "lucide-react";
 import { formatDateBR } from "@/lib/utils";
 import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
 
 function calcProgress(categories: StrategyCategory[]) {
   const allItems = categories.flatMap((c) => c.items);
@@ -22,6 +24,12 @@ function calcProgress(categories: StrategyCategory[]) {
   return { percent, completed, inProgress, pending, total };
 }
 
+const STATUS_BADGE: Record<string, { label: string; variant: "default" | "secondary" | "outline" | "destructive" }> = {
+  in_progress: { label: "Em andamento", variant: "secondary" },
+  pending_approval: { label: "Aguardando aprovação", variant: "outline" },
+  approved: { label: "Aprovada ✓", variant: "default" },
+};
+
 export default function OperationalStrategyView() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -33,6 +41,7 @@ export default function OperationalStrategyView() {
   const [editingObs, setEditingObs] = useState<string | null>(null);
   const [obsValue, setObsValue] = useState("");
   const [saving, setSaving] = useState(false);
+  const [storeAccess, setStoreAccess] = useState(false);
 
   useEffect(() => {
     if (strategy) {
@@ -40,6 +49,7 @@ export default function OperationalStrategyView() {
       const expanded: Record<string, boolean> = {};
       strategy.categories.forEach((c) => { expanded[c.id] = true; });
       setExpandedCats(expanded);
+      setStoreAccess(strategy.store_access_confirmed || false);
     }
   }, [strategy]);
 
@@ -47,8 +57,12 @@ export default function OperationalStrategyView() {
   if (!strategy) return <div className="flex items-center justify-center h-64 text-muted-foreground">Estratégia não encontrada.</div>;
 
   const progress = calcProgress(categories);
+  const strategyStatus = strategy.status || "in_progress";
+  const badge = STATUS_BADGE[strategyStatus] || STATUS_BADGE.in_progress;
+  const isPendingOrApproved = strategyStatus === "pending_approval" || strategyStatus === "approved";
 
   const handleStatusChange = (catId: string, itemId: string, status: ItemStatus) => {
+    if (isPendingOrApproved) return;
     setCategories((prev) =>
       prev.map((c) =>
         c.id === catId
@@ -70,9 +84,24 @@ export default function OperationalStrategyView() {
   };
 
   const handleSave = async () => {
+    if (!storeAccess) {
+      toast.error("Confirme que você tem acesso à loja antes de salvar!");
+      return;
+    }
     setSaving(true);
-    await updateStrategy(strategy.id, { categories });
+    await updateStrategy(strategy.id, { categories, store_access_confirmed: storeAccess });
     toast.success("Progresso salvo com sucesso!");
+    setSaving(false);
+  };
+
+  const handleSubmitForApproval = async () => {
+    if (!storeAccess) {
+      toast.error("Confirme que você tem acesso à loja antes de enviar!");
+      return;
+    }
+    setSaving(true);
+    await updateStrategy(strategy.id, { categories, status: "pending_approval", store_access_confirmed: true });
+    toast.success("Estratégia enviada para aprovação!");
     setSaving(false);
   };
 
@@ -90,15 +119,36 @@ export default function OperationalStrategyView() {
             <h1 className="font-heading font-bold text-xl text-foreground">
               Estratégia Inicial – {strategy.store_name}
             </h1>
-            <div className="text-xs text-muted-foreground mt-0.5">
-              Administrador: {strategy.manager_name} • Prazo: {formatDateBR(strategy.deadline)}
+            <div className="text-xs text-muted-foreground mt-0.5 flex items-center gap-2">
+              Prazo: {formatDateBR(strategy.deadline)}
+              <Badge variant={badge.variant}>{badge.label}</Badge>
             </div>
           </div>
         </div>
-        <Button onClick={handleSave} disabled={saving}>
-          <Save className="h-4 w-4 mr-1" /> {saving ? "Salvando..." : "Salvar"}
-        </Button>
+        <div className="flex gap-2">
+          {!isPendingOrApproved && (
+            <Button onClick={handleSave} disabled={saving} variant="outline">
+              <Save className="h-4 w-4 mr-1" /> Salvar
+            </Button>
+          )}
+        </div>
       </div>
+
+      {/* Store access confirmation */}
+      <Card className="p-4">
+        <div className="flex items-center gap-3">
+          <Checkbox
+            id="store-access"
+            checked={storeAccess}
+            onCheckedChange={(v) => setStoreAccess(!!v)}
+            disabled={isPendingOrApproved}
+          />
+          <label htmlFor="store-access" className="text-sm text-foreground font-medium cursor-pointer flex items-center gap-2">
+            <ShieldCheck className="h-4 w-4 text-primary" />
+            Confirmo que tenho acesso à loja na plataforma
+          </label>
+        </div>
+      </Card>
 
       {/* Progress overview */}
       <Card className="p-5">
@@ -113,6 +163,31 @@ export default function OperationalStrategyView() {
           <span className="text-warning font-medium">{progress.pending} pendentes</span>
         </div>
       </Card>
+
+      {/* Submit for approval button */}
+      {strategyStatus === "in_progress" && progress.percent === 100 && (
+        <Button
+          onClick={handleSubmitForApproval}
+          disabled={saving}
+          className="w-full bg-success text-success-foreground hover:bg-success/90"
+          size="lg"
+        >
+          <CheckCircle2 className="h-5 w-5 mr-2" />
+          {saving ? "Enviando..." : "Concluir e Enviar para Aprovação"}
+        </Button>
+      )}
+
+      {strategyStatus === "pending_approval" && (
+        <Card className="p-4 border-warning/50 bg-warning/10 text-center">
+          <p className="text-sm text-warning font-medium">⏳ Aguardando aprovação do estrategista/administrador</p>
+        </Card>
+      )}
+
+      {strategyStatus === "approved" && (
+        <Card className="p-4 border-success/50 bg-success/10 text-center">
+          <p className="text-sm text-success font-medium">✅ Estratégia aprovada!</p>
+        </Card>
+      )}
 
       {/* Categories */}
       {visibleCategories.map((cat) => (
@@ -143,6 +218,7 @@ export default function OperationalStrategyView() {
                       <Select
                         value={status}
                         onValueChange={(v) => handleStatusChange(cat.id, item.id, v as ItemStatus)}
+                        disabled={isPendingOrApproved}
                       >
                         <SelectTrigger className="w-40 h-8 text-xs">
                           <SelectValue />
@@ -162,7 +238,7 @@ export default function OperationalStrategyView() {
                     </div>
 
                     {/* Observation */}
-                    {editingObs === item.id ? (
+                    {editingObs === item.id && !isPendingOrApproved ? (
                       <div className="space-y-2">
                         <Textarea
                           value={obsValue}
@@ -183,7 +259,7 @@ export default function OperationalStrategyView() {
                       </div>
                     ) : (
                       <button
-                        onClick={() => { setEditingObs(item.id); setObsValue(item.observation || ""); }}
+                        onClick={() => { if (!isPendingOrApproved) { setEditingObs(item.id); setObsValue(item.observation || ""); } }}
                         className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
                       >
                         <MessageSquare className="h-3 w-3" />
