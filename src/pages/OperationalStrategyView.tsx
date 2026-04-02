@@ -2,16 +2,28 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useDbStrategies, STRATEGY_TYPE_LABELS, StrategyType } from "@/hooks/useDbStrategies";
 import { StrategyCategory, ItemStatus } from "@/types/strategy";
+import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, ChevronDown, ChevronRight, Save, MessageSquare, CheckCircle2, ShieldCheck, AlertCircle } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { ArrowLeft, ChevronDown, ChevronRight, Save, MessageSquare, CheckCircle2, ShieldCheck, AlertCircle, History } from "lucide-react";
 import { formatDateBR } from "@/lib/utils";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
+
+interface HistoryEntry {
+  id: string;
+  user_name: string;
+  action: string;
+  field_changed: string;
+  old_value: string;
+  new_value: string;
+  created_at: string;
+}
 
 function calcProgress(categories: StrategyCategory[]) {
   const allItems = categories.flatMap((c) => c.items);
@@ -42,6 +54,17 @@ export default function OperationalStrategyView() {
   const [obsValue, setObsValue] = useState("");
   const [saving, setSaving] = useState(false);
   const [storeAccess, setStoreAccess] = useState(false);
+  const [history, setHistory] = useState<HistoryEntry[]>([]);
+  const [historyOpen, setHistoryOpen] = useState(false);
+
+  const fetchHistory = async (strategyId: string) => {
+    const { data } = await supabase
+      .from("strategy_history")
+      .select("*")
+      .eq("strategy_id", strategyId)
+      .order("created_at", { ascending: false });
+    if (data) setHistory(data as HistoryEntry[]);
+  };
 
   useEffect(() => {
     if (strategy) {
@@ -50,6 +73,7 @@ export default function OperationalStrategyView() {
       strategy.categories.forEach((c) => { expanded[c.id] = true; });
       setExpandedCats(expanded);
       setStoreAccess(strategy.store_access_confirmed || false);
+      fetchHistory(strategy.id);
     }
   }, [strategy]);
 
@@ -292,6 +316,59 @@ export default function OperationalStrategyView() {
           <p className="text-muted-foreground">Nenhum item selecionado nesta estratégia.</p>
         </Card>
       )}
+
+      {/* Histórico de alterações */}
+      <Collapsible open={historyOpen} onOpenChange={setHistoryOpen}>
+        <Card>
+          <CollapsibleTrigger className="w-full flex items-center justify-between p-4 hover:bg-muted/30 transition-colors">
+            <h3 className="font-heading font-semibold text-foreground flex items-center gap-2">
+              <History className="h-5 w-5 text-primary" />
+              Histórico de Alterações
+            </h3>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted-foreground">{history.length} registros</span>
+              {historyOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+            </div>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <div className="border-t border-border divide-y divide-border">
+              {history.length === 0 ? (
+                <p className="p-4 text-sm text-muted-foreground text-center">Nenhuma alteração registrada ainda.</p>
+              ) : (
+                history.map((entry) => {
+                  const date = new Date(entry.created_at);
+                  const statusLabels: Record<string, string> = {
+                    in_progress: "Em andamento",
+                    pending_approval: "Aguardando aprovação",
+                    approved: "Aprovada",
+                  };
+                  return (
+                    <div key={entry.id} className="p-4 flex items-start gap-3">
+                      <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
+                        <History className="h-4 w-4 text-primary" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm text-foreground">
+                          <span className="font-medium">{entry.user_name || "Usuário"}</span>
+                          {" alterou o status de "}
+                          <Badge variant="outline" className="text-xs mx-1">{statusLabels[entry.old_value] || entry.old_value}</Badge>
+                          {" para "}
+                          <Badge variant="secondary" className="text-xs mx-1">{statusLabels[entry.new_value] || entry.new_value}</Badge>
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {date.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" })}
+                          {" às "}
+                          {date.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </CollapsibleContent>
+        </Card>
+      </Collapsible>
     </div>
   );
 }
