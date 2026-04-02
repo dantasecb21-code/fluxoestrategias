@@ -376,7 +376,7 @@ export default function StrategyBuilderPage() {
           <div className="flex items-center gap-2 text-sm">
             <ShieldCheck className="h-4 w-4 text-primary" />
             <span className="text-foreground font-medium">Acesso à loja confirmado pelo gestor:</span>
-            <span className={existing.store_access_confirmed ? "text-success" : "text-destructive"}>
+            <span className={existing.store_access_confirmed ? "text-success" : "text-warning"}>
               {existing.store_access_confirmed ? "Sim ✓" : "Não ✗"}
             </span>
           </div>
