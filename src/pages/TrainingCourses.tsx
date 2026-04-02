@@ -5,9 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { Plus, Trash2, GripVertical, Pencil, Check, X, BookOpen, Eye, EyeOff, ImagePlus, Loader2 } from "lucide-react";
-import { ImageLightbox } from "@/components/ImageLightbox";
 
 type Course = {
   id: string;
