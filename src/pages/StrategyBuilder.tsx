@@ -120,8 +120,22 @@ export default function StrategyBuilderPage() {
   const [showFollowUp, setShowFollowUp] = useState(false);
   const [generatingFromFollowUp, setGeneratingFromFollowUp] = useState(false);
 
+  // History
+  const [history, setHistory] = useState<{ id: string; user_name: string; action: string; field_changed: string; old_value: string; new_value: string; created_at: string }[]>([]);
+  const [showHistory, setShowHistory] = useState(false);
+
   const editor = useCategoryEditor(categories, setCategories);
   const strategyStatus = existing?.status || "in_progress";
+
+  useEffect(() => {
+    if (!id) return;
+    supabase
+      .from("strategy_history")
+      .select("*")
+      .eq("strategy_id", id)
+      .order("created_at", { ascending: false })
+      .then(({ data }) => { if (data) setHistory(data as any); });
+  }, [id, strategyStatus]);
 
   // Save draft to localStorage for new strategies
   useEffect(() => {
