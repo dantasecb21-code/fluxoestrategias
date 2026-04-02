@@ -78,6 +78,22 @@ export function useDbStrategies() {
     return () => { supabase.removeChannel(channel); };
   }, [user, fetchStrategies]);
 
+  const logHistory = async (strategyId: string, action: string, fieldChanged = "", oldValue = "", newValue = "") => {
+    if (!user) return;
+    // Get display name
+    const { data: profile } = await supabase.from("profiles").select("display_name").eq("user_id", user.id).single();
+    const userName = profile?.display_name || user.email || "Usuário";
+    await supabase.from("strategy_history" as any).insert({
+      strategy_id: strategyId,
+      user_id: user.id,
+      user_name: userName,
+      action,
+      field_changed: fieldChanged,
+      old_value: oldValue,
+      new_value: newValue,
+    });
+  };
+
   const createStrategy = async (params: {
     store_name: string;
     manager_name: string;
@@ -108,6 +124,13 @@ export function useDbStrategies() {
     if (error || !data) return null;
     const mapped = mapRow(data);
     setStrategies((prev) => [mapped, ...prev]);
+    
+    // Log creation
+    await logHistory(mapped.id, "created");
+    if (params.assigned_to) {
+      await logHistory(mapped.id, "assigned", "assigned_to", "", params.operational_manager || "");
+    }
+    
     return mapped;
   };
 
