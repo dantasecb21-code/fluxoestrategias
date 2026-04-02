@@ -292,9 +292,20 @@ export default function StrategyBuilderPage() {
   };
 
   const handleReject = async () => {
+    if (!savedId || !newDeadline) {
+      toast.error("Defina o novo prazo antes de devolver!");
+      return;
+    }
+    await updateStrategy(savedId, { status: "in_progress", deadline: newDeadline });
+    setShowRejectDialog(false);
+    setNewDeadline("");
+    toast.success("Estratégia devolvida com novo prazo.");
+  };
+
+  const handleRevokeApproval = async () => {
     if (!savedId) return;
-    await updateStrategy(savedId, { status: "in_progress" });
-    toast.success("Estratégia devolvida para revisão.");
+    await updateStrategy(savedId, { status: "pending_approval" });
+    toast.success("Aprovação removida. Estratégia voltou para análise.");
   };
 
   const STATUS_BADGE_MAP: Record<string, { label: string; variant: "default" | "secondary" | "outline" | "destructive" }> = {
