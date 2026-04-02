@@ -8,6 +8,7 @@ import { Progress } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft, ChevronDown, ChevronRight, Save, MessageSquare } from "lucide-react";
+import { formatDateBR } from "@/lib/utils";
 import { toast } from "sonner";
 
 function calcProgress(categories: StrategyCategory[]) {
