@@ -33,7 +33,7 @@ function calcManagerStats(strategies: any[], managerId: string) {
   let inProgress = 0;
 
   assigned.forEach((s) => {
-    const allItems = s.categories.flatMap((c: any) => c.items).filter((i: any) => i.checked);
+    const allItems = s.categories.flatMap((c: any) => c.items);
     if (allItems.length === 0) return;
     const allCompleted = allItems.every((i: any) => i.status === "completed");
     const hasStarted = allItems.some((i: any) => i.status === "in_progress" || i.status === "completed");
