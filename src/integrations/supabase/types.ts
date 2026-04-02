@@ -89,6 +89,7 @@ export type Database = {
           categories: Json
           created_at: string
           deadline: string
+          deleted_at: string | null
           id: string
           manager_name: string
           observation: string
@@ -105,6 +106,7 @@ export type Database = {
           categories?: Json
           created_at?: string
           deadline?: string
+          deleted_at?: string | null
           id?: string
           manager_name?: string
           observation?: string
@@ -121,6 +123,7 @@ export type Database = {
           categories?: Json
           created_at?: string
           deadline?: string
+          deleted_at?: string | null
           id?: string
           manager_name?: string
           observation?: string
