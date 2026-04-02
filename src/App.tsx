@@ -81,6 +81,7 @@ const App = () => (
             <Route path="/operacional/:id" element={<ProtectedRoute allowedRoles={["operational"]}><OperationalStrategyView /></ProtectedRoute>} />
             <Route path="/perfil/:userId" element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
             <Route path="/assistente" element={<ProtectedRoute><AssistantChat /></ProtectedRoute>} />
+            <Route path="/treinamentos" element={<ProtectedRoute allowedRoles={["admin", "strategic"]}><TrainingCourses /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>

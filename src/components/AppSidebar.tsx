@@ -139,6 +139,21 @@ export function AppSidebar() {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               )}
+              {canManage && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild>
+                    <NavLink
+                      to="/treinamentos"
+                      onClick={() => handleNav("/treinamentos")}
+                      className="hover:bg-sidebar-accent/50"
+                      activeClassName="bg-sidebar-accent text-primary font-medium"
+                    >
+                      <BookOpen className="mr-2 h-4 w-4" />
+                      {!collapsed && <span>Treinamentos</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
                   <NavLink
