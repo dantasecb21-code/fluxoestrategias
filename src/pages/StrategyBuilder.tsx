@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Progress } from "@/components/ui/progress";
 import { Card } from "@/components/ui/card";
 import { FileText, Plus, Save, Check, X, UserCheck, Sparkles, Loader2, ImagePlus, Mail, ChevronDown, ChevronRight, CheckCircle2, ShieldCheck } from "lucide-react";
+import { AIFollowUpDialog } from "@/components/AIFollowUpDialog";
 import { toast } from "sonner";
 import { StrategyMeta } from "@/types/strategy";
 import { supabase } from "@/integrations/supabase/client";
@@ -112,6 +113,11 @@ export default function StrategyBuilderPage() {
   const [uploadingImage, setUploadingImage] = useState(false);
   const [storeAccess, setStoreAccess] = useState(existing?.store_access_confirmed || false);
   const imageInputRef = useRef<HTMLInputElement>(null);
+
+  // AI follow-up dialog state
+  const [aiDetection, setAiDetection] = useState<any>(null);
+  const [showFollowUp, setShowFollowUp] = useState(false);
+  const [generatingFromFollowUp, setGeneratingFromFollowUp] = useState(false);
 
   const editor = useCategoryEditor(categories, setCategories);
   const strategyStatus = existing?.status || "in_progress";
@@ -251,36 +257,17 @@ export default function StrategyBuilderPage() {
         body: { freeText: freeText.trim(), storeName: meta.storeName, imageBase64: uploadedImage || undefined },
       });
       if (error) throw error;
+
+      // Check if AI needs follow-up input
+      if (data?.needsInput && data?.detection) {
+        setAiDetection(data.detection);
+        setShowFollowUp(true);
+        setOrganizingAI(false);
+        return;
+      }
+
       if (data?.categories && Array.isArray(data.categories)) {
-        const newCats: StrategyCategory[] = data.categories.map((cat: any) => ({
-          id: generateId(),
-          name: cat.name,
-          items: (cat.items || []).map((item: any) => ({
-            id: generateId(),
-            name: item.name || "",
-            text: item.text || "",
-            checked: false,
-            status: "pending" as const,
-          })),
-        }));
-        setCategories((prev) => [...prev, ...newCats]);
-
-        // Save context for AI learning
-        if (freeText.trim()) {
-          const { data: { user } } = await supabase.auth.getUser();
-          if (user) {
-            await supabase.from("ai_context_entries" as any).insert({
-              user_id: user.id,
-              content: freeText.trim(),
-              structured_summary: JSON.stringify(data.categories.map((c: any) => c.name)),
-              category: meta.storeName || "geral",
-            });
-          }
-        }
-
-        setFreeText("");
-        setUploadedImage(null);
-        toast.success(`${newCats.length} categorias adicionadas pela IA!`);
+        addAICategories(data.categories);
       }
     } catch (err: any) {
       console.error(err);
@@ -288,6 +275,62 @@ export default function StrategyBuilderPage() {
     } finally {
       setOrganizingAI(false);
     }
+  };
+
+  const handleFollowUpSubmit = async (answers: Record<string, string>) => {
+    setGeneratingFromFollowUp(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("organize-strategy", {
+        body: {
+          mode: "generate",
+          storeName: meta.storeName,
+          followUpAnswers: { detection: aiDetection, answers },
+        },
+      });
+      if (error) throw error;
+      if (data?.categories && Array.isArray(data.categories)) {
+        addAICategories(data.categories);
+        setShowFollowUp(false);
+        setAiDetection(null);
+      }
+    } catch (err: any) {
+      console.error(err);
+      toast.error("Erro ao gerar estratégia. Tente novamente.");
+    } finally {
+      setGeneratingFromFollowUp(false);
+    }
+  };
+
+  const addAICategories = async (aiCategories: any[]) => {
+    const newCats: StrategyCategory[] = aiCategories.map((cat: any) => ({
+      id: generateId(),
+      name: cat.name,
+      items: (cat.items || []).map((item: any) => ({
+        id: generateId(),
+        name: item.name || "",
+        text: item.text || "",
+        checked: false,
+        status: "pending" as const,
+      })),
+    }));
+    setCategories((prev) => [...prev, ...newCats]);
+
+    // Save context for AI learning
+    if (freeText.trim()) {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        await supabase.from("ai_context_entries" as any).insert({
+          user_id: user.id,
+          content: freeText.trim(),
+          structured_summary: JSON.stringify(aiCategories.map((c: any) => c.name)),
+          category: meta.storeName || "geral",
+        });
+      }
+    }
+
+    setFreeText("");
+    setUploadedImage(null);
+    toast.success(`${newCats.length} categorias adicionadas pela IA!`);
   };
 
   const selectedManager = managers.find((m) => m.user_id === assignedTo);
@@ -692,6 +735,13 @@ export default function StrategyBuilderPage() {
 
         </>
       )}
+      <AIFollowUpDialog
+        open={showFollowUp}
+        onClose={() => { setShowFollowUp(false); setAiDetection(null); }}
+        detection={aiDetection}
+        onSubmit={handleFollowUpSubmit}
+        loading={generatingFromFollowUp}
+      />
     </div>
   );
 }
