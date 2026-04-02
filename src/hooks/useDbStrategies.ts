@@ -104,6 +104,8 @@ export function useDbStrategies() {
     deadline?: string;
     categories?: StrategyCategory[];
     assigned_to?: string | null;
+    status?: string;
+    store_access_confirmed?: boolean;
   }) => {
     const updateData: Record<string, unknown> = { ...params };
     if (params.categories) {
