@@ -18,6 +18,9 @@ import { toast } from "sonner";
 import { StrategyMeta } from "@/types/strategy";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDateBR } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
+import { useAuth } from "@/hooks/useAuth";
 
 function generateId() {
   return Math.random().toString(36).substring(2, 10) + Date.now().toString(36);
