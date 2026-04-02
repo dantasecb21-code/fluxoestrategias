@@ -185,10 +185,14 @@ export default function ManagersList() {
                 </div>
 
                 {/* Stats */}
-                <div className="grid grid-cols-3 gap-3 mb-3">
+                <div className="grid grid-cols-4 gap-3 mb-3">
                   <div className="text-center p-2 rounded-lg bg-success/10">
                     <p className="font-heading font-bold text-lg text-success">{stats.completed}</p>
                     <p className="text-xs text-muted-foreground">Concluídas</p>
+                  </div>
+                  <div className="text-center p-2 rounded-lg bg-blue-500/10">
+                    <p className="font-heading font-bold text-lg text-blue-400">{stats.pendingApproval}</p>
+                    <p className="text-xs text-muted-foreground">Aguardando</p>
                   </div>
                   <div className="text-center p-2 rounded-lg bg-primary/10">
                     <p className="font-heading font-bold text-lg text-primary">{stats.inProgress}</p>
