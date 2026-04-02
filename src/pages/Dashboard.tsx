@@ -75,9 +75,12 @@ export default function Dashboard() {
               >
                 <div className="flex items-start justify-between mb-3">
                   <div className="min-w-0 flex-1">
-                    <h3 className="font-heading font-semibold text-foreground text-lg truncate flex items-center gap-2">
-                      {s.store_name || "Sem nome"}
-                      <Badge variant={badgeProps.variant} className={`text-[10px] py-0 px-1.5 h-4 leading-none ${badgeProps.className}`}>{statusLabel}</Badge>
+                    <h3 className="font-heading font-semibold text-foreground text-lg flex items-center gap-2 min-w-0">
+                      <span className="truncate">{s.store_name || "Sem nome"}</span>
+                      <Badge variant={badgeProps.variant} className={`text-[10px] py-0 px-1.5 h-4 leading-none shrink-0 ${badgeProps.className}`}>{statusLabel}</Badge>
+                      {s.observation && (
+                        <span className="shrink-0 text-[10px] py-0 px-1.5 h-4 leading-none rounded-full bg-warning/20 text-warning border border-warning/30 flex items-center" title={s.observation}>📌 Obs</span>
+                      )}
                     </h3>
                     <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground mt-1">
                       {s.operational_manager && (
