@@ -25,8 +25,9 @@ export default function PendingStrategies() {
   const { strategies, loading } = useDbStrategies();
 
   const pendingStrategies = strategies.filter((s) => {
-    const p = calcProgress(s.categories);
-    return p.percent < 100;
+    const displayStatus = deriveStrategyDisplayStatus(s);
+    // Include: pending, in_progress, AND pending_approval
+    return displayStatus !== "completed";
   });
 
   return (
