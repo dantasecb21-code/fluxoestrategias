@@ -1,5 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useDbStrategies } from "@/hooks/useDbStrategies";
+import { Badge } from "@/components/ui/badge";
+import { deriveStrategyDisplayStatus, getStatusLabel, getStatusBadgeProps } from "@/lib/strategyStatus";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Clock, AlertTriangle, UserCheck, Eye } from "lucide-react";
@@ -23,8 +25,9 @@ export default function PendingStrategies() {
   const { strategies, loading } = useDbStrategies();
 
   const pendingStrategies = strategies.filter((s) => {
-    const p = calcProgress(s.categories);
-    return p.percent < 100;
+    const displayStatus = deriveStrategyDisplayStatus(s);
+    // Include: pending, in_progress, AND pending_approval
+    return displayStatus !== "completed";
   });
 
   return (
@@ -65,9 +68,20 @@ export default function PendingStrategies() {
               >
                 <div className="flex items-start justify-between mb-3">
                   <div className="min-w-0 flex-1">
-                    <h3 className="font-heading font-semibold text-foreground text-lg truncate">
-                      {s.store_name || "Sem nome"}
-                    </h3>
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-heading font-semibold text-foreground text-lg truncate">
+                        {s.store_name || "Sem nome"}
+                      </h3>
+                      {(() => {
+                        const ds = deriveStrategyDisplayStatus(s);
+                        const badgeProps = getStatusBadgeProps(ds);
+                        return (
+                          <Badge variant={badgeProps.variant} className={badgeProps.className + " text-[10px] shrink-0"}>
+                            {getStatusLabel(ds)}
+                          </Badge>
+                        );
+                      })()}
+                    </div>
                     <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground mt-1">
                       {s.operational_manager && (
                         <span className="flex items-center gap-1">
