@@ -1,5 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useDbStrategies } from "@/hooks/useDbStrategies";
+import { Badge } from "@/components/ui/badge";
+import { deriveStrategyDisplayStatus, getStatusLabel, getStatusBadgeProps } from "@/lib/strategyStatus";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Clock, AlertTriangle, UserCheck, Eye } from "lucide-react";
