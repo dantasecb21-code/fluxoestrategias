@@ -262,10 +262,33 @@ REGRAS:
   ];
 
   try {
-    const rawContent = await callAI(apiKey, "google/gemini-2.5-flash", detectPrompt, userMessage);
-    console.log("AI detection response:", rawContent.substring(0, 500));
-    
-    const detection = extractJsonObject(rawContent);
+    let detection = null;
+    let lastRaw = "";
+
+    // Retry up to 3 times if AI returns unparseable response
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const rawContent = await callAI(apiKey, "google/gemini-2.5-flash", detectPrompt, userMessage);
+      lastRaw = rawContent;
+      console.log(`AI detection response (attempt ${attempt + 1}):`, rawContent.substring(0, 500));
+      
+      detection = extractJsonObject(rawContent);
+      if (detection && detection.type) break;
+      
+      console.warn(`Failed to parse AI response on attempt ${attempt + 1}, retrying...`);
+    }
+
+    if (!detection || !detection.type) {
+      // Final fallback: return a generic "other" detection so user can still proceed
+      console.error("All parse attempts failed. Last raw:", lastRaw.substring(0, 500));
+      detection = {
+        type: "other",
+        detected: "Não foi possível identificar automaticamente o conteúdo do print.",
+        questions: [{ id: "custom_action", label: "O que precisa ser feito?", type: "text" }],
+      };
+      return new Response(JSON.stringify({ needsInput: true, detection }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
     
     // If there are questions, return them for the frontend to show
     if (detection.questions && detection.questions.length > 0) {
