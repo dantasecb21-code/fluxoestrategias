@@ -7,27 +7,37 @@ const corsHeaders = {
 };
 
 function extractJsonObject(text: string): any {
-  let cleaned = text.replace(/^```json?\s*/i, "").replace(/\s*```$/i, "").trim();
+  // Remove markdown code fences anywhere in the text
+  let cleaned = text.replace(/```json?\s*/gi, "").replace(/```/g, "").trim();
   
   try { return JSON.parse(cleaned); } catch {}
   
-  // Try to find JSON object or array
-  const objMatch = cleaned.match(/\{[\s\S]*\}/);
-  if (objMatch) {
-    try { return JSON.parse(objMatch[0]); } catch {}
+  // Try to find the outermost JSON object
+  const objStart = cleaned.indexOf("{");
+  const objEnd = cleaned.lastIndexOf("}");
+  if (objStart !== -1 && objEnd > objStart) {
+    const candidate = cleaned.substring(objStart, objEnd + 1);
+    try { return JSON.parse(candidate); } catch {}
+    // Fix common issues and retry
+    try {
+      const fixed = candidate
+        .replace(/,\s*]/g, "]")
+        .replace(/,\s*}/g, "}")
+        .replace(/'/g, '"')
+        .replace(/[\x00-\x1F\x7F]/g, " "); // remove control chars
+      return JSON.parse(fixed);
+    } catch {}
   }
-  const arrayMatch = cleaned.match(/\[[\s\S]*\]/);
-  if (arrayMatch) {
-    try { return JSON.parse(arrayMatch[0]); } catch {}
+
+  // Try array
+  const arrStart = cleaned.indexOf("[");
+  const arrEnd = cleaned.lastIndexOf("]");
+  if (arrStart !== -1 && arrEnd > arrStart) {
+    const candidate = cleaned.substring(arrStart, arrEnd + 1);
+    try { return JSON.parse(candidate); } catch {}
   }
   
-  // Fix common issues
-  try {
-    cleaned = cleaned.replace(/,\s*]/g, "]").replace(/,\s*}/g, "}").replace(/'/g, '"');
-    return JSON.parse(cleaned);
-  } catch {}
-  
-  throw new Error("Não foi possível interpretar a resposta da IA. Tente novamente.");
+  return null; // return null instead of throwing - caller handles retry
 }
 
 serve(async (req) => {
@@ -252,10 +262,33 @@ REGRAS:
   ];
 
   try {
-    const rawContent = await callAI(apiKey, "google/gemini-2.5-flash", detectPrompt, userMessage);
-    console.log("AI detection response:", rawContent.substring(0, 500));
-    
-    const detection = extractJsonObject(rawContent);
+    let detection = null;
+    let lastRaw = "";
+
+    // Retry up to 3 times if AI returns unparseable response
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const rawContent = await callAI(apiKey, "google/gemini-2.5-flash", detectPrompt, userMessage);
+      lastRaw = rawContent;
+      console.log(`AI detection response (attempt ${attempt + 1}):`, rawContent.substring(0, 500));
+      
+      detection = extractJsonObject(rawContent);
+      if (detection && detection.type) break;
+      
+      console.warn(`Failed to parse AI response on attempt ${attempt + 1}, retrying...`);
+    }
+
+    if (!detection || !detection.type) {
+      // Final fallback: return a generic "other" detection so user can still proceed
+      console.error("All parse attempts failed. Last raw:", lastRaw.substring(0, 500));
+      detection = {
+        type: "other",
+        detected: "Não foi possível identificar automaticamente o conteúdo do print.",
+        questions: [{ id: "custom_action", label: "O que precisa ser feito?", type: "text" }],
+      };
+      return new Response(JSON.stringify({ needsInput: true, detection }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
     
     // If there are questions, return them for the frontend to show
     if (detection.questions && detection.questions.length > 0) {
