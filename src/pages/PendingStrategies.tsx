@@ -68,9 +68,20 @@ export default function PendingStrategies() {
               >
                 <div className="flex items-start justify-between mb-3">
                   <div className="min-w-0 flex-1">
-                    <h3 className="font-heading font-semibold text-foreground text-lg truncate">
-                      {s.store_name || "Sem nome"}
-                    </h3>
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-heading font-semibold text-foreground text-lg truncate">
+                        {s.store_name || "Sem nome"}
+                      </h3>
+                      {(() => {
+                        const ds = deriveStrategyDisplayStatus(s);
+                        const badgeProps = getStatusBadgeProps(ds);
+                        return (
+                          <Badge variant={badgeProps.variant} className={badgeProps.className + " text-[10px] shrink-0"}>
+                            {getStatusLabel(ds)}
+                          </Badge>
+                        );
+                      })()}
+                    </div>
                     <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground mt-1">
                       {s.operational_manager && (
                         <span className="flex items-center gap-1">
