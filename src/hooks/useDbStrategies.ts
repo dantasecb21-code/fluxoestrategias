@@ -65,19 +65,24 @@ export function useDbStrategies() {
   useEffect(() => {
     if (!user) return;
 
-    const channelId = `strategies-realtime-${Date.now()}`;
-    const channel = supabase
-      .channel(channelId)
+    let cancelled = false;
+    const channelId = `strategies-rt-${Math.random().toString(36).slice(2)}`;
+    const channel = supabase.channel(channelId);
+    
+    channel
       .on("postgres_changes", {
         event: "*",
         schema: "public",
         table: "strategies",
       }, () => {
-        fetchStrategies();
+        if (!cancelled) fetchStrategies();
       })
       .subscribe();
 
-    return () => { supabase.removeChannel(channel); };
+    return () => {
+      cancelled = true;
+      supabase.removeChannel(channel);
+    };
   }, [user, fetchStrategies]);
 
   const createStrategy = async (params: {
