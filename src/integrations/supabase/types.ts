@@ -93,6 +93,7 @@ export type Database = {
           email: string
           id: string
           status_text: string
+          store_count: number
           store_limit: number
           updated_at: string
           user_id: string
@@ -107,6 +108,7 @@ export type Database = {
           email?: string
           id?: string
           status_text?: string
+          store_count?: number
           store_limit?: number
           updated_at?: string
           user_id: string
@@ -121,6 +123,7 @@ export type Database = {
           email?: string
           id?: string
           status_text?: string
+          store_count?: number
           store_limit?: number
           updated_at?: string
           user_id?: string
