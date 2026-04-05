@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { useDbStrategies, StrategyType, STRATEGY_TYPE_LABELS } from "@/hooks/useDbStrategies";
 import { DEFAULT_CATEGORIES, StrategyCategory } from "@/types/strategy";
 import { StrategyMetaForm } from "@/components/StrategyMetaForm";
