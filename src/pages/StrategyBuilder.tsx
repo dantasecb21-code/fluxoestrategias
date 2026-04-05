@@ -379,7 +379,7 @@ export default function StrategyBuilderPage() {
       toast.error("Defina o novo prazo antes de devolver!");
       return;
     }
-    await updateStrategy(savedId, { status: "in_progress", deadline: newDeadline, categories });
+    await updateStrategy(savedId, { status: "in_progress", deadline: newDeadline, categories, returned: true });
     setShowRejectDialog(false);
     setNewDeadline("");
     toast.success("Estratégia devolvida com novo prazo.");

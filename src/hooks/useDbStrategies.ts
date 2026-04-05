@@ -25,6 +25,7 @@ export interface DbStrategy {
   strategy_type: StrategyType;
   observation: string;
   store_access_confirmed: boolean;
+  returned: boolean;
   created_at: string;
   updated_at: string;
   deleted_at: string | null;
