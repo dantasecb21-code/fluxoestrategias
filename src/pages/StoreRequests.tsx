@@ -49,7 +49,8 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 export default function StoreRequests() {
-  const { user, role } = useAuth();
+  const { user, role, displayName } = useAuth();
+  const navigate = useNavigate();
   const isAdmin = role === "admin";
   const [requests, setRequests] = useState<StoreRequest[]>([]);
   const [strategicUsers, setStrategicUsers] = useState<StrategicUser[]>([]);
