@@ -1,0 +1,1 @@
+ALTER TABLE public.strategies ADD COLUMN returned boolean NOT NULL DEFAULT false;
