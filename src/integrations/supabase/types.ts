@@ -83,6 +83,51 @@ export type Database = {
         }
         Relationships: []
       }
+      store_requests: {
+        Row: {
+          assigned_to: string | null
+          client_name: string
+          created_at: string
+          created_by: string
+          id: string
+          meeting_date: string
+          observation: string
+          platform_access_confirmed: boolean
+          status: string
+          store_created: boolean
+          store_name: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          client_name?: string
+          created_at?: string
+          created_by: string
+          id?: string
+          meeting_date?: string
+          observation?: string
+          platform_access_confirmed?: boolean
+          status?: string
+          store_created?: boolean
+          store_name?: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          client_name?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          meeting_date?: string
+          observation?: string
+          platform_access_confirmed?: boolean
+          status?: string
+          store_created?: boolean
+          store_name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       strategies: {
         Row: {
           assigned_to: string | null
