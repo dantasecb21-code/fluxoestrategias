@@ -193,18 +193,8 @@ export default function StoreRequests() {
     setSubmitting(false);
   };
 
-  const handleStatusChange = async (id: string, newStatus: string) => {
-    const { error } = await supabase
-      .from("store_requests")
-      .update({ status: newStatus } as any)
-      .eq("id", id);
-    if (error) {
-      toast.error("Erro ao atualizar status.");
-    } else {
-      toast.success("Status atualizado!");
-      fetchRequests();
-    }
-  };
+
+
 
   const getAssigneeName = (userId: string | null) => {
     if (!userId) return "—";
