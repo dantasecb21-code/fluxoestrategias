@@ -128,6 +128,7 @@ export default function PendingActivities() {
     setEditStatus("pending");
     setEditingId(null);
     setFreeText("");
+    setPastedImage(null);
   };
 
   const openEdit = (act: PendingActivity) => {
