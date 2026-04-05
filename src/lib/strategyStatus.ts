@@ -48,6 +48,8 @@ export function getStatusBadgeProps(status: ReturnType<typeof deriveStrategyDisp
       return { variant: "secondary" as const, className: "" };
     case "pending":
       return { variant: "outline" as const, className: "border-warning/30 text-warning" };
+    case "returned":
+      return { variant: "destructive" as const, className: "bg-destructive/20 text-destructive border-destructive/30" };
   }
 }
 
