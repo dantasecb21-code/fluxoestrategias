@@ -139,7 +139,7 @@ export default function Dashboard() {
             <Zap className="h-5 w-5 text-primary-foreground" />
           </div>
           <h1 className="font-heading font-bold text-3xl text-foreground">
-            Gestor de <span className="text-primary">Estratégias</span>
+            Fluxo de <span className="text-primary">Estratégias</span>
           </h1>
         </div>
         <p className="text-muted-foreground">
