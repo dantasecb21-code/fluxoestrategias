@@ -168,8 +168,7 @@ export default function ManagersList() {
         <div className="space-y-3">
           {sortedManagers.map((m) => {
             const stats = calcManagerStats(strategies, m.user_id);
-            const assignedCount = getAssignedStoreCount(m.user_id);
-            const isOverLimit = assignedCount >= m.store_limit;
+            const isOverLimit = m.store_count >= m.store_limit;
 
             return (
               <Card key={m.user_id} className="p-5">
