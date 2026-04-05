@@ -350,7 +350,7 @@ export default function StoreRequests() {
                     <SelectContent>
                       {strategicUsers.map((u) => (
                         <SelectItem key={u.user_id} value={u.user_id}>
-                          {u.display_name || u.user_id}
+                          {shortName(u.display_name) || u.user_id}
                         </SelectItem>
                       ))}
                     </SelectContent>
