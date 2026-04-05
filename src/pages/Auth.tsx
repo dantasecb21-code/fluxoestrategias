@@ -76,7 +76,7 @@ export default function Auth() {
             <Zap className="h-5 w-5 text-primary-foreground" />
           </div>
           <h1 className="font-heading font-bold text-2xl text-foreground">
-            Gestor de <span className="text-primary">Estratégias</span>
+            Fluxo de <span className="text-primary">Estratégias</span>
           </h1>
         </div>
 
