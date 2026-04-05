@@ -63,6 +63,7 @@ export function AppSidebar() {
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
+              {/* Início */}
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
                   <NavLink
@@ -81,49 +82,108 @@ export function AppSidebar() {
                   </NavLink>
                 </SidebarMenuButton>
               </SidebarMenuItem>
+
+              {/* Lojas Novas */}
               {canManage && (
-                <>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton asChild>
-                      <NavLink
-                        to="/nova"
-                        onClick={() => handleNav("/nova")}
-                        className="hover:bg-sidebar-accent/50"
-                        activeClassName="bg-sidebar-accent text-primary font-medium"
-                      >
-                        <Plus className="mr-2 h-4 w-4" />
-                        {!collapsed && <span>Nova Estratégia</span>}
-                      </NavLink>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton asChild>
-                      <NavLink
-                        to="/pendentes"
-                        onClick={() => handleNav("/pendentes")}
-                        className="hover:bg-sidebar-accent/50"
-                        activeClassName="bg-sidebar-accent text-primary font-medium"
-                      >
-                        <AlertTriangle className="mr-2 h-4 w-4" />
-                        {!collapsed && <span>Pendentes</span>}
-                      </NavLink>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton asChild>
-                      <NavLink
-                        to="/gestores"
-                        onClick={() => handleNav("/gestores")}
-                        className="hover:bg-sidebar-accent/50"
-                        activeClassName="bg-sidebar-accent text-primary font-medium"
-                      >
-                        <Users className="mr-2 h-4 w-4" />
-                        {!collapsed && <span>Gestores</span>}
-                      </NavLink>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                </>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild>
+                    <NavLink
+                      to="/lojas-novas"
+                      onClick={() => handleNav("/lojas-novas")}
+                      className="hover:bg-sidebar-accent/50"
+                      activeClassName="bg-sidebar-accent text-primary font-medium"
+                    >
+                      <Store className="mr-2 h-4 w-4" />
+                      {!collapsed && <span>Lojas Novas</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
               )}
+
+              {/* Nova Estratégia */}
+              {canManage && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild>
+                    <NavLink
+                      to="/nova"
+                      onClick={() => handleNav("/nova")}
+                      className="hover:bg-sidebar-accent/50"
+                      activeClassName="bg-sidebar-accent text-primary font-medium"
+                    >
+                      <Plus className="mr-2 h-4 w-4" />
+                      {!collapsed && <span>Nova Estratégia</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
+
+              {/* Pendentes */}
+              {canManage && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild>
+                    <NavLink
+                      to="/pendentes"
+                      onClick={() => handleNav("/pendentes")}
+                      className="hover:bg-sidebar-accent/50"
+                      activeClassName="bg-sidebar-accent text-primary font-medium"
+                    >
+                      <AlertTriangle className="mr-2 h-4 w-4" />
+                      {!collapsed && <span>Pendentes</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
+
+              {/* Gestores */}
+              {canManage && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild>
+                    <NavLink
+                      to="/gestores"
+                      onClick={() => handleNav("/gestores")}
+                      className="hover:bg-sidebar-accent/50"
+                      activeClassName="bg-sidebar-accent text-primary font-medium"
+                    >
+                      <Users className="mr-2 h-4 w-4" />
+                      {!collapsed && <span>Gestores</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
+
+              {/* Treinamentos */}
+              {canManage && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild>
+                    <NavLink
+                      to="/treinamentos"
+                      onClick={() => handleNav("/treinamentos")}
+                      className="hover:bg-sidebar-accent/50"
+                      activeClassName="bg-sidebar-accent text-primary font-medium"
+                    >
+                      <BookOpen className="mr-2 h-4 w-4" />
+                      {!collapsed && <span>Treinamentos</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
+
+              {/* Assistente */}
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <NavLink
+                    to="/assistente"
+                    onClick={() => handleNav("/assistente")}
+                    className="hover:bg-sidebar-accent/50"
+                    activeClassName="bg-sidebar-accent text-primary font-medium"
+                  >
+                    <MessageCircleQuestion className="mr-2 h-4 w-4" />
+                    {!collapsed && <span>Assistente</span>}
+                  </NavLink>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+
+              {/* Aprovações */}
               {isAdmin && (
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild>
@@ -139,49 +199,6 @@ export function AppSidebar() {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               )}
-              {canManage && (
-                <>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton asChild>
-                      <NavLink
-                        to="/lojas-novas"
-                        onClick={() => handleNav("/lojas-novas")}
-                        className="hover:bg-sidebar-accent/50"
-                        activeClassName="bg-sidebar-accent text-primary font-medium"
-                      >
-                        <Store className="mr-2 h-4 w-4" />
-                        {!collapsed && <span>Lojas Novas</span>}
-                      </NavLink>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton asChild>
-                      <NavLink
-                        to="/treinamentos"
-                        onClick={() => handleNav("/treinamentos")}
-                        className="hover:bg-sidebar-accent/50"
-                        activeClassName="bg-sidebar-accent text-primary font-medium"
-                      >
-                        <BookOpen className="mr-2 h-4 w-4" />
-                        {!collapsed && <span>Treinamentos</span>}
-                      </NavLink>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                </>
-              )}
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <NavLink
-                    to="/assistente"
-                    onClick={() => handleNav("/assistente")}
-                    className="hover:bg-sidebar-accent/50"
-                    activeClassName="bg-sidebar-accent text-primary font-medium"
-                  >
-                    <MessageCircleQuestion className="mr-2 h-4 w-4" />
-                    {!collapsed && <span>Assistente</span>}
-                  </NavLink>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
