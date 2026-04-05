@@ -258,45 +258,41 @@ export default function StoreRequests() {
                 Nova Solicitação
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-lg">
+            <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>{editingId ? "Editar Solicitação" : "Nova Solicitação de Loja"}</DialogTitle>
               </DialogHeader>
               <div className="space-y-4 mt-2">
-                {/* AI Free Text Parser - only for new requests */}
+                {/* AI Free Text Parser - collapsible, compact */}
                 {!editingId && (
-                  <div className="space-y-2 p-3 rounded-lg border border-primary/30 bg-primary/5">
-                    <Label className="flex items-center gap-2 text-primary font-medium">
-                      <Sparkles className="h-4 w-4" />
-                      Cole as informações da loja
-                    </Label>
-                    <Textarea
-                      value={freeText}
-                      onChange={(e) => setFreeText(e.target.value)}
-                      placeholder="Cole aqui qualquer texto com informações da loja. Ex: 'O cliente João Silva quer abrir a Pizzaria do João, reunião marcada para 15/04/2026, ele já tem acesso ao MiBusca...'"
-                      rows={4}
-                      className="resize-none"
-                    />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      className="w-full border-primary/30 text-primary hover:bg-primary/10"
-                      onClick={handleParseText}
-                      disabled={parsing}
-                    >
-                      {parsing ? (
-                        <>
-                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                          Extraindo dados...
-                        </>
-                      ) : (
-                        <>
-                          <Sparkles className="h-4 w-4 mr-2" />
-                          Extrair dados com IA
-                        </>
-                      )}
-                    </Button>
+                  <div className="rounded-lg border border-primary/20 overflow-hidden">
+                    <div className="flex items-center gap-2 px-3 py-2 bg-primary/10">
+                      <Sparkles className="h-3.5 w-3.5 text-primary" />
+                      <span className="text-xs font-medium text-primary">Preenchimento inteligente</span>
+                    </div>
+                    <div className="p-3 space-y-2">
+                      <Textarea
+                        value={freeText}
+                        onChange={(e) => setFreeText(e.target.value)}
+                        placeholder="Cole aqui qualquer texto com as informações da loja e a IA preenche os campos automaticamente..."
+                        rows={2}
+                        className="resize-none text-sm"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="w-full h-8 text-xs border-primary/20 text-primary hover:bg-primary/10"
+                        onClick={handleParseText}
+                        disabled={parsing}
+                      >
+                        {parsing ? (
+                          <><Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> Extraindo...</>
+                        ) : (
+                          <><Sparkles className="h-3.5 w-3.5 mr-1.5" /> Extrair dados com IA</>
+                        )}
+                      </Button>
+                    </div>
                   </div>
                 )}
                 <div>
