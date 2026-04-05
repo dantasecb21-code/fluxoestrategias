@@ -440,16 +440,6 @@ export default function StoreRequests() {
                 {/* Admin actions */}
                 {isAdmin && (
                   <div className="flex items-center gap-2 pt-1" onClick={(e) => e.stopPropagation()}>
-                    <Select value={req.status} onValueChange={(v) => handleStatusChange(req.id, v)}>
-                      <SelectTrigger className="w-[160px] h-8 text-xs">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="pending">Pendente</SelectItem>
-                        <SelectItem value="in_progress">Em andamento</SelectItem>
-                        <SelectItem value="completed">Concluída</SelectItem>
-                      </SelectContent>
-                    </Select>
                     <Button size="sm" variant="outline" onClick={() => openEdit(req)}>
                       <Pencil className="h-3.5 w-3.5 mr-1" />
                       Editar
