@@ -17,6 +17,7 @@ import PendingStrategies from "./pages/PendingStrategies";
 import UserApproval from "./pages/UserApproval";
 import AssistantChat from "./pages/AssistantChat";
 import TrainingCourses from "./pages/TrainingCourses";
+import StoreRequests from "./pages/StoreRequests";
 import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 
@@ -84,6 +85,7 @@ const App = () => (
             <Route path="/perfil/:userId" element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
             <Route path="/assistente" element={<ProtectedRoute><AssistantChat /></ProtectedRoute>} />
             <Route path="/treinamentos" element={<ProtectedRoute allowedRoles={["admin", "strategic"]}><TrainingCourses /></ProtectedRoute>} />
+            <Route path="/lojas-novas" element={<ProtectedRoute allowedRoles={["admin", "strategic"]}><StoreRequests /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
