@@ -263,8 +263,43 @@ export default function StoreRequests() {
                 <DialogTitle>{editingId ? "Editar Solicitação" : "Nova Solicitação de Loja"}</DialogTitle>
               </DialogHeader>
               <div className="space-y-4 mt-2">
-                <div>
-                  <Label>Nome da Loja *</Label>
+                {/* AI Free Text Parser - only for new requests */}
+                {!editingId && (
+                  <div className="space-y-2 p-3 rounded-lg border border-primary/30 bg-primary/5">
+                    <Label className="flex items-center gap-2 text-primary font-medium">
+                      <Sparkles className="h-4 w-4" />
+                      Cole as informações da loja
+                    </Label>
+                    <Textarea
+                      value={freeText}
+                      onChange={(e) => setFreeText(e.target.value)}
+                      placeholder="Cole aqui qualquer texto com informações da loja. Ex: 'O cliente João Silva quer abrir a Pizzaria do João, reunião marcada para 15/04/2026, ele já tem acesso ao MiBusca...'"
+                      rows={4}
+                      className="resize-none"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="w-full border-primary/30 text-primary hover:bg-primary/10"
+                      onClick={handleParseText}
+                      disabled={parsing}
+                    >
+                      {parsing ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Extraindo dados...
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="h-4 w-4 mr-2" />
+                          Extrair dados com IA
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                )}
+                
                   <Input
                     value={storeName}
                     onChange={(e) => setStoreName(e.target.value)}
