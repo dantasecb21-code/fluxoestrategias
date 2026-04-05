@@ -124,7 +124,7 @@ export default function OperationalStrategyView() {
       return;
     }
     setSaving(true);
-    await updateStrategy(strategy.id, { categories, status: "pending_approval", store_access_confirmed: true });
+    await updateStrategy(strategy.id, { categories, status: "pending_approval", store_access_confirmed: true, returned: false });
     toast.success("Estratégia enviada para aprovação!");
     setSaving(false);
   };
