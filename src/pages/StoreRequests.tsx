@@ -42,6 +42,12 @@ const STATUS_LABELS: Record<string, string> = {
   completed: "Concluída",
 };
 
+const STATUS_DOT_COLORS: Record<string, string> = {
+  pending: "bg-warning",
+  in_progress: "bg-primary",
+  completed: "bg-emerald-500",
+};
+
 const STATUS_COLORS: Record<string, string> = {
   pending: "bg-warning/20 text-warning border-warning/30",
   in_progress: "bg-primary/20 text-primary border-primary/30",
