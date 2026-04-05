@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { ListChecks, Plus, Clock, CheckCircle2, User, Pencil, Trash2, Sparkles, Loader2, AlertCircle } from "lucide-react";
+import { ListChecks, Plus, Clock, CheckCircle2, User, Pencil, Trash2, Sparkles, Loader2, AlertCircle, Image, X } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
