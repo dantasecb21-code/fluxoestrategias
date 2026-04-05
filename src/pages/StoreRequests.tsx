@@ -42,6 +42,12 @@ const STATUS_LABELS: Record<string, string> = {
   completed: "Concluída",
 };
 
+const STATUS_DOT_COLORS: Record<string, string> = {
+  pending: "bg-warning",
+  in_progress: "bg-primary",
+  completed: "bg-emerald-500",
+};
+
 const STATUS_COLORS: Record<string, string> = {
   pending: "bg-warning/20 text-warning border-warning/30",
   in_progress: "bg-primary/20 text-primary border-primary/30",
@@ -66,6 +72,7 @@ export default function StoreRequests() {
   const [meetingDate, setMeetingDate] = useState("");
   const [observation, setObservation] = useState("");
   const [assignedTo, setAssignedTo] = useState("");
+  const [editStatus, setEditStatus] = useState("pending");
   const [submitting, setSubmitting] = useState(false);
 
   const fetchRequests = async () => {
@@ -106,6 +113,7 @@ export default function StoreRequests() {
     setMeetingDate("");
     setObservation("");
     setAssignedTo("");
+    setEditStatus("pending");
     setEditingId(null);
   };
 
@@ -117,6 +125,7 @@ export default function StoreRequests() {
     setMeetingDate(req.meeting_date);
     setObservation(req.observation);
     setAssignedTo(req.assigned_to || "");
+    setEditStatus(req.status);
     setEditingId(req.id);
     setDialogOpen(true);
   };
@@ -149,6 +158,7 @@ export default function StoreRequests() {
         meeting_date: meetingDate,
         observation: observation.trim(),
         assigned_to: assignedTo,
+        status: editStatus,
       } as any).eq("id", editingId);
 
       if (error) {
@@ -183,18 +193,8 @@ export default function StoreRequests() {
     setSubmitting(false);
   };
 
-  const handleStatusChange = async (id: string, newStatus: string) => {
-    const { error } = await supabase
-      .from("store_requests")
-      .update({ status: newStatus } as any)
-      .eq("id", id);
-    if (error) {
-      toast.error("Erro ao atualizar status.");
-    } else {
-      toast.success("Status atualizado!");
-      fetchRequests();
-    }
-  };
+
+
 
   const getAssigneeName = (userId: string | null) => {
     if (!userId) return "—";
@@ -299,6 +299,27 @@ export default function StoreRequests() {
                     </SelectContent>
                   </Select>
                 </div>
+                {editingId && (
+                  <div>
+                    <Label>Status</Label>
+                    <Select value={editStatus} onValueChange={setEditStatus}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="pending">
+                          <span className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-warning" /> Pendente</span>
+                        </SelectItem>
+                        <SelectItem value="in_progress">
+                          <span className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-primary" /> Em andamento</span>
+                        </SelectItem>
+                        <SelectItem value="completed">
+                          <span className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-emerald-500" /> Concluída</span>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
                 <div>
                   <Label>Observação</Label>
                   <Textarea
@@ -358,7 +379,8 @@ export default function StoreRequests() {
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Badge className={STATUS_COLORS[req.status] || ""}>
+                    <Badge className={`${STATUS_COLORS[req.status] || ""} flex items-center gap-1.5`}>
+                      <span className={`h-2 w-2 rounded-full ${STATUS_DOT_COLORS[req.status] || ""}`} />
                       {STATUS_LABELS[req.status] || req.status}
                     </Badge>
                     {isStrategic && req.status !== "completed" && (
@@ -408,16 +430,6 @@ export default function StoreRequests() {
                 {/* Admin actions */}
                 {isAdmin && (
                   <div className="flex items-center gap-2 pt-1" onClick={(e) => e.stopPropagation()}>
-                    <Select value={req.status} onValueChange={(v) => handleStatusChange(req.id, v)}>
-                      <SelectTrigger className="w-[160px] h-8 text-xs">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="pending">Pendente</SelectItem>
-                        <SelectItem value="in_progress">Em andamento</SelectItem>
-                        <SelectItem value="completed">Concluída</SelectItem>
-                      </SelectContent>
-                    </Select>
                     <Button size="sm" variant="outline" onClick={() => openEdit(req)}>
                       <Pencil className="h-3.5 w-3.5 mr-1" />
                       Editar
