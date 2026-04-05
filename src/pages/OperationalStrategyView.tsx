@@ -158,7 +158,19 @@ export default function OperationalStrategyView() {
         </div>
       </div>
 
-      {/* Observation highlight */}
+      {/* Returned alert */}
+      {(strategy as any).returned && (
+        <Card className="p-4 border-destructive/40 bg-destructive/10">
+          <div className="flex items-start gap-2">
+            <AlertCircle className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm font-medium text-destructive">⚠️ Estratégia devolvida para revisão</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Revise os itens e reenvie para aprovação.</p>
+            </div>
+          </div>
+        </Card>
+      )}
+
       {(strategy as any).observation && (
         <Card className="p-4 border-warning/30 bg-warning/5">
           <div className="flex items-start gap-2">
