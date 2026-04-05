@@ -149,7 +149,7 @@ export default function ManagersList() {
                           <AlertTriangle className="h-5 w-5 text-destructive" /> Remover acesso
                         </AlertDialogTitle>
                         <AlertDialogDescription>
-                          Tem certeza que deseja remover o acesso operacional de <strong>{m.display_name}</strong>? 
+                          Tem certeza que deseja remover o acesso operacional de <strong>{shortName(m.display_name)}</strong>? 
                           O gestor não poderá mais acessar o painel operacional.
                         </AlertDialogDescription>
                       </AlertDialogHeader>

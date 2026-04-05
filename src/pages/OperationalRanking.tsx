@@ -167,7 +167,7 @@ export default function OperationalRanking() {
                   <p className={`font-heading font-semibold truncate ${
                     index === 0 ? "text-yellow-500 text-lg" : "text-foreground"
                   }`}>
-                    {manager.display_name}
+                    {shortName(manager.display_name)}
                   </p>
                   <p className="text-xs text-muted-foreground">Gestor Operacional</p>
                 </div>
