@@ -11,7 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Store, Plus, Clock, CheckCircle2, User, ArrowRight } from "lucide-react";
+import { Store, Plus, Clock, CheckCircle2, User, ArrowRight, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -56,6 +56,7 @@ export default function StoreRequests() {
   const [strategicUsers, setStrategicUsers] = useState<StrategicUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   // Form state
   const [storeName, setStoreName] = useState("");
@@ -105,6 +106,29 @@ export default function StoreRequests() {
     setMeetingDate("");
     setObservation("");
     setAssignedTo("");
+    setEditingId(null);
+  };
+
+  const openEdit = (req: StoreRequest) => {
+    setStoreName(req.store_name);
+    setClientName(req.client_name);
+    setStoreCreated(req.store_created);
+    setPlatformAccess(req.platform_access_confirmed);
+    setMeetingDate(req.meeting_date);
+    setObservation(req.observation);
+    setAssignedTo(req.assigned_to || "");
+    setEditingId(req.id);
+    setDialogOpen(true);
+  };
+
+  const handleDelete = async (id: string) => {
+    const { error } = await supabase.from("store_requests").delete().eq("id", id);
+    if (error) {
+      toast.error("Erro ao excluir solicitação.");
+    } else {
+      toast.success("Solicitação excluída!");
+      fetchRequests();
+    }
   };
 
   const handleSubmit = async () => {
@@ -115,25 +139,46 @@ export default function StoreRequests() {
     if (!user) return;
 
     setSubmitting(true);
-    const { error } = await supabase.from("store_requests").insert({
-      store_name: storeName.trim(),
-      client_name: clientName.trim(),
-      store_created: storeCreated,
-      platform_access_confirmed: platformAccess,
-      meeting_date: meetingDate,
-      observation: observation.trim(),
-      assigned_to: assignedTo,
-      created_by: user.id,
-    } as any);
 
-    if (error) {
-      toast.error("Erro ao criar solicitação.");
-      console.error(error);
+    if (editingId) {
+      const { error } = await supabase.from("store_requests").update({
+        store_name: storeName.trim(),
+        client_name: clientName.trim(),
+        store_created: storeCreated,
+        platform_access_confirmed: platformAccess,
+        meeting_date: meetingDate,
+        observation: observation.trim(),
+        assigned_to: assignedTo,
+      } as any).eq("id", editingId);
+
+      if (error) {
+        toast.error("Erro ao atualizar solicitação.");
+      } else {
+        toast.success("Solicitação atualizada!");
+        resetForm();
+        setDialogOpen(false);
+        fetchRequests();
+      }
     } else {
-      toast.success("Solicitação enviada com sucesso!");
-      resetForm();
-      setDialogOpen(false);
-      fetchRequests();
+      const { error } = await supabase.from("store_requests").insert({
+        store_name: storeName.trim(),
+        client_name: clientName.trim(),
+        store_created: storeCreated,
+        platform_access_confirmed: platformAccess,
+        meeting_date: meetingDate,
+        observation: observation.trim(),
+        assigned_to: assignedTo,
+        created_by: user.id,
+      } as any);
+
+      if (error) {
+        toast.error("Erro ao criar solicitação.");
+      } else {
+        toast.success("Solicitação enviada com sucesso!");
+        resetForm();
+        setDialogOpen(false);
+        fetchRequests();
+      }
     }
     setSubmitting(false);
   };
@@ -181,16 +226,16 @@ export default function StoreRequests() {
         </div>
 
         {isAdmin && (
-          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+          <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) resetForm(); }}>
             <DialogTrigger asChild>
-              <Button>
+              <Button onClick={() => resetForm()}>
                 <Plus className="h-4 w-4 mr-2" />
                 Nova Solicitação
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-lg">
               <DialogHeader>
-                <DialogTitle>Nova Solicitação de Loja</DialogTitle>
+                <DialogTitle>{editingId ? "Editar Solicitação" : "Nova Solicitação de Loja"}</DialogTitle>
               </DialogHeader>
               <div className="space-y-4 mt-2">
                 <div>
@@ -268,7 +313,7 @@ export default function StoreRequests() {
                   onClick={handleSubmit}
                   disabled={submitting}
                 >
-                  {submitting ? "Enviando..." : "Enviar Solicitação"}
+                  {submitting ? "Salvando..." : editingId ? "Salvar Alterações" : "Enviar Solicitação"}
                 </Button>
               </div>
             </DialogContent>
@@ -360,17 +405,22 @@ export default function StoreRequests() {
                   Criado em {format(new Date(req.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
                 </div>
 
-                {/* Admin status actions */}
-                {isAdmin && req.status !== "completed" && (
+                {/* Admin actions */}
+                {isAdmin && (
                   <div className="flex gap-2 pt-1" onClick={(e) => e.stopPropagation()}>
-                    {req.status === "pending" && (
-                      <Button size="sm" variant="outline" onClick={() => handleStatusChange(req.id, "in_progress")}>
-                        Iniciar
+                    <Button size="sm" variant="outline" onClick={() => openEdit(req)}>
+                      <Pencil className="h-3.5 w-3.5 mr-1" />
+                      Editar
+                    </Button>
+                    <Button size="sm" variant="destructive" onClick={() => handleDelete(req.id)}>
+                      <Trash2 className="h-3.5 w-3.5 mr-1" />
+                      Excluir
+                    </Button>
+                    {req.status !== "completed" && (
+                      <Button size="sm" onClick={() => handleStatusChange(req.id, "completed")}>
+                        Marcar como Concluída
                       </Button>
                     )}
-                    <Button size="sm" onClick={() => handleStatusChange(req.id, "completed")}>
-                      Marcar como Concluída
-                    </Button>
                   </div>
                 )}
               </Card>
