@@ -83,6 +83,7 @@ const App = () => (
             <Route path="/notas" element={<ProtectedRoute allowedRoles={["admin", "strategic"]}><StrategyNotes /></ProtectedRoute>} />
             <Route path="/aprovacoes" element={<ProtectedRoute allowedRoles={["admin"]}><UserApproval /></ProtectedRoute>} />
             <Route path="/operacional/:id" element={<ProtectedRoute allowedRoles={["operational"]}><OperationalStrategyView /></ProtectedRoute>} />
+            <Route path="/ranking" element={<ProtectedRoute allowedRoles={["operational"]}><OperationalRanking /></ProtectedRoute>} />
             <Route path="/perfil/:userId" element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
             <Route path="/assistente" element={<ProtectedRoute><AssistantChat /></ProtectedRoute>} />
             <Route path="/treinamentos" element={<ProtectedRoute allowedRoles={["admin", "strategic"]}><TrainingCourses /></ProtectedRoute>} />
