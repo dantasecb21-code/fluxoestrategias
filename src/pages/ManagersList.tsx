@@ -28,6 +28,7 @@ interface OperationalManager {
   whatsapp: string;
   avatar_url: string;
   store_limit: number;
+  store_count: number;
 }
 
 export default function ManagersList() {
