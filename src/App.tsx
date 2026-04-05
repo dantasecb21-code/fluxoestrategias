@@ -87,7 +87,7 @@ const App = () => (
             <Route path="/ranking" element={<ProtectedRoute allowedRoles={["operational"]}><OperationalRanking /></ProtectedRoute>} />
             <Route path="/perfil/:userId" element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
             <Route path="/assistente" element={<ProtectedRoute><AssistantChat /></ProtectedRoute>} />
-            <Route path="/treinamentos" element={<ProtectedRoute allowedRoles={["admin", "strategic"]}><TrainingCourses /></ProtectedRoute>} />
+            <Route path="/treinamentos" element={<ProtectedRoute allowedRoles={["admin", "strategic", "operational"]}><TrainingCourses /></ProtectedRoute>} />
             <Route path="/lojas-novas" element={<ProtectedRoute allowedRoles={["admin", "strategic"]}><StoreRequests /></ProtectedRoute>} />
             <Route path="/atividades" element={<ProtectedRoute><PendingActivities /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
