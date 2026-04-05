@@ -223,9 +223,45 @@ export default function ManagersList() {
                 <div className="flex items-center gap-2 mb-3 p-2.5 rounded-lg bg-muted/50 border border-border">
                   <Store className="h-4 w-4 text-muted-foreground shrink-0" />
                   <span className="text-sm text-muted-foreground">Lojas:</span>
-                  <span className={`font-heading font-bold text-sm ${isOverLimit ? "text-destructive" : "text-foreground"}`}>
-                    {assignedCount}
-                  </span>
+                  {editingCount === m.user_id ? (
+                    <div className="flex items-center gap-1">
+                      <Input
+                        type="number"
+                        min={0}
+                        value={editValue}
+                        onChange={(e) => setEditValue(e.target.value)}
+                        className="h-7 w-16 text-sm px-2"
+                        autoFocus
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") handleSaveCount(m.user_id);
+                          if (e.key === "Escape") setEditingCount(null);
+                        }}
+                      />
+                      <Button size="icon" variant="ghost" className="h-6 w-6 text-success" onClick={() => handleSaveCount(m.user_id)}>
+                        <Check className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button size="icon" variant="ghost" className="h-6 w-6 text-muted-foreground" onClick={() => setEditingCount(null)}>
+                        <X className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-1">
+                      <span className={`font-heading font-bold text-sm ${isOverLimit ? "text-destructive" : "text-foreground"}`}>
+                        {m.store_count}
+                      </span>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-6 w-6 text-muted-foreground hover:text-primary"
+                        onClick={() => {
+                          setEditingCount(m.user_id);
+                          setEditValue(String(m.store_count));
+                        }}
+                      >
+                        <Pencil className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  )}
                   <span className="text-sm text-muted-foreground">/</span>
                   {editingLimit === m.user_id ? (
                     <div className="flex items-center gap-1">
