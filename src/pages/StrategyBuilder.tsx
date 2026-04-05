@@ -88,6 +88,7 @@ export default function StrategyBuilderPage() {
   // Pre-fill from query params (store request flow)
   const prefillStore = searchParams.get("store") || "";
   const prefillManager = searchParams.get("manager") || "";
+  const storeRequestId = searchParams.get("store_request_id") || "";
 
   const [meta, setMeta] = useState<StrategyMeta>(() => {
     if (existing) {
