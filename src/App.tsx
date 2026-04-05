@@ -19,6 +19,7 @@ import AssistantChat from "./pages/AssistantChat";
 import TrainingCourses from "./pages/TrainingCourses";
 import StoreRequests from "./pages/StoreRequests";
 import ResetPassword from "./pages/ResetPassword";
+import OperationalRanking from "./pages/OperationalRanking";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
