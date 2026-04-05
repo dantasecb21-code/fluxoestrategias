@@ -270,7 +270,7 @@ export default function PendingActivities() {
   const getAssigneeName = (userId: string | null) => {
     if (!userId) return "—";
     const found = operationalUsers.find((u) => u.user_id === userId);
-    return found?.display_name || "Gestor";
+    return found?.display_name ? shortName(found.display_name) : "Gestor";
   };
 
   if (loading) {
