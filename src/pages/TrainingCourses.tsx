@@ -25,11 +25,11 @@ type Course = {
 };
 
 const CATEGORIES = [
-  "📋 Plataforma (Tutoriais)",
-  "💰 Precificação",
-  "🍔 Cardápio (Estrutura e Vendas)",
-  "🎯 Estratégia de Vendas",
-  "🚀 Operação e Boas Práticas",
+  "Plataforma",
+  "Precificação",
+  "Cardápio",
+  "Estratégia de Vendas",
+  "Operação e Boas Práticas",
   "Geral",
 ];
 
