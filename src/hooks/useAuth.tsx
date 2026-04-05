@@ -46,7 +46,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setApproved(profileRes.data.approved ?? false);
             setAvatarUrl(profileRes.data.avatar_url || "");
           }
-          if (roleRes.data) setRole(roleRes.data.role as AppRole);
+          if (roleRes.data && roleRes.data.length > 0) {
+            const roles = roleRes.data.map(r => r.role);
+            const priority: AppRole[] = ["admin", "strategic", "operational"];
+            const bestRole = priority.find(r => roles.includes(r)) || roles[0];
+            setRole(bestRole as AppRole);
+          }
           setLoading(false);
         }, 0);
       } else {
