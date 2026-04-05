@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Trophy, Medal, Crown, Flame, TrendingUp } from "lucide-react";
+import { shortName } from "@/lib/utils";
 
 interface RankedManager {
   user_id: string;
