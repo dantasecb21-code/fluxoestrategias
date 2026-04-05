@@ -131,7 +131,7 @@ export default function ManagersList() {
                       )}
                     </div>
                      <div>
-                       <p className="font-heading font-semibold text-foreground">{m.display_name || "Sem nome"}</p>
+                       <p className="font-heading font-semibold text-foreground">{shortName(m.display_name) || "Sem nome"}</p>
                        <p className="text-xs text-muted-foreground">Gestor Operacional</p>
                        {m.whatsapp && <p className="text-xs text-muted-foreground">📱 {m.whatsapp}</p>}
                        <button onClick={() => navigate(`/perfil/${m.user_id}`)} className="text-xs text-primary hover:underline mt-0.5">Ver perfil →</button>
