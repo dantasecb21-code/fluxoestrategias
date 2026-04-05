@@ -56,6 +56,7 @@ export default function StoreRequests() {
   const [strategicUsers, setStrategicUsers] = useState<StrategicUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   // Form state
   const [storeName, setStoreName] = useState("");
