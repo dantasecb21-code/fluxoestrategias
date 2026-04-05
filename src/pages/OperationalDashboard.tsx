@@ -63,18 +63,10 @@ export default function OperationalDashboard() {
                 className={`p-5 hover:border-primary/30 transition-colors cursor-pointer ${deriveStrategyDisplayStatus(s) === "returned" ? "border-destructive/40 bg-destructive/5" : ""}`}
                 onClick={() => navigate(`/operacional/${s.id}`)}
               >
-                <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <h3 className="font-heading font-semibold text-foreground text-lg flex items-center gap-2">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="min-w-0 flex-1">
+                    <h3 className="font-heading font-semibold text-foreground text-lg truncate">
                       {s.store_name || "Sem nome"}
-                      {(() => {
-                        const ds = deriveStrategyDisplayStatus(s);
-                        if (ds === "returned") {
-                          const bp = getStatusBadgeProps(ds);
-                          return <Badge variant={bp.variant} className={`text-[10px] py-0 px-1.5 h-4 leading-none shrink-0 ${bp.className}`}>{getStatusLabel(ds)}</Badge>;
-                        }
-                        return null;
-                      })()}
                     </h3>
                     <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1">
                       <span className="flex items-center gap-1">
@@ -82,9 +74,19 @@ export default function OperationalDashboard() {
                       </span>
                     </div>
                   </div>
-                  <Button size="sm" variant="outline">
-                    <Eye className="h-4 w-4 mr-1" /> Ver estratégia
-                  </Button>
+                  <div className="flex items-center gap-2 ml-3 shrink-0">
+                    {(() => {
+                      const ds = deriveStrategyDisplayStatus(s);
+                      if (ds === "returned") {
+                        const bp = getStatusBadgeProps(ds);
+                        return <Badge variant={bp.variant} className={`text-[10px] py-0 px-1.5 h-5 leading-none ${bp.className}`}>{getStatusLabel(ds)}</Badge>;
+                      }
+                      return null;
+                    })()}
+                    <Button size="sm" variant="outline">
+                      <Eye className="h-4 w-4 mr-1" /> Ver estratégia
+                    </Button>
+                  </div>
                 </div>
 
                 <div className="space-y-2">
