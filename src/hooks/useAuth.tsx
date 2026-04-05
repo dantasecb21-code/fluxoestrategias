@@ -21,6 +21,7 @@ const AuthContext = createContext<AuthContextType>({
   displayName: "",
   avatarUrl: "",
   role: null,
+  roles: [],
   approved: false,
   signOut: async () => {},
 });
