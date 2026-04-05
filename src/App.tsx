@@ -17,6 +17,7 @@ import PendingStrategies from "./pages/PendingStrategies";
 import UserApproval from "./pages/UserApproval";
 import AssistantChat from "./pages/AssistantChat";
 import TrainingCourses from "./pages/TrainingCourses";
+import StoreRequests from "./pages/StoreRequests";
 import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 
