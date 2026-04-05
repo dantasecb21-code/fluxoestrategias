@@ -87,6 +87,7 @@ export default function PendingActivities() {
   const [submitting, setSubmitting] = useState(false);
   const [freeText, setFreeText] = useState("");
   const [parsing, setParsing] = useState(false);
+  const [pastedImage, setPastedImage] = useState<string | null>(null);
 
   const fetchActivities = async () => {
     const { data } = await supabase
