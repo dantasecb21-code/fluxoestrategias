@@ -3,7 +3,10 @@ import { useDbStrategies } from "@/hooks/useDbStrategies";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
 import { ClipboardList, Eye, Clock } from "lucide-react";
+import OverdueAlert from "@/components/OverdueAlert";
+import { deriveStrategyDisplayStatus, getStatusLabel, getStatusBadgeProps } from "@/lib/strategyStatus";
 import OverdueAlert from "@/components/OverdueAlert";
 
 function calcProgress(categories: any[]) {
