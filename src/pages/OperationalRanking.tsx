@@ -171,7 +171,7 @@ export default function OperationalRanking() {
                   <p className="text-xs text-muted-foreground">Gestor Operacional</p>
                 </div>
 
-                {/* Progress indicator (no numbers) */}
+                {/* Progress indicator - no numbers, just visual */}
                 <div className="flex items-center gap-2">
                   <div className="w-20 h-2 bg-muted rounded-full overflow-hidden">
                     <div
@@ -180,7 +180,7 @@ export default function OperationalRanking() {
                         index === 1 ? "bg-slate-300" :
                         index === 2 ? "bg-amber-700" : "bg-primary"
                       }`}
-                      style={{ width: `${manager.percent}%` }}
+                      style={{ width: `${manager.total > 0 ? Math.round((manager.completed / manager.total) * 100) : 0}%` }}
                     />
                   </div>
                   {index < 3 && (
