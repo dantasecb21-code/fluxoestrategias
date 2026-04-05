@@ -46,7 +46,13 @@ export default function UserApproval() {
       .select("user_id, role");
 
     const roleMap = new Map<string, string>();
-    roles?.forEach((r) => roleMap.set(r.user_id, r.role));
+    const rolePriority: Record<string, number> = { admin: 0, strategic: 1, operational: 2 };
+    roles?.forEach((r) => {
+      const current = roleMap.get(r.user_id);
+      if (!current || (rolePriority[r.role] ?? 99) < (rolePriority[current] ?? 99)) {
+        roleMap.set(r.user_id, r.role);
+      }
+    });
 
     const mapped: PendingUser[] = profiles.map((p) => ({
       user_id: p.user_id,
