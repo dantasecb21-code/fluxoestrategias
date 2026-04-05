@@ -113,6 +113,7 @@ export default function StoreRequests() {
     setMeetingDate("");
     setObservation("");
     setAssignedTo("");
+    setEditStatus("pending");
     setEditingId(null);
   };
 
