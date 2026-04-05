@@ -60,6 +60,7 @@ export default function ManagersList() {
           whatsapp: p.whatsapp || "",
           avatar_url: p.avatar_url || "",
           store_limit: (p as any).store_limit ?? 10,
+          store_count: (p as any).store_count ?? 0,
         })));
       }
     } else {
