@@ -73,6 +73,7 @@ export function calcManagerStats(strategies: any[], managerId: string): ManagerS
       case "completed": completed++; break;
       case "pending_approval": pendingApproval++; break;
       case "in_progress": inProgress++; break;
+      case "returned": inProgress++; break;
       // "pending" falls through to be counted as pending below
     }
   });
