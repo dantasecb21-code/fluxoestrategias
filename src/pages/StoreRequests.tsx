@@ -125,6 +125,7 @@ export default function StoreRequests() {
     setMeetingDate(req.meeting_date);
     setObservation(req.observation);
     setAssignedTo(req.assigned_to || "");
+    setEditStatus(req.status);
     setEditingId(req.id);
     setDialogOpen(true);
   };
