@@ -7,9 +7,11 @@ interface RankedManager {
   user_id: string;
   display_name: string;
   avatar_url: string;
-  totalItems: number;
-  completedItems: number;
-  percent: number;
+  completed: number;
+  waiting: number;
+  inProgress: number;
+  pending: number;
+  total: number;
 }
 
 export default function OperationalRanking() {
@@ -41,25 +43,24 @@ export default function OperationalRanking() {
       // Get strategies assigned to operational managers
       const { data: strategies } = await supabase
         .from("strategies")
-        .select("assigned_to, categories")
+        .select("assigned_to, status")
         .in("assigned_to", userIds)
         .is("deleted_at", null);
 
-      // Calculate completion per manager
-      const statsMap: Record<string, { totalItems: number; completedItems: number }> = {};
+      // Calculate strategy counts per manager
+      const statsMap: Record<string, { completed: number; waiting: number; inProgress: number; pending: number; total: number }> = {};
       userIds.forEach((uid) => {
-        statsMap[uid] = { totalItems: 0, completedItems: 0 };
+        statsMap[uid] = { completed: 0, waiting: 0, inProgress: 0, pending: 0, total: 0 };
       });
 
       (strategies || []).forEach((s: any) => {
         const uid = s.assigned_to;
         if (!uid || !statsMap[uid]) return;
-        const cats = Array.isArray(s.categories) ? s.categories : [];
-        cats.forEach((c: any) => {
-          const items = Array.isArray(c.items) ? c.items : [];
-          statsMap[uid].totalItems += items.length;
-          statsMap[uid].completedItems += items.filter((i: any) => i.status === "completed").length;
-        });
+        statsMap[uid].total += 1;
+        if (s.status === "completed") statsMap[uid].completed += 1;
+        else if (s.status === "waiting") statsMap[uid].waiting += 1;
+        else if (s.status === "in_progress") statsMap[uid].inProgress += 1;
+        else statsMap[uid].pending += 1;
       });
 
       const ranked: RankedManager[] = (profiles || [])
@@ -67,13 +68,13 @@ export default function OperationalRanking() {
           user_id: p.user_id,
           display_name: p.display_name || "Sem nome",
           avatar_url: p.avatar_url || "",
-          totalItems: statsMap[p.user_id]?.totalItems || 0,
-          completedItems: statsMap[p.user_id]?.completedItems || 0,
-          percent: statsMap[p.user_id]?.totalItems > 0
-            ? Math.round((statsMap[p.user_id].completedItems / statsMap[p.user_id].totalItems) * 100)
-            : 0,
+          ...statsMap[p.user_id] || { completed: 0, waiting: 0, inProgress: 0, pending: 0, total: 0 },
         }))
-        .sort((a, b) => b.completedItems - a.completedItems || b.percent - a.percent);
+        .sort((a, b) => 
+          b.completed - a.completed || 
+          b.waiting - a.waiting || 
+          b.inProgress - a.inProgress
+        );
 
       setRanking(ranked);
       setLoading(false);
@@ -170,7 +171,7 @@ export default function OperationalRanking() {
                   <p className="text-xs text-muted-foreground">Gestor Operacional</p>
                 </div>
 
-                {/* Progress indicator (no numbers) */}
+                {/* Progress indicator - no numbers, just visual */}
                 <div className="flex items-center gap-2">
                   <div className="w-20 h-2 bg-muted rounded-full overflow-hidden">
                     <div
@@ -179,7 +180,7 @@ export default function OperationalRanking() {
                         index === 1 ? "bg-slate-300" :
                         index === 2 ? "bg-amber-700" : "bg-primary"
                       }`}
-                      style={{ width: `${manager.percent}%` }}
+                      style={{ width: `${manager.total > 0 ? Math.round((manager.completed / manager.total) * 100) : 0}%` }}
                     />
                   </div>
                   {index < 3 && (
