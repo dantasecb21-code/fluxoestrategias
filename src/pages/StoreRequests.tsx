@@ -11,7 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Store, Plus, Clock, CheckCircle2, User, ArrowRight, Pencil, Trash2 } from "lucide-react";
+import { Store, Plus, Clock, CheckCircle2, User, ArrowRight, Pencil, Trash2, Sparkles, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -74,6 +74,8 @@ export default function StoreRequests() {
   const [assignedTo, setAssignedTo] = useState("");
   const [editStatus, setEditStatus] = useState("pending");
   const [submitting, setSubmitting] = useState(false);
+  const [freeText, setFreeText] = useState("");
+  const [parsing, setParsing] = useState(false);
 
   const fetchRequests = async () => {
     const { data } = await supabase
@@ -115,6 +117,29 @@ export default function StoreRequests() {
     setAssignedTo("");
     setEditStatus("pending");
     setEditingId(null);
+    setFreeText("");
+  };
+
+  const handleParseText = async () => {
+    if (!freeText.trim()) {
+      toast.error("Cole ou digite o texto com as informações da loja.");
+      return;
+    }
+    setParsing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("parse-store-request", {
+        body: { text: freeText.trim() },
+      });
+      if (error) throw error;
+      if (data.store_name) setStoreName(data.store_name);
+      if (data.client_name) setClientName(data.client_name);
+      if (data.meeting_date) setMeetingDate(data.meeting_date);
+      if (data.observation) setObservation(data.observation);
+      toast.success("Dados extraídos com sucesso! Revise e complete os campos.");
+    } catch {
+      toast.error("Erro ao processar texto. Preencha manualmente.");
+    }
+    setParsing(false);
   };
 
   const openEdit = (req: StoreRequest) => {
@@ -238,6 +263,42 @@ export default function StoreRequests() {
                 <DialogTitle>{editingId ? "Editar Solicitação" : "Nova Solicitação de Loja"}</DialogTitle>
               </DialogHeader>
               <div className="space-y-4 mt-2">
+                {/* AI Free Text Parser - only for new requests */}
+                {!editingId && (
+                  <div className="space-y-2 p-3 rounded-lg border border-primary/30 bg-primary/5">
+                    <Label className="flex items-center gap-2 text-primary font-medium">
+                      <Sparkles className="h-4 w-4" />
+                      Cole as informações da loja
+                    </Label>
+                    <Textarea
+                      value={freeText}
+                      onChange={(e) => setFreeText(e.target.value)}
+                      placeholder="Cole aqui qualquer texto com informações da loja. Ex: 'O cliente João Silva quer abrir a Pizzaria do João, reunião marcada para 15/04/2026, ele já tem acesso ao MiBusca...'"
+                      rows={4}
+                      className="resize-none"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="w-full border-primary/30 text-primary hover:bg-primary/10"
+                      onClick={handleParseText}
+                      disabled={parsing}
+                    >
+                      {parsing ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Extraindo dados...
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="h-4 w-4 mr-2" />
+                          Extrair dados com IA
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                )}
                 <div>
                   <Label>Nome da Loja *</Label>
                   <Input
