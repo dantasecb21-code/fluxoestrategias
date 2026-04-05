@@ -89,11 +89,16 @@ export default function StrategyBuilderPage() {
   const prefillStore = searchParams.get("store") || "";
   const prefillManager = searchParams.get("manager") || "";
 
-  const [meta, setMeta] = useState<StrategyMeta>(
-    existing
-      ? { storeName: existing.store_name, managerName: existing.manager_name, operationalManager: existing.operational_manager, deadline: existing.deadline }
-      : draft?.meta || { storeName: prefillStore, managerName: prefillManager, operationalManager: "", deadline: "" }
-  );
+  const [meta, setMeta] = useState<StrategyMeta>(() => {
+    if (existing) {
+      return { storeName: existing.store_name, managerName: existing.manager_name, operationalManager: existing.operational_manager, deadline: existing.deadline };
+    }
+    // Query params take priority over draft
+    if (prefillStore) {
+      return { storeName: prefillStore, managerName: prefillManager, operationalManager: "", deadline: "" };
+    }
+    return draft?.meta || { storeName: "", managerName: "", operationalManager: "", deadline: "" };
+  });
   const [categories, setCategories] = useState<StrategyCategory[]>(
     existing?.categories?.length ? existing.categories : draft?.categories?.length ? draft.categories : initCategories()
   );
