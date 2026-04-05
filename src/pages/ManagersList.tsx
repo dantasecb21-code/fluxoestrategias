@@ -110,11 +110,28 @@ export default function ManagersList() {
     setEditingLimit(null);
     toast.success("Limite atualizado");
   };
+  const handleSaveCount = async (managerId: string) => {
+    const val = parseInt(editValue);
+    if (isNaN(val) || val < 0) {
+      toast.error("Informe um número válido");
+      return;
+    }
 
-  const getAssignedStoreCount = (managerId: string) => {
-    return strategies.filter(
-      (s) => s.assigned_to === managerId && !s.deleted_at
-    ).length;
+    const { error } = await supabase
+      .from("profiles")
+      .update({ store_count: val } as any)
+      .eq("user_id", managerId);
+
+    if (error) {
+      toast.error("Erro ao salvar contagem");
+      return;
+    }
+
+    setManagers((prev) =>
+      prev.map((m) => (m.user_id === managerId ? { ...m, store_count: val } : m))
+    );
+    setEditingCount(null);
+    toast.success("Contagem atualizada");
   };
 
   const sortedManagers = [...managers].sort((a, b) => {
