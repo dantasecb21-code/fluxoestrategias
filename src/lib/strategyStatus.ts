@@ -34,6 +34,7 @@ export function getStatusLabel(status: ReturnType<typeof deriveStrategyDisplaySt
     case "pending_approval": return "Aguardando aprovação";
     case "in_progress": return "Em andamento";
     case "pending": return "Pendente";
+    case "returned": return "Devolvida";
   }
 }
 
