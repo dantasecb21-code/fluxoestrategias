@@ -378,7 +378,7 @@ export default function TrainingCourses() {
                               <h3 className="font-medium text-foreground text-sm">{course.title}</h3>
                               {!course.published && <span className="text-xs bg-muted px-2 py-0.5 rounded text-muted-foreground">Rascunho</span>}
                             </div>
-                            {course.content && <p className="text-xs text-muted-foreground mt-1 line-clamp-1">{course.content.slice(0, 100)}</p>}
+                            {course.content && <p className="text-xs text-muted-foreground mt-1 line-clamp-1">{course.content.replace(/^#{1,3}\s*/gm, "").slice(0, 100)}</p>}
                           </div>
                           {canManage && (
                             <div className="flex items-center gap-1 shrink-0" onClick={e => e.stopPropagation()}>
