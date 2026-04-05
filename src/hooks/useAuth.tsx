@@ -39,7 +39,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setTimeout(async () => {
           const [profileRes, roleRes] = await Promise.all([
             supabase.from("profiles").select("display_name, approved, avatar_url").eq("user_id", session.user.id).single(),
-            supabase.from("user_roles").select("role").eq("user_id", session.user.id).single(),
+            supabase.from("user_roles").select("role").eq("user_id", session.user.id),
           ]);
           if (profileRes.data) {
             setDisplayName(profileRes.data.display_name);
