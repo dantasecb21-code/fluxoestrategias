@@ -25,6 +25,7 @@ export interface DbStrategy {
   strategy_type: StrategyType;
   observation: string;
   store_access_confirmed: boolean;
+  returned: boolean;
   created_at: string;
   updated_at: string;
   deleted_at: string | null;
@@ -127,6 +128,7 @@ export function useDbStrategies() {
     strategy_type?: string;
     observation?: string;
     store_access_confirmed?: boolean;
+    returned?: boolean;
   }) => {
     // Track status change in history
     if (params.status && user) {

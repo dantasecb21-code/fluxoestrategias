@@ -88,10 +88,11 @@ export default function Dashboard() {
             const statusLabel = getStatusLabel(displayStatus);
             const badgeProps = getStatusBadgeProps(displayStatus);
             const isApproved = displayStatus === "completed";
+            const isReturned = displayStatus === "returned";
             return (
               <Card
                 key={s.id}
-                className={`p-5 hover:border-primary/30 transition-colors cursor-pointer ${isApproved ? "border-success/30 bg-success/5" : ""}`}
+                className={`p-5 hover:border-primary/30 transition-colors cursor-pointer ${isApproved ? "border-success/30 bg-success/5" : ""} ${isReturned ? "border-destructive/40 bg-destructive/5" : ""}`}
                 onClick={() => navigate(`/estrategia/${s.id}`)}
               >
                 <div className="flex items-start justify-between mb-3">

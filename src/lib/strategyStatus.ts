@@ -9,8 +9,10 @@
 export function deriveStrategyDisplayStatus(strategy: {
   status: string;
   categories: any[];
-}): "completed" | "pending_approval" | "in_progress" | "pending" {
+  returned?: boolean;
+}): "completed" | "pending_approval" | "in_progress" | "pending" | "returned" {
   if (strategy.status === "approved") return "completed";
+  if (strategy.returned && strategy.status === "in_progress") return "returned";
 
   const allItems = (strategy.categories || []).flatMap((c: any) => c.items || []);
   const hasInProgress = allItems.some(
@@ -32,6 +34,7 @@ export function getStatusLabel(status: ReturnType<typeof deriveStrategyDisplaySt
     case "pending_approval": return "Aguardando aprovação";
     case "in_progress": return "Em andamento";
     case "pending": return "Pendente";
+    case "returned": return "Devolvida";
   }
 }
 
@@ -45,6 +48,8 @@ export function getStatusBadgeProps(status: ReturnType<typeof deriveStrategyDisp
       return { variant: "secondary" as const, className: "" };
     case "pending":
       return { variant: "outline" as const, className: "border-warning/30 text-warning" };
+    case "returned":
+      return { variant: "destructive" as const, className: "bg-destructive/20 text-destructive border-destructive/30" };
   }
 }
 
@@ -68,6 +73,7 @@ export function calcManagerStats(strategies: any[], managerId: string): ManagerS
       case "completed": completed++; break;
       case "pending_approval": pendingApproval++; break;
       case "in_progress": inProgress++; break;
+      case "returned": inProgress++; break;
       // "pending" falls through to be counted as pending below
     }
   });
