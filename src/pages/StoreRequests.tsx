@@ -299,7 +299,8 @@ export default function StoreRequests() {
                     </Button>
                   </div>
                 )}
-                
+                <div>
+                  <Label>Nome da Loja *</Label>
                   <Input
                     value={storeName}
                     onChange={(e) => setStoreName(e.target.value)}
