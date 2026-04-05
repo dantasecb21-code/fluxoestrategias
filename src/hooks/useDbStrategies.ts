@@ -128,6 +128,7 @@ export function useDbStrategies() {
     strategy_type?: string;
     observation?: string;
     store_access_confirmed?: boolean;
+    returned?: boolean;
   }) => {
     // Track status change in history
     if (params.status && user) {
