@@ -30,6 +30,9 @@ export default function PendingStrategies() {
       return displayStatus !== "completed";
     })
     .sort((a, b) => {
+      const aReturned = deriveStrategyDisplayStatus(a) === "returned" ? 0 : 1;
+      const bReturned = deriveStrategyDisplayStatus(b) === "returned" ? 0 : 1;
+      if (aReturned !== bReturned) return aReturned - bReturned;
       const dateA = a.deadline ? new Date(a.deadline).getTime() : Infinity;
       const dateB = b.deadline ? new Date(b.deadline).getTime() : Infinity;
       return dateA - dateB;
