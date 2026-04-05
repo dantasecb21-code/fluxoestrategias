@@ -65,8 +65,9 @@ export function useDbStrategies() {
   useEffect(() => {
     if (!user) return;
 
+    const channelId = `strategies-realtime-${Date.now()}`;
     const channel = supabase
-      .channel("strategies-realtime")
+      .channel(channelId)
       .on("postgres_changes", {
         event: "*",
         schema: "public",
