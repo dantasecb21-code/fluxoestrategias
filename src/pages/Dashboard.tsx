@@ -28,6 +28,10 @@ export default function Dashboard() {
   const [showTrash, setShowTrash] = useState(false);
   const [deletedStrategies, setDeletedStrategies] = useState<DbStrategy[]>([]);
   const [loadingTrash, setLoadingTrash] = useState(false);
+  const [showCompleted, setShowCompleted] = useState(false);
+
+  const activeStrategies = strategies.filter((s) => deriveStrategyDisplayStatus(s) !== "completed");
+  const completedStrategies = strategies.filter((s) => deriveStrategyDisplayStatus(s) === "completed");
 
   const toggleTrash = async () => {
     if (!showTrash) {
