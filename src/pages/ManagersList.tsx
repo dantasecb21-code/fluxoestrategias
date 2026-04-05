@@ -6,7 +6,8 @@ import { useDbStrategies } from "@/hooks/useDbStrategies";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Users, UserCheck, Trophy, Trash2, AlertTriangle, Eye } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Users, Trash2, AlertTriangle, Store, Pencil, Check, X } from "lucide-react";
 import { toast } from "sonner";
 import { calcManagerStats } from "@/lib/strategyStatus";
 import {
@@ -26,13 +27,14 @@ interface OperationalManager {
   display_name: string;
   whatsapp: string;
   avatar_url: string;
+  store_limit: number;
 }
-
-// calcManagerStats imported from @/lib/strategyStatus
 
 export default function ManagersList() {
   const [managers, setManagers] = useState<OperationalManager[]>([]);
   const [loading, setLoading] = useState(true);
+  const [editingLimit, setEditingLimit] = useState<string | null>(null);
+  const [editValue, setEditValue] = useState("");
   const { strategies } = useDbStrategies();
   const navigate = useNavigate();
 
@@ -46,7 +48,7 @@ export default function ManagersList() {
       const userIds = roles.map((r) => r.user_id);
       const { data: profiles } = await supabase
         .from("profiles")
-        .select("user_id, display_name, whatsapp, avatar_url")
+        .select("user_id, display_name, whatsapp, avatar_url, store_limit")
         .in("user_id", userIds);
 
       if (profiles) {
@@ -55,6 +57,7 @@ export default function ManagersList() {
           display_name: p.display_name,
           whatsapp: p.whatsapp || "",
           avatar_url: p.avatar_url || "",
+          store_limit: (p as any).store_limit ?? 10,
         })));
       }
     } else {
@@ -66,7 +69,6 @@ export default function ManagersList() {
   useEffect(() => { fetchManagers(); }, []);
 
   const handleDeleteManager = async (managerId: string) => {
-    // Remove the operational role (user can no longer access operational panel)
     const { error } = await supabase
       .from("user_roles")
       .delete()
@@ -82,7 +84,36 @@ export default function ManagersList() {
     setManagers((prev) => prev.filter((m) => m.user_id !== managerId));
   };
 
-  // Sort by completion rate descending (ranking)
+  const handleSaveLimit = async (managerId: string) => {
+    const val = parseInt(editValue);
+    if (isNaN(val) || val < 0) {
+      toast.error("Informe um número válido");
+      return;
+    }
+
+    const { error } = await supabase
+      .from("profiles")
+      .update({ store_limit: val } as any)
+      .eq("user_id", managerId);
+
+    if (error) {
+      toast.error("Erro ao salvar limite");
+      return;
+    }
+
+    setManagers((prev) =>
+      prev.map((m) => (m.user_id === managerId ? { ...m, store_limit: val } : m))
+    );
+    setEditingLimit(null);
+    toast.success("Limite atualizado");
+  };
+
+  const getAssignedStoreCount = (managerId: string) => {
+    return strategies.filter(
+      (s) => s.assigned_to === managerId && !s.deleted_at
+    ).length;
+  };
+
   const sortedManagers = [...managers].sort((a, b) => {
     const statsA = calcManagerStats(strategies, a.user_id);
     const statsB = calcManagerStats(strategies, b.user_id);
@@ -115,8 +146,11 @@ export default function ManagersList() {
         </Card>
       ) : (
         <div className="space-y-3">
-          {sortedManagers.map((m, index) => {
+          {sortedManagers.map((m) => {
             const stats = calcManagerStats(strategies, m.user_id);
+            const assignedCount = getAssignedStoreCount(m.user_id);
+            const isOverLimit = assignedCount >= m.store_limit;
+
             return (
               <Card key={m.user_id} className="p-5">
                 <div className="flex items-start justify-between mb-3">
@@ -130,12 +164,12 @@ export default function ManagersList() {
                         </span>
                       )}
                     </div>
-                     <div>
-                       <p className="font-heading font-semibold text-foreground">{shortName(m.display_name) || "Sem nome"}</p>
-                       <p className="text-xs text-muted-foreground">Gestor Operacional</p>
-                       {m.whatsapp && <p className="text-xs text-muted-foreground">📱 {m.whatsapp}</p>}
-                       <button onClick={() => navigate(`/perfil/${m.user_id}`)} className="text-xs text-primary hover:underline mt-0.5">Ver perfil →</button>
-                     </div>
+                    <div>
+                      <p className="font-heading font-semibold text-foreground">{shortName(m.display_name) || "Sem nome"}</p>
+                      <p className="text-xs text-muted-foreground">Gestor Operacional</p>
+                      {m.whatsapp && <p className="text-xs text-muted-foreground">📱 {m.whatsapp}</p>}
+                      <button onClick={() => navigate(`/perfil/${m.user_id}`)} className="text-xs text-primary hover:underline mt-0.5">Ver perfil →</button>
+                    </div>
                   </div>
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
@@ -164,6 +198,56 @@ export default function ManagersList() {
                       </AlertDialogFooter>
                     </AlertDialogContent>
                   </AlertDialog>
+                </div>
+
+                {/* Store counter */}
+                <div className="flex items-center gap-2 mb-3 p-2.5 rounded-lg bg-muted/50 border border-border">
+                  <Store className="h-4 w-4 text-muted-foreground shrink-0" />
+                  <span className="text-sm text-muted-foreground">Lojas:</span>
+                  <span className={`font-heading font-bold text-sm ${isOverLimit ? "text-destructive" : "text-foreground"}`}>
+                    {assignedCount}
+                  </span>
+                  <span className="text-sm text-muted-foreground">/</span>
+                  {editingLimit === m.user_id ? (
+                    <div className="flex items-center gap-1">
+                      <Input
+                        type="number"
+                        min={0}
+                        value={editValue}
+                        onChange={(e) => setEditValue(e.target.value)}
+                        className="h-7 w-16 text-sm px-2"
+                        autoFocus
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") handleSaveLimit(m.user_id);
+                          if (e.key === "Escape") setEditingLimit(null);
+                        }}
+                      />
+                      <Button size="icon" variant="ghost" className="h-6 w-6 text-success" onClick={() => handleSaveLimit(m.user_id)}>
+                        <Check className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button size="icon" variant="ghost" className="h-6 w-6 text-muted-foreground" onClick={() => setEditingLimit(null)}>
+                        <X className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-1">
+                      <span className="font-heading font-bold text-sm text-foreground">{m.store_limit}</span>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-6 w-6 text-muted-foreground hover:text-primary"
+                        onClick={() => {
+                          setEditingLimit(m.user_id);
+                          setEditValue(String(m.store_limit));
+                        }}
+                      >
+                        <Pencil className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  )}
+                  {isOverLimit && (
+                    <span className="text-xs text-destructive ml-auto">Limite atingido</span>
+                  )}
                 </div>
 
                 {/* Stats */}
