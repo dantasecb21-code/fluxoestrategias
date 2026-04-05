@@ -185,7 +185,7 @@ export function AppSidebar() {
               )}
 
               {/* Treinamentos */}
-              {canManage && (
+              {(canManage || isOperational) && (
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild>
                     <NavLink
