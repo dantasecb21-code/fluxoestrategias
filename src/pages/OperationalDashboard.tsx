@@ -7,7 +7,6 @@ import { Badge } from "@/components/ui/badge";
 import { ClipboardList, Eye, Clock } from "lucide-react";
 import OverdueAlert from "@/components/OverdueAlert";
 import { deriveStrategyDisplayStatus, getStatusLabel, getStatusBadgeProps } from "@/lib/strategyStatus";
-import OverdueAlert from "@/components/OverdueAlert";
 
 function calcProgress(categories: any[]) {
   const allItems = categories.flatMap((c: any) => c.items);
