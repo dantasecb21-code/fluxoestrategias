@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { useDbStrategies, StrategyType, STRATEGY_TYPE_LABELS } from "@/hooks/useDbStrategies";
 import { DEFAULT_CATEGORIES, StrategyCategory } from "@/types/strategy";
 import { StrategyMetaForm } from "@/components/StrategyMetaForm";
@@ -78,16 +78,21 @@ function clearDraft() {
 export default function StrategyBuilderPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { strategies, createStrategy, updateStrategy, loading } = useDbStrategies();
   const { role } = useAuth();
 
   const existing = id ? strategies.find((s) => s.id === id) : null;
   const draft = !id ? loadDraft() : null;
 
+  // Pre-fill from query params (store request flow)
+  const prefillStore = searchParams.get("store") || "";
+  const prefillManager = searchParams.get("manager") || "";
+
   const [meta, setMeta] = useState<StrategyMeta>(
     existing
       ? { storeName: existing.store_name, managerName: existing.manager_name, operationalManager: existing.operational_manager, deadline: existing.deadline }
-      : draft?.meta || { storeName: "", managerName: "", operationalManager: "", deadline: "" }
+      : draft?.meta || { storeName: prefillStore, managerName: prefillManager, operationalManager: "", deadline: "" }
   );
   const [categories, setCategories] = useState<StrategyCategory[]>(
     existing?.categories?.length ? existing.categories : draft?.categories?.length ? draft.categories : initCategories()
