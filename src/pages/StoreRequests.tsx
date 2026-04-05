@@ -309,6 +309,27 @@ export default function StoreRequests() {
                     </SelectContent>
                   </Select>
                 </div>
+                {editingId && (
+                  <div>
+                    <Label>Status</Label>
+                    <Select value={editStatus} onValueChange={setEditStatus}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="pending">
+                          <span className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-warning" /> Pendente</span>
+                        </SelectItem>
+                        <SelectItem value="in_progress">
+                          <span className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-primary" /> Em andamento</span>
+                        </SelectItem>
+                        <SelectItem value="completed">
+                          <span className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-emerald-500" /> Concluída</span>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
                 <div>
                   <Label>Observação</Label>
                   <Textarea
