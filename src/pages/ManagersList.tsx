@@ -35,6 +35,7 @@ export default function ManagersList() {
   const [managers, setManagers] = useState<OperationalManager[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingLimit, setEditingLimit] = useState<string | null>(null);
+  const [editingCount, setEditingCount] = useState<string | null>(null);
   const [editValue, setEditValue] = useState("");
   const { strategies } = useDbStrategies();
   const navigate = useNavigate();
