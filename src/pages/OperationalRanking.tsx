@@ -157,7 +157,7 @@ export default function OperationalRanking() {
                     <img src={manager.avatar_url} alt="" className="h-full w-full object-cover" />
                   ) : (
                     <span className="text-sm font-bold text-muted-foreground">
-                      {manager.display_name.charAt(0).toUpperCase()}
+                      {shortName(manager.display_name).charAt(0).toUpperCase()}
                     </span>
                   )}
                 </div>
