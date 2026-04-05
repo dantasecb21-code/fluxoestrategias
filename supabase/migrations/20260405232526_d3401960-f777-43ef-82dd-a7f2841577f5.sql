@@ -1,0 +1,1 @@
+ALTER TABLE public.profiles ADD COLUMN store_limit integer NOT NULL DEFAULT 10;
