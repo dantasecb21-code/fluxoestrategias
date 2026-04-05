@@ -87,21 +87,26 @@ export function useDbStrategies() {
     assigned_to?: string | null;
     strategy_type?: string;
     observation?: string;
+    store_request_id?: string;
   }): Promise<DbStrategy | null> => {
     if (!user) return null;
+    const insertData: any = {
+      user_id: user.id,
+      store_name: params.store_name,
+      manager_name: params.manager_name,
+      operational_manager: params.operational_manager,
+      deadline: params.deadline,
+      categories: params.categories as unknown as Json,
+      assigned_to: params.assigned_to || null,
+      strategy_type: params.strategy_type || "initial",
+      observation: params.observation || "",
+    };
+    if (params.store_request_id) {
+      insertData.store_request_id = params.store_request_id;
+    }
     const { data, error } = await supabase
       .from("strategies")
-      .insert({
-        user_id: user.id,
-        store_name: params.store_name,
-        manager_name: params.manager_name,
-        operational_manager: params.operational_manager,
-        deadline: params.deadline,
-        categories: params.categories as unknown as Json,
-        assigned_to: params.assigned_to || null,
-        strategy_type: params.strategy_type || "initial",
-        observation: params.observation || "",
-      })
+      .insert(insertData)
       .select()
       .single();
 

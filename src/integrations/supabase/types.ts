@@ -142,6 +142,7 @@ export type Database = {
           status: string
           store_access_confirmed: boolean
           store_name: string
+          store_request_id: string | null
           strategy_type: string
           updated_at: string
           user_id: string
@@ -159,6 +160,7 @@ export type Database = {
           status?: string
           store_access_confirmed?: boolean
           store_name?: string
+          store_request_id?: string | null
           strategy_type?: string
           updated_at?: string
           user_id: string
@@ -176,11 +178,20 @@ export type Database = {
           status?: string
           store_access_confirmed?: boolean
           store_name?: string
+          store_request_id?: string | null
           strategy_type?: string
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "strategies_store_request_id_fkey"
+            columns: ["store_request_id"]
+            isOneToOne: false
+            referencedRelation: "store_requests"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       strategy_history: {
         Row: {
