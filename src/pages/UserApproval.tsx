@@ -135,7 +135,7 @@ export default function UserApproval() {
             {isPending ? <Clock className="h-5 w-5 text-warning" /> : <UserCheck className="h-5 w-5 text-success" />}
           </div>
           <div>
-            <p className="font-medium text-foreground">{u.display_name || "Sem nome"}</p>
+            <p className="font-medium text-foreground">{shortName(u.display_name) || "Sem nome"}</p>
             <div className="flex items-center gap-2 flex-wrap">
               {u.whatsapp && <span className="text-xs text-muted-foreground">📱 {u.whatsapp}</span>}
             </div>
