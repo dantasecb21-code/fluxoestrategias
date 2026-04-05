@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { ListChecks, Plus, Clock, CheckCircle2, User, Pencil, Trash2, Sparkles, Loader2, AlertCircle } from "lucide-react";
+import { ListChecks, Plus, Clock, CheckCircle2, User, Pencil, Trash2, Sparkles, Loader2, AlertCircle, Image, X } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -87,6 +87,7 @@ export default function PendingActivities() {
   const [submitting, setSubmitting] = useState(false);
   const [freeText, setFreeText] = useState("");
   const [parsing, setParsing] = useState(false);
+  const [pastedImage, setPastedImage] = useState<string | null>(null);
 
   const fetchActivities = async () => {
     const { data } = await supabase
@@ -127,6 +128,7 @@ export default function PendingActivities() {
     setEditStatus("pending");
     setEditingId(null);
     setFreeText("");
+    setPastedImage(null);
   };
 
   const openEdit = (act: PendingActivity) => {
@@ -151,16 +153,46 @@ export default function PendingActivities() {
     }
   };
 
+  const handlePaste = (e: React.ClipboardEvent) => {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].type.startsWith("image/")) {
+        e.preventDefault();
+        const file = items[i].getAsFile();
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          setPastedImage(ev.target?.result as string);
+        };
+        reader.readAsDataURL(file);
+        return;
+      }
+    }
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      setPastedImage(ev.target?.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
   const handleParseText = async () => {
-    if (!freeText.trim()) {
-      toast.error("Cole ou digite o texto com as informações.");
+    if (!freeText.trim() && !pastedImage) {
+      toast.error("Cole texto ou uma imagem com as informações.");
       return;
     }
     setParsing(true);
     try {
-      const { data, error } = await supabase.functions.invoke("parse-activity", {
-        body: { text: freeText.trim() },
-      });
+      const body: any = {};
+      if (freeText.trim()) body.text = freeText.trim();
+      if (pastedImage) body.image = pastedImage;
+
+      const { data, error } = await supabase.functions.invoke("parse-activity", { body });
       if (error) throw error;
       if (data.client_name) setClientName(data.client_name);
       if (data.store_name) setStoreName(data.store_name);
@@ -169,7 +201,7 @@ export default function PendingActivities() {
       if (data.priority) setPriority(data.priority);
       toast.success("Dados extraídos! Revise e complete os campos.");
     } catch {
-      toast.error("Erro ao processar texto. Preencha manualmente.");
+      toast.error("Erro ao processar. Preencha manualmente.");
     }
     setParsing(false);
   };
@@ -288,24 +320,46 @@ export default function PendingActivities() {
                       <Textarea
                         value={freeText}
                         onChange={(e) => setFreeText(e.target.value)}
-                        placeholder="Cole a mensagem do cliente do grupo e a IA extrai os dados automaticamente..."
+                        onPaste={handlePaste}
+                        placeholder="Cole texto ou imagem (print) do cliente aqui..."
                         rows={2}
                         className="resize-none text-sm"
                       />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        className="w-full h-8 text-xs border-primary/20 text-primary hover:bg-primary/10"
-                        onClick={handleParseText}
-                        disabled={parsing}
-                      >
-                        {parsing ? (
-                          <><Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> Extraindo...</>
-                        ) : (
-                          <><Sparkles className="h-3.5 w-3.5 mr-1.5" /> Extrair dados com IA</>
-                        )}
-                      </Button>
+                      {pastedImage && (
+                        <div className="relative inline-block">
+                          <img src={pastedImage} alt="Print colado" className="max-h-32 rounded border border-border" />
+                          <button
+                            type="button"
+                            onClick={() => setPastedImage(null)}
+                            className="absolute -top-2 -right-2 h-5 w-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </div>
+                      )}
+                      <div className="flex gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="flex-1 h-8 text-xs border-primary/20 text-primary hover:bg-primary/10"
+                          onClick={handleParseText}
+                          disabled={parsing}
+                        >
+                          {parsing ? (
+                            <><Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> Extraindo...</>
+                          ) : (
+                            <><Sparkles className="h-3.5 w-3.5 mr-1.5" /> Extrair dados com IA</>
+                          )}
+                        </Button>
+                        <label className="cursor-pointer">
+                          <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
+                          <div className="h-8 px-3 rounded-md border border-primary/20 text-primary hover:bg-primary/10 flex items-center gap-1.5 text-xs">
+                            <Image className="h-3.5 w-3.5" />
+                            Imagem
+                          </div>
+                        </label>
+                      </div>
                     </div>
                   </div>
                 )}
