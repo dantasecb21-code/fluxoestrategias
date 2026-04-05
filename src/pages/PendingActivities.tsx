@@ -10,7 +10,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { ListChecks, Plus, Clock, CheckCircle2, User, Pencil, Trash2, Sparkles, Loader2, AlertCircle, Image, X } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { ListChecks, Plus, Clock, CheckCircle2, User, Pencil, Trash2, Sparkles, Loader2, AlertCircle, AlertTriangle, Image, X, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -450,79 +451,116 @@ export default function PendingActivities() {
         )}
       </div>
 
-      {activities.length === 0 ? (
-        <Card className="p-8 text-center text-muted-foreground">
-          <ListChecks className="h-10 w-10 mx-auto mb-3 opacity-40" />
-          <p>Nenhuma atividade pendente encontrada.</p>
-        </Card>
-      ) : (
-        <div className="grid gap-4">
-          {activities.map((act) => (
-            <Card key={act.id} className="p-4 space-y-3">
-              <div className="flex items-start justify-between">
-                <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-foreground">{act.description}</p>
-                  <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground mt-1">
-                    {act.client_name && (
-                      <span className="flex items-center gap-1">
-                        <User className="h-3.5 w-3.5" /> {act.client_name}
-                      </span>
-                    )}
-                    {act.store_name && <span>🏪 {act.store_name}</span>}
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 shrink-0">
-                  <Badge className={`${PRIORITY_COLORS[act.priority] || ""} text-xs`}>
-                    {PRIORITY_LABELS[act.priority] || act.priority}
-                  </Badge>
-                  <Badge className={`${STATUS_COLORS[act.status] || ""} flex items-center gap-1.5`}>
-                    <span className={`h-2 w-2 rounded-full ${STATUS_DOT_COLORS[act.status] || ""}`} />
-                    {STATUS_LABELS[act.status] || act.status}
-                  </Badge>
+      {(() => {
+        const pendingActs = activities.filter((a) => a.status !== "completed");
+        const completedActs = activities.filter((a) => a.status === "completed");
+
+        const renderCard = (act: any) => (
+          <Card key={act.id} className="p-4 space-y-3">
+            <div className="flex items-start justify-between">
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-foreground">{act.description}</p>
+                <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground mt-1">
+                  {act.client_name && (
+                    <span className="flex items-center gap-1">
+                      <User className="h-3.5 w-3.5" /> {act.client_name}
+                    </span>
+                  )}
+                  {act.store_name && <span>🏪 {act.store_name}</span>}
                 </div>
               </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <Badge className={`${PRIORITY_COLORS[act.priority] || ""} text-xs`}>
+                  {PRIORITY_LABELS[act.priority] || act.priority}
+                </Badge>
+                <Badge className={`${STATUS_COLORS[act.status] || ""} flex items-center gap-1.5`}>
+                  <span className={`h-2 w-2 rounded-full ${STATUS_DOT_COLORS[act.status] || ""}`} />
+                  {STATUS_LABELS[act.status] || act.status}
+                </Badge>
+              </div>
+            </div>
 
-              <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
-                {act.deadline && (
-                  <span className="flex items-center gap-1">
-                    <Clock className="h-3.5 w-3.5" /> Prazo: {act.deadline}
-                  </span>
-                )}
-                {canManage && (
-                  <span>Gestor: {getAssigneeName(act.assigned_to)}</span>
-                )}
-                <span>
-                  Criado em {format(new Date(act.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+            <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
+              {act.deadline && (
+                <span className="flex items-center gap-1">
+                  <Clock className="h-3.5 w-3.5" /> Prazo: {act.deadline}
                 </span>
-              </div>
-
-              {/* Operational: mark as completed */}
-              {isOperational && act.status !== "completed" && (
-                <Button
-                  size="sm"
-                  onClick={() => handleOperationalComplete(act)}
-                  className="bg-emerald-600 hover:bg-emerald-700"
-                >
-                  <CheckCircle2 className="h-3.5 w-3.5 mr-1" />
-                  Marcar como Concluída
-                </Button>
               )}
-
-              {/* Admin/Strategic actions */}
               {canManage && (
-                <div className="flex items-center gap-2 pt-1">
-                  <Button size="sm" variant="outline" onClick={() => openEdit(act)}>
-                    <Pencil className="h-3.5 w-3.5 mr-1" /> Editar
-                  </Button>
-                  <Button size="sm" variant="destructive" onClick={() => handleDelete(act.id)}>
-                    <Trash2 className="h-3.5 w-3.5 mr-1" /> Excluir
-                  </Button>
-                </div>
+                <span>Gestor: {getAssigneeName(act.assigned_to)}</span>
               )}
-            </Card>
-          ))}
-        </div>
-      )}
+              <span>
+                Criado em {format(new Date(act.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+              </span>
+            </div>
+
+            {isOperational && act.status !== "completed" && (
+              <Button
+                size="sm"
+                onClick={() => handleOperationalComplete(act)}
+                className="bg-emerald-600 hover:bg-emerald-700"
+              >
+                <CheckCircle2 className="h-3.5 w-3.5 mr-1" />
+                Marcar como Concluída
+              </Button>
+            )}
+
+            {canManage && (
+              <div className="flex items-center gap-2 pt-1">
+                <Button size="sm" variant="outline" onClick={() => openEdit(act)}>
+                  <Pencil className="h-3.5 w-3.5 mr-1" /> Editar
+                </Button>
+                <Button size="sm" variant="destructive" onClick={() => handleDelete(act.id)}>
+                  <Trash2 className="h-3.5 w-3.5 mr-1" /> Excluir
+                </Button>
+              </div>
+            )}
+          </Card>
+        );
+
+        return (
+          <>
+            {/* Ativas */}
+            {pendingActs.length === 0 && completedActs.length === 0 ? (
+              <Card className="p-8 text-center text-muted-foreground">
+                <ListChecks className="h-10 w-10 mx-auto mb-3 opacity-40" />
+                <p>Nenhuma atividade encontrada.</p>
+              </Card>
+            ) : (
+              <>
+                {pendingActs.length > 0 && (
+                  <div className="space-y-3">
+                    <h2 className="font-heading font-semibold text-foreground flex items-center gap-2">
+                      <AlertTriangle className="h-4 w-4 text-warning" />
+                      Ativas ({pendingActs.length})
+                    </h2>
+                    <div className="grid gap-3">
+                      {pendingActs.map(renderCard)}
+                    </div>
+                  </div>
+                )}
+
+                {completedActs.length > 0 && (
+                  <Collapsible>
+                    <CollapsibleTrigger className="w-full flex items-center justify-between py-2 px-1 hover:opacity-80 transition-opacity">
+                      <h2 className="font-heading font-semibold text-foreground flex items-center gap-2">
+                        <CheckCircle2 className="h-4 w-4 text-success" />
+                        Concluídas ({completedActs.length})
+                      </h2>
+                      <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <div className="grid gap-3 mt-2 opacity-75">
+                        {completedActs.map(renderCard)}
+                      </div>
+                    </CollapsibleContent>
+                  </Collapsible>
+                )}
+              </>
+            )}
+          </>
+        );
+      })()}
     </div>
   );
 }
