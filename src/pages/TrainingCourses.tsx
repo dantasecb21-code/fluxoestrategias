@@ -230,8 +230,19 @@ export default function TrainingCourses() {
             </div>
           </div>
           {viewingCourse.content && (
-            <div className="prose prose-sm dark:prose-invert max-w-none">
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+            <div className="prose prose-sm dark:prose-invert max-w-none training-content">
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
+                components={{
+                  h1: ({ children }) => <h3 className="text-base font-semibold text-foreground mt-4 mb-2">{children}</h3>,
+                  h2: ({ children }) => <h3 className="text-sm font-semibold text-foreground mt-3 mb-1.5">{children}</h3>,
+                  h3: ({ children }) => <p className="text-sm font-medium text-foreground mt-2 mb-1">{children}</p>,
+                  p: ({ children }) => <p className="text-sm text-muted-foreground leading-relaxed mb-2">{children}</p>,
+                  strong: ({ children }) => <strong className="text-foreground font-medium">{children}</strong>,
+                  ul: ({ children }) => <ul className="space-y-1 my-2 ml-1">{children}</ul>,
+                  li: ({ children }) => <li className="text-sm text-muted-foreground flex gap-2 items-start"><span className="text-primary mt-1.5 shrink-0 h-1.5 w-1.5 rounded-full bg-primary inline-block" /><span>{children}</span></li>,
+                }}
+              >
                 {viewingCourse.content}
               </ReactMarkdown>
             </div>
