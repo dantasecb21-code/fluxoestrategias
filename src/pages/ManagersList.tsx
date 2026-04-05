@@ -123,7 +123,7 @@ export default function ManagersList() {
                   <div className="flex items-center gap-3">
                     <div className="h-10 w-10 rounded-full border-2 border-border bg-muted flex items-center justify-center overflow-hidden shrink-0">
                       {m.avatar_url ? (
-                        <img src={m.avatar_url} alt={m.display_name} className="h-full w-full object-cover" />
+                        <img src={m.avatar_url} alt={shortName(m.display_name)} className="h-full w-full object-cover" />
                       ) : (
                         <span className="text-sm font-bold text-muted-foreground">
                           {m.display_name?.charAt(0)?.toUpperCase() || "?"}
