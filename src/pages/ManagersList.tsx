@@ -50,7 +50,7 @@ export default function ManagersList() {
       const userIds = roles.map((r) => r.user_id);
       const { data: profiles } = await supabase
         .from("profiles")
-        .select("user_id, display_name, whatsapp, avatar_url, store_limit")
+        .select("user_id, display_name, whatsapp, avatar_url, store_limit, store_count")
         .in("user_id", userIds);
 
       if (profiles) {
