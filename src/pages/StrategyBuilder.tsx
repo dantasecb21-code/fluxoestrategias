@@ -239,6 +239,10 @@ export default function StrategyBuilderPage() {
       if (created) {
         setSavedId(created.id);
         clearDraft();
+        // Auto-complete store request if coming from store request flow
+        if (storeRequestId) {
+          await supabase.from("store_requests").update({ status: "completed" } as any).eq("id", storeRequestId);
+        }
         toast.success("Estratégia criada!");
         navigate(`/estrategia/${created.id}`, { replace: true });
       }
