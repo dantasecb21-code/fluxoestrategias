@@ -151,6 +151,21 @@ export function AppSidebar() {
                 </SidebarMenuItem>
               )}
 
+              {/* Atividades Pendentes */}
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <NavLink
+                    to="/atividades"
+                    onClick={() => handleNav("/atividades")}
+                    className="hover:bg-sidebar-accent/50"
+                    activeClassName="bg-sidebar-accent text-primary font-medium"
+                  >
+                    <ListChecks className="mr-2 h-4 w-4" />
+                    {!collapsed && <span>Atividades</span>}
+                  </NavLink>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+
               {/* Gestores */}
               {canManage && (
                 <SidebarMenuItem>
