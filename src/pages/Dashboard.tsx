@@ -107,7 +107,7 @@ export default function Dashboard() {
                     <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground mt-1">
                       {s.operational_manager && (
                         <span className="flex items-center gap-1">
-                          <UserCheck className="h-3 w-3" /> {s.operational_manager}
+                          <UserCheck className="h-3 w-3" /> {shortName(s.operational_manager)}
                         </span>
                       )}
                       {s.deadline && (
