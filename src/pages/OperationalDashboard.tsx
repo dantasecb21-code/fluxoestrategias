@@ -53,13 +53,21 @@ export default function OperationalDashboard() {
             return (
               <Card
                 key={s.id}
-                className="p-5 hover:border-primary/30 transition-colors cursor-pointer"
+                className={`p-5 hover:border-primary/30 transition-colors cursor-pointer ${deriveStrategyDisplayStatus(s) === "returned" ? "border-destructive/40 bg-destructive/5" : ""}`}
                 onClick={() => navigate(`/operacional/${s.id}`)}
               >
                 <div className="flex items-start justify-between mb-3">
                   <div>
-                    <h3 className="font-heading font-semibold text-foreground text-lg">
+                    <h3 className="font-heading font-semibold text-foreground text-lg flex items-center gap-2">
                       {s.store_name || "Sem nome"}
+                      {(() => {
+                        const ds = deriveStrategyDisplayStatus(s);
+                        if (ds === "returned") {
+                          const bp = getStatusBadgeProps(ds);
+                          return <Badge variant={bp.variant} className={`text-[10px] py-0 px-1.5 h-4 leading-none shrink-0 ${bp.className}`}>{getStatusLabel(ds)}</Badge>;
+                        }
+                        return null;
+                      })()}
                     </h3>
                     <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1">
                       <span className="flex items-center gap-1">
