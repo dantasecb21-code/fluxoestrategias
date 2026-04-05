@@ -10,6 +10,7 @@ interface AuthContextType {
   displayName: string;
   avatarUrl: string;
   role: AppRole | null;
+  roles: AppRole[];
   approved: boolean;
   signOut: () => Promise<void>;
 }
