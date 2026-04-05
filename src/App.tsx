@@ -20,6 +20,7 @@ import TrainingCourses from "./pages/TrainingCourses";
 import StoreRequests from "./pages/StoreRequests";
 import ResetPassword from "./pages/ResetPassword";
 import OperationalRanking from "./pages/OperationalRanking";
+import PendingActivities from "./pages/PendingActivities";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -88,6 +89,7 @@ const App = () => (
             <Route path="/assistente" element={<ProtectedRoute><AssistantChat /></ProtectedRoute>} />
             <Route path="/treinamentos" element={<ProtectedRoute allowedRoles={["admin", "strategic"]}><TrainingCourses /></ProtectedRoute>} />
             <Route path="/lojas-novas" element={<ProtectedRoute allowedRoles={["admin", "strategic"]}><StoreRequests /></ProtectedRoute>} />
+            <Route path="/atividades" element={<ProtectedRoute><PendingActivities /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>

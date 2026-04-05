@@ -41,6 +41,48 @@ export type Database = {
         }
         Relationships: []
       }
+      pending_activities: {
+        Row: {
+          assigned_to: string | null
+          client_name: string
+          created_at: string
+          created_by: string
+          deadline: string
+          description: string
+          id: string
+          priority: string
+          status: string
+          store_name: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          client_name?: string
+          created_at?: string
+          created_by: string
+          deadline?: string
+          description?: string
+          id?: string
+          priority?: string
+          status?: string
+          store_name?: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          client_name?: string
+          created_at?: string
+          created_by?: string
+          deadline?: string
+          description?: string
+          id?: string
+          priority?: string
+          status?: string
+          store_name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           approved: boolean
