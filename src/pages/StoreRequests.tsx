@@ -313,7 +313,7 @@ export default function StoreRequests() {
                   onClick={handleSubmit}
                   disabled={submitting}
                 >
-                  {submitting ? "Enviando..." : "Enviar Solicitação"}
+                  {submitting ? "Salvando..." : editingId ? "Salvar Alterações" : "Enviar Solicitação"}
                 </Button>
               </div>
             </DialogContent>
