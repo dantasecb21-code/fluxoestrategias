@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import { shortName } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import {
   Sidebar,
