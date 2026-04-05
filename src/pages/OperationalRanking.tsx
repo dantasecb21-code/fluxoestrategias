@@ -57,8 +57,8 @@ export default function OperationalRanking() {
         const uid = s.assigned_to;
         if (!uid || !statsMap[uid]) return;
         statsMap[uid].total += 1;
-        if (s.status === "completed") statsMap[uid].completed += 1;
-        else if (s.status === "waiting") statsMap[uid].waiting += 1;
+        if (s.status === "approved") statsMap[uid].completed += 1;
+        else if (s.status === "pending_approval") statsMap[uid].waiting += 1;
         else if (s.status === "in_progress") statsMap[uid].inProgress += 1;
         else statsMap[uid].pending += 1;
       });
