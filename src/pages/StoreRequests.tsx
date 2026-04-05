@@ -224,7 +224,7 @@ export default function StoreRequests() {
   const getAssigneeName = (userId: string | null) => {
     if (!userId) return "—";
     const found = strategicUsers.find((u) => u.user_id === userId);
-    return found?.display_name || "Estrategista";
+    return found?.display_name ? shortName(found.display_name) : "Estrategista";
   };
 
   if (loading) {
