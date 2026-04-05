@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { shortName } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Card } from "@/components/ui/card";
@@ -270,7 +271,7 @@ export default function PendingActivities() {
   const getAssigneeName = (userId: string | null) => {
     if (!userId) return "—";
     const found = operationalUsers.find((u) => u.user_id === userId);
-    return found?.display_name || "Gestor";
+    return found?.display_name ? shortName(found.display_name) : "Gestor";
   };
 
   if (loading) {
@@ -415,7 +416,7 @@ export default function PendingActivities() {
                     <SelectContent>
                       {operationalUsers.map((u) => (
                         <SelectItem key={u.user_id} value={u.user_id}>
-                          {u.display_name || u.user_id}
+                          {shortName(u.display_name) || u.user_id}
                         </SelectItem>
                       ))}
                     </SelectContent>

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { shortName } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
@@ -134,7 +135,7 @@ export default function UserApproval() {
             {isPending ? <Clock className="h-5 w-5 text-warning" /> : <UserCheck className="h-5 w-5 text-success" />}
           </div>
           <div>
-            <p className="font-medium text-foreground">{u.display_name || "Sem nome"}</p>
+            <p className="font-medium text-foreground">{shortName(u.display_name) || "Sem nome"}</p>
             <div className="flex items-center gap-2 flex-wrap">
               {u.whatsapp && <span className="text-xs text-muted-foreground">📱 {u.whatsapp}</span>}
             </div>
@@ -183,7 +184,7 @@ export default function UserApproval() {
                       <AlertTriangle className="h-5 w-5 text-destructive" /> Recusar usuário
                     </AlertDialogTitle>
                     <AlertDialogDescription>
-                      Tem certeza que deseja recusar <strong>{u.display_name}</strong>? O cadastro será removido.
+                      Tem certeza que deseja recusar <strong>{shortName(u.display_name)}</strong>? O cadastro será removido.
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>

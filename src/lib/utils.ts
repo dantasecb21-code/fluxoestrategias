@@ -12,3 +12,11 @@ export function formatDateBR(dateStr: string): string {
   if (match) return `${match[3]}-${match[2]}-${match[1]}`;
   return dateStr;
 }
+
+/** Returns only the first name + last name from a full name string */
+export function shortName(fullName: string | null | undefined): string {
+  if (!fullName) return "";
+  const parts = fullName.trim().split(/\s+/);
+  if (parts.length <= 2) return fullName.trim();
+  return `${parts[0]} ${parts[parts.length - 1]}`;
+}

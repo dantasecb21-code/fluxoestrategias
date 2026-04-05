@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { shortName } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useDbStrategies } from "@/hooks/useDbStrategies";
 import { Card } from "@/components/ui/card";
@@ -122,7 +123,7 @@ export default function ManagersList() {
                   <div className="flex items-center gap-3">
                     <div className="h-10 w-10 rounded-full border-2 border-border bg-muted flex items-center justify-center overflow-hidden shrink-0">
                       {m.avatar_url ? (
-                        <img src={m.avatar_url} alt={m.display_name} className="h-full w-full object-cover" />
+                        <img src={m.avatar_url} alt={shortName(m.display_name)} className="h-full w-full object-cover" />
                       ) : (
                         <span className="text-sm font-bold text-muted-foreground">
                           {m.display_name?.charAt(0)?.toUpperCase() || "?"}
@@ -130,7 +131,7 @@ export default function ManagersList() {
                       )}
                     </div>
                      <div>
-                       <p className="font-heading font-semibold text-foreground">{m.display_name || "Sem nome"}</p>
+                       <p className="font-heading font-semibold text-foreground">{shortName(m.display_name) || "Sem nome"}</p>
                        <p className="text-xs text-muted-foreground">Gestor Operacional</p>
                        {m.whatsapp && <p className="text-xs text-muted-foreground">📱 {m.whatsapp}</p>}
                        <button onClick={() => navigate(`/perfil/${m.user_id}`)} className="text-xs text-primary hover:underline mt-0.5">Ver perfil →</button>
@@ -148,7 +149,7 @@ export default function ManagersList() {
                           <AlertTriangle className="h-5 w-5 text-destructive" /> Remover acesso
                         </AlertDialogTitle>
                         <AlertDialogDescription>
-                          Tem certeza que deseja remover o acesso operacional de <strong>{m.display_name}</strong>? 
+                          Tem certeza que deseja remover o acesso operacional de <strong>{shortName(m.display_name)}</strong>? 
                           O gestor não poderá mais acessar o painel operacional.
                         </AlertDialogDescription>
                       </AlertDialogHeader>

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Trophy, Medal, Crown, Flame, TrendingUp } from "lucide-react";
+import { shortName } from "@/lib/utils";
 
 interface RankedManager {
   user_id: string;
@@ -156,7 +157,7 @@ export default function OperationalRanking() {
                     <img src={manager.avatar_url} alt="" className="h-full w-full object-cover" />
                   ) : (
                     <span className="text-sm font-bold text-muted-foreground">
-                      {manager.display_name.charAt(0).toUpperCase()}
+                      {shortName(manager.display_name).charAt(0).toUpperCase()}
                     </span>
                   )}
                 </div>
@@ -166,7 +167,7 @@ export default function OperationalRanking() {
                   <p className={`font-heading font-semibold truncate ${
                     index === 0 ? "text-yellow-500 text-lg" : "text-foreground"
                   }`}>
-                    {manager.display_name}
+                    {shortName(manager.display_name)}
                   </p>
                   <p className="text-xs text-muted-foreground">Gestor Operacional</p>
                 </div>

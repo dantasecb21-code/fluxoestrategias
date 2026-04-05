@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import { shortName } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import {
   Sidebar,
@@ -248,7 +249,7 @@ export function AppSidebar() {
               </div>
               {!collapsed && (
                 <div className="min-w-0">
-                  {displayName && <p className="text-xs text-foreground font-medium truncate">{displayName}</p>}
+                  {displayName && <p className="text-xs text-foreground font-medium truncate">{shortName(displayName)}</p>}
                   <p className="text-[10px] text-muted-foreground">{roleLabel}</p>
                   <p className="text-[10px] text-primary">Ver perfil →</p>
                 </div>

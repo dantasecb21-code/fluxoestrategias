@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { shortName } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -224,7 +225,7 @@ export default function StoreRequests() {
   const getAssigneeName = (userId: string | null) => {
     if (!userId) return "—";
     const found = strategicUsers.find((u) => u.user_id === userId);
-    return found?.display_name || "Estrategista";
+    return found?.display_name ? shortName(found.display_name) : "Estrategista";
   };
 
   if (loading) {
@@ -350,7 +351,7 @@ export default function StoreRequests() {
                     <SelectContent>
                       {strategicUsers.map((u) => (
                         <SelectItem key={u.user_id} value={u.user_id}>
-                          {u.display_name || u.user_id}
+                          {shortName(u.display_name) || u.user_id}
                         </SelectItem>
                       ))}
                     </SelectContent>
