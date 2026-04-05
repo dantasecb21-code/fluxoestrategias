@@ -235,6 +235,7 @@ export default function StrategyBuilderPage() {
         assigned_to: assignedTo || null,
         strategy_type: strategyType,
         observation,
+        store_request_id: storeRequestId || undefined,
       });
       if (created) {
         setSavedId(created.id);
