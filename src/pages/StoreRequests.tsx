@@ -368,7 +368,8 @@ export default function StoreRequests() {
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Badge className={STATUS_COLORS[req.status] || ""}>
+                    <Badge className={`${STATUS_COLORS[req.status] || ""} flex items-center gap-1.5`}>
+                      <span className={`h-2 w-2 rounded-full ${STATUS_DOT_COLORS[req.status] || ""}`} />
                       {STATUS_LABELS[req.status] || req.status}
                     </Badge>
                     {isStrategic && req.status !== "completed" && (
