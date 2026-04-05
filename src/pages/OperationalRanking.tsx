@@ -43,25 +43,24 @@ export default function OperationalRanking() {
       // Get strategies assigned to operational managers
       const { data: strategies } = await supabase
         .from("strategies")
-        .select("assigned_to, categories")
+        .select("assigned_to, status")
         .in("assigned_to", userIds)
         .is("deleted_at", null);
 
-      // Calculate completion per manager
-      const statsMap: Record<string, { totalItems: number; completedItems: number }> = {};
+      // Calculate strategy counts per manager
+      const statsMap: Record<string, { completed: number; waiting: number; inProgress: number; pending: number; total: number }> = {};
       userIds.forEach((uid) => {
-        statsMap[uid] = { totalItems: 0, completedItems: 0 };
+        statsMap[uid] = { completed: 0, waiting: 0, inProgress: 0, pending: 0, total: 0 };
       });
 
       (strategies || []).forEach((s: any) => {
         const uid = s.assigned_to;
         if (!uid || !statsMap[uid]) return;
-        const cats = Array.isArray(s.categories) ? s.categories : [];
-        cats.forEach((c: any) => {
-          const items = Array.isArray(c.items) ? c.items : [];
-          statsMap[uid].totalItems += items.length;
-          statsMap[uid].completedItems += items.filter((i: any) => i.status === "completed").length;
-        });
+        statsMap[uid].total += 1;
+        if (s.status === "completed") statsMap[uid].completed += 1;
+        else if (s.status === "waiting") statsMap[uid].waiting += 1;
+        else if (s.status === "in_progress") statsMap[uid].inProgress += 1;
+        else statsMap[uid].pending += 1;
       });
 
       const ranked: RankedManager[] = (profiles || [])
@@ -69,13 +68,13 @@ export default function OperationalRanking() {
           user_id: p.user_id,
           display_name: p.display_name || "Sem nome",
           avatar_url: p.avatar_url || "",
-          totalItems: statsMap[p.user_id]?.totalItems || 0,
-          completedItems: statsMap[p.user_id]?.completedItems || 0,
-          percent: statsMap[p.user_id]?.totalItems > 0
-            ? Math.round((statsMap[p.user_id].completedItems / statsMap[p.user_id].totalItems) * 100)
-            : 0,
+          ...statsMap[p.user_id] || { completed: 0, waiting: 0, inProgress: 0, pending: 0, total: 0 },
         }))
-        .sort((a, b) => b.completedItems - a.completedItems || b.percent - a.percent);
+        .sort((a, b) => 
+          b.completed - a.completed || 
+          b.waiting - a.waiting || 
+          b.inProgress - a.inProgress
+        );
 
       setRanking(ranked);
       setLoading(false);
