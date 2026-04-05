@@ -320,24 +320,46 @@ export default function PendingActivities() {
                       <Textarea
                         value={freeText}
                         onChange={(e) => setFreeText(e.target.value)}
-                        placeholder="Cole a mensagem do cliente do grupo e a IA extrai os dados automaticamente..."
+                        onPaste={handlePaste}
+                        placeholder="Cole texto ou imagem (print) do cliente aqui..."
                         rows={2}
                         className="resize-none text-sm"
                       />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        className="w-full h-8 text-xs border-primary/20 text-primary hover:bg-primary/10"
-                        onClick={handleParseText}
-                        disabled={parsing}
-                      >
-                        {parsing ? (
-                          <><Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> Extraindo...</>
-                        ) : (
-                          <><Sparkles className="h-3.5 w-3.5 mr-1.5" /> Extrair dados com IA</>
-                        )}
-                      </Button>
+                      {pastedImage && (
+                        <div className="relative inline-block">
+                          <img src={pastedImage} alt="Print colado" className="max-h-32 rounded border border-border" />
+                          <button
+                            type="button"
+                            onClick={() => setPastedImage(null)}
+                            className="absolute -top-2 -right-2 h-5 w-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </div>
+                      )}
+                      <div className="flex gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="flex-1 h-8 text-xs border-primary/20 text-primary hover:bg-primary/10"
+                          onClick={handleParseText}
+                          disabled={parsing}
+                        >
+                          {parsing ? (
+                            <><Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> Extraindo...</>
+                          ) : (
+                            <><Sparkles className="h-3.5 w-3.5 mr-1.5" /> Extrair dados com IA</>
+                          )}
+                        </Button>
+                        <label className="cursor-pointer">
+                          <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
+                          <div className="h-8 px-3 rounded-md border border-primary/20 text-primary hover:bg-primary/10 flex items-center gap-1.5 text-xs">
+                            <Image className="h-3.5 w-3.5" />
+                            Imagem
+                          </div>
+                        </label>
+                      </div>
                     </div>
                   </div>
                 )}
