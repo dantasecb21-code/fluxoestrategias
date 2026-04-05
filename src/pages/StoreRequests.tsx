@@ -226,16 +226,16 @@ export default function StoreRequests() {
         </div>
 
         {isAdmin && (
-          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+          <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) resetForm(); }}>
             <DialogTrigger asChild>
-              <Button>
+              <Button onClick={() => resetForm()}>
                 <Plus className="h-4 w-4 mr-2" />
                 Nova Solicitação
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-lg">
               <DialogHeader>
-                <DialogTitle>Nova Solicitação de Loja</DialogTitle>
+                <DialogTitle>{editingId ? "Editar Solicitação" : "Nova Solicitação de Loja"}</DialogTitle>
               </DialogHeader>
               <div className="space-y-4 mt-2">
                 <div>
