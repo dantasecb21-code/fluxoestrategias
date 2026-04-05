@@ -72,6 +72,7 @@ export default function StoreRequests() {
   const [meetingDate, setMeetingDate] = useState("");
   const [observation, setObservation] = useState("");
   const [assignedTo, setAssignedTo] = useState("");
+  const [editStatus, setEditStatus] = useState("pending");
   const [submitting, setSubmitting] = useState(false);
 
   const fetchRequests = async () => {
