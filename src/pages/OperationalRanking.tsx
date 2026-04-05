@@ -7,9 +7,11 @@ interface RankedManager {
   user_id: string;
   display_name: string;
   avatar_url: string;
-  totalItems: number;
-  completedItems: number;
-  percent: number;
+  completed: number;
+  waiting: number;
+  inProgress: number;
+  pending: number;
+  total: number;
 }
 
 export default function OperationalRanking() {
