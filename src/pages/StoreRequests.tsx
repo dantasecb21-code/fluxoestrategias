@@ -405,17 +405,22 @@ export default function StoreRequests() {
                   Criado em {format(new Date(req.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
                 </div>
 
-                {/* Admin status actions */}
-                {isAdmin && req.status !== "completed" && (
+                {/* Admin actions */}
+                {isAdmin && (
                   <div className="flex gap-2 pt-1" onClick={(e) => e.stopPropagation()}>
-                    {req.status === "pending" && (
-                      <Button size="sm" variant="outline" onClick={() => handleStatusChange(req.id, "in_progress")}>
-                        Iniciar
+                    <Button size="sm" variant="outline" onClick={() => openEdit(req)}>
+                      <Pencil className="h-3.5 w-3.5 mr-1" />
+                      Editar
+                    </Button>
+                    <Button size="sm" variant="destructive" onClick={() => handleDelete(req.id)}>
+                      <Trash2 className="h-3.5 w-3.5 mr-1" />
+                      Excluir
+                    </Button>
+                    {req.status !== "completed" && (
+                      <Button size="sm" onClick={() => handleStatusChange(req.id, "completed")}>
+                        Marcar como Concluída
                       </Button>
                     )}
-                    <Button size="sm" onClick={() => handleStatusChange(req.id, "completed")}>
-                      Marcar como Concluída
-                    </Button>
                   </div>
                 )}
               </Card>
