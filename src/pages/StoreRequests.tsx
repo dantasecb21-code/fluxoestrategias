@@ -158,6 +158,7 @@ export default function StoreRequests() {
         meeting_date: meetingDate,
         observation: observation.trim(),
         assigned_to: assignedTo,
+        status: editStatus,
       } as any).eq("id", editingId);
 
       if (error) {
