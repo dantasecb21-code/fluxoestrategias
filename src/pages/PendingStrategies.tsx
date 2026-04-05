@@ -24,11 +24,16 @@ export default function PendingStrategies() {
   const navigate = useNavigate();
   const { strategies, loading } = useDbStrategies();
 
-  const pendingStrategies = strategies.filter((s) => {
-    const displayStatus = deriveStrategyDisplayStatus(s);
-    // Include: pending, in_progress, AND pending_approval
-    return displayStatus !== "completed";
-  });
+  const pendingStrategies = strategies
+    .filter((s) => {
+      const displayStatus = deriveStrategyDisplayStatus(s);
+      return displayStatus !== "completed";
+    })
+    .sort((a, b) => {
+      const dateA = a.deadline ? new Date(a.deadline).getTime() : Infinity;
+      const dateB = b.deadline ? new Date(b.deadline).getTime() : Infinity;
+      return dateA - dateB;
+    });
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
