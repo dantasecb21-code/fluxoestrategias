@@ -106,6 +106,29 @@ export default function StoreRequests() {
     setMeetingDate("");
     setObservation("");
     setAssignedTo("");
+    setEditingId(null);
+  };
+
+  const openEdit = (req: StoreRequest) => {
+    setStoreName(req.store_name);
+    setClientName(req.client_name);
+    setStoreCreated(req.store_created);
+    setPlatformAccess(req.platform_access_confirmed);
+    setMeetingDate(req.meeting_date);
+    setObservation(req.observation);
+    setAssignedTo(req.assigned_to || "");
+    setEditingId(req.id);
+    setDialogOpen(true);
+  };
+
+  const handleDelete = async (id: string) => {
+    const { error } = await supabase.from("store_requests").delete().eq("id", id);
+    if (error) {
+      toast.error("Erro ao excluir solicitação.");
+    } else {
+      toast.success("Solicitação excluída!");
+      fetchRequests();
+    }
   };
 
   const handleSubmit = async () => {
@@ -116,25 +139,46 @@ export default function StoreRequests() {
     if (!user) return;
 
     setSubmitting(true);
-    const { error } = await supabase.from("store_requests").insert({
-      store_name: storeName.trim(),
-      client_name: clientName.trim(),
-      store_created: storeCreated,
-      platform_access_confirmed: platformAccess,
-      meeting_date: meetingDate,
-      observation: observation.trim(),
-      assigned_to: assignedTo,
-      created_by: user.id,
-    } as any);
 
-    if (error) {
-      toast.error("Erro ao criar solicitação.");
-      console.error(error);
+    if (editingId) {
+      const { error } = await supabase.from("store_requests").update({
+        store_name: storeName.trim(),
+        client_name: clientName.trim(),
+        store_created: storeCreated,
+        platform_access_confirmed: platformAccess,
+        meeting_date: meetingDate,
+        observation: observation.trim(),
+        assigned_to: assignedTo,
+      } as any).eq("id", editingId);
+
+      if (error) {
+        toast.error("Erro ao atualizar solicitação.");
+      } else {
+        toast.success("Solicitação atualizada!");
+        resetForm();
+        setDialogOpen(false);
+        fetchRequests();
+      }
     } else {
-      toast.success("Solicitação enviada com sucesso!");
-      resetForm();
-      setDialogOpen(false);
-      fetchRequests();
+      const { error } = await supabase.from("store_requests").insert({
+        store_name: storeName.trim(),
+        client_name: clientName.trim(),
+        store_created: storeCreated,
+        platform_access_confirmed: platformAccess,
+        meeting_date: meetingDate,
+        observation: observation.trim(),
+        assigned_to: assignedTo,
+        created_by: user.id,
+      } as any);
+
+      if (error) {
+        toast.error("Erro ao criar solicitação.");
+      } else {
+        toast.success("Solicitação enviada com sucesso!");
+        resetForm();
+        setDialogOpen(false);
+        fetchRequests();
+      }
     }
     setSubmitting(false);
   };
