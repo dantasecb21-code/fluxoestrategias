@@ -9,8 +9,10 @@
 export function deriveStrategyDisplayStatus(strategy: {
   status: string;
   categories: any[];
-}): "completed" | "pending_approval" | "in_progress" | "pending" {
+  returned?: boolean;
+}): "completed" | "pending_approval" | "in_progress" | "pending" | "returned" {
   if (strategy.status === "approved") return "completed";
+  if (strategy.returned && strategy.status === "in_progress") return "returned";
 
   const allItems = (strategy.categories || []).flatMap((c: any) => c.items || []);
   const hasInProgress = allItems.some(
