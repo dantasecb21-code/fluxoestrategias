@@ -117,6 +117,29 @@ export default function StoreRequests() {
     setAssignedTo("");
     setEditStatus("pending");
     setEditingId(null);
+    setFreeText("");
+  };
+
+  const handleParseText = async () => {
+    if (!freeText.trim()) {
+      toast.error("Cole ou digite o texto com as informações da loja.");
+      return;
+    }
+    setParsing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("parse-store-request", {
+        body: { text: freeText.trim() },
+      });
+      if (error) throw error;
+      if (data.store_name) setStoreName(data.store_name);
+      if (data.client_name) setClientName(data.client_name);
+      if (data.meeting_date) setMeetingDate(data.meeting_date);
+      if (data.observation) setObservation(data.observation);
+      toast.success("Dados extraídos com sucesso! Revise e complete os campos.");
+    } catch {
+      toast.error("Erro ao processar texto. Preencha manualmente.");
+    }
+    setParsing(false);
   };
 
   const openEdit = (req: StoreRequest) => {
