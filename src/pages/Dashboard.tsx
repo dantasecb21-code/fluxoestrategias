@@ -58,6 +58,13 @@ export default function Dashboard() {
     setDeletedStrategies((prev) => prev.filter((s) => s.id !== id));
     toast.success("Estratégia restaurada!");
   };
+
+  const handlePermanentDelete = async (id: string) => {
+    if (!confirm("Tem certeza que deseja excluir permanentemente? Esta ação não pode ser desfeita.")) return;
+    await permanentDeleteStrategy(id);
+    setDeletedStrategies((prev) => prev.filter((s) => s.id !== id));
+    toast.success("Estratégia excluída permanentemente!");
+  };
   const renderStrategyCard = (s: DbStrategy) => {
     const progress = calcProgress(s.categories);
     const displayStatus = deriveStrategyDisplayStatus(s);
