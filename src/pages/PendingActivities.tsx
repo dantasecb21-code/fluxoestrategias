@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { shortName } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -84,7 +85,7 @@ export default function PendingActivities() {
   const [description, setDescription] = useState("");
   const [deadline, setDeadline] = useState("");
   const [priority, setPriority] = useState("medium");
-  const [assignedTo, setAssignedTo] = useState("");
+  const [assignedTo, setAssignedTo] = useState<string[]>([]);
   const [editStatus, setEditStatus] = useState("pending");
   const [submitting, setSubmitting] = useState(false);
   const [freeText, setFreeText] = useState("");
@@ -126,7 +127,7 @@ export default function PendingActivities() {
     setDescription("");
     setDeadline("");
     setPriority("medium");
-    setAssignedTo("");
+    setAssignedTo([]);
     setEditStatus("pending");
     setEditingId(null);
     setFreeText("");
@@ -139,7 +140,7 @@ export default function PendingActivities() {
     setDescription(act.description);
     setDeadline(act.deadline);
     setPriority(act.priority);
-    setAssignedTo(act.assigned_to || "");
+    setAssignedTo(act.assigned_to ? [act.assigned_to] : []);
     setEditStatus(act.status);
     setEditingId(act.id);
     setDialogOpen(true);
@@ -209,8 +210,8 @@ export default function PendingActivities() {
   };
 
   const handleSubmit = async () => {
-    if (!description.trim() || !assignedTo) {
-      toast.error("Preencha a descrição e selecione o gestor responsável.");
+    if (!description.trim() || assignedTo.length === 0) {
+      toast.error("Preencha a descrição e selecione ao menos um gestor responsável.");
       return;
     }
     if (!user) return;
@@ -223,7 +224,7 @@ export default function PendingActivities() {
         description: description.trim(),
         deadline,
         priority,
-        assigned_to: assignedTo,
+        assigned_to: assignedTo[0],
         status: editStatus,
       } as any).eq("id", editingId);
       if (error) {
@@ -235,19 +236,20 @@ export default function PendingActivities() {
         fetchActivities();
       }
     } else {
-      const { error } = await supabase.from("pending_activities").insert({
+      const rows = assignedTo.map((uid) => ({
         client_name: clientName.trim(),
         store_name: storeName.trim(),
         description: description.trim(),
         deadline,
         priority,
-        assigned_to: assignedTo,
+        assigned_to: uid,
         created_by: user.id,
-      } as any);
+      }));
+      const { error } = await supabase.from("pending_activities").insert(rows as any);
       if (error) {
         toast.error("Erro ao criar atividade.");
       } else {
-        toast.success("Atividade criada com sucesso!");
+        toast.success(assignedTo.length > 1 ? `${assignedTo.length} atividades criadas!` : "Atividade criada com sucesso!");
         resetForm();
         setDialogOpen(false);
         fetchActivities();
@@ -409,19 +411,24 @@ export default function PendingActivities() {
                   </div>
                 </div>
                 <div>
-                  <Label>Gestor Responsável *</Label>
-                  <Select value={assignedTo} onValueChange={setAssignedTo}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione o gestor" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {operationalUsers.map((u) => (
-                        <SelectItem key={u.user_id} value={u.user_id}>
-                          {shortName(u.display_name) || u.user_id}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Label>Gestor Responsável * {assignedTo.length > 0 && <span className="text-xs text-muted-foreground">({assignedTo.length} selecionado{assignedTo.length > 1 ? "s" : ""})</span>}</Label>
+                  <div className="mt-1.5 space-y-1 max-h-40 overflow-y-auto rounded-md border border-border p-2">
+                    {operationalUsers.map((u) => {
+                      const checked = assignedTo.includes(u.user_id);
+                      return (
+                        <label key={u.user_id} className={`flex items-center gap-2 px-2 py-1.5 rounded-md cursor-pointer transition-colors ${checked ? "bg-primary/20" : "hover:bg-accent/50"}`}>
+                          <Checkbox
+                            checked={checked}
+                            onCheckedChange={(v) => {
+                              if (v) setAssignedTo((prev) => [...prev, u.user_id]);
+                              else setAssignedTo((prev) => prev.filter((id) => id !== u.user_id));
+                            }}
+                          />
+                          <span className="text-sm">{shortName(u.display_name) || u.user_id}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
                 </div>
                 {editingId && (
                   <div>
