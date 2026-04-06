@@ -103,7 +103,7 @@ export default function OperationalRanking() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-8">
+    <div className="max-w-2xl mx-auto space-y-6">
       <div className="mb-8 text-center">
         <div className="flex items-center justify-center gap-3 mb-3">
           <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-yellow-500 to-orange-500 flex items-center justify-center">

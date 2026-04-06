@@ -39,7 +39,7 @@ export default function PendingStrategies() {
     });
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
+    <div className="max-w-4xl mx-auto space-y-6">
       <div className="mb-8">
         <div className="flex items-center gap-3 mb-2">
           <div className="h-10 w-10 rounded-xl bg-warning/20 flex items-center justify-center">
