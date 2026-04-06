@@ -105,8 +105,8 @@ export default function StoreRequests() {
 
   useEffect(() => {
     fetchRequests();
-    if (isAdmin) fetchStrategicUsers();
-  }, [isAdmin]);
+    fetchStrategicUsers();
+  }, []);
 
   const resetForm = () => {
     setStoreName("");
