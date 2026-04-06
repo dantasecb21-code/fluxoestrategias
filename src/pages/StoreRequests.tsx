@@ -90,11 +90,11 @@ export default function StoreRequests() {
   const fetchStrategicUsers = async () => {
     const { data: roles } = await supabase
       .from("user_roles")
-      .select("user_id")
-      .eq("role", "strategic");
+      .select("user_id, role")
+      .in("role", ["strategic", "admin"]);
     if (!roles?.length) return;
 
-    const userIds = roles.map((r) => r.user_id);
+    const userIds = [...new Set(roles.map((r) => r.user_id))];
     const { data: profiles } = await supabase
       .from("profiles")
       .select("user_id, display_name")
@@ -105,8 +105,8 @@ export default function StoreRequests() {
 
   useEffect(() => {
     fetchRequests();
-    if (isAdmin) fetchStrategicUsers();
-  }, [isAdmin]);
+    fetchStrategicUsers();
+  }, []);
 
   const resetForm = () => {
     setStoreName("");
