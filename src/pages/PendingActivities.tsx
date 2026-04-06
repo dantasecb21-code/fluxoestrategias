@@ -139,7 +139,7 @@ export default function PendingActivities() {
     setDescription(act.description);
     setDeadline(act.deadline);
     setPriority(act.priority);
-    setAssignedTo(act.assigned_to || "");
+    setAssignedTo(act.assigned_to ? [act.assigned_to] : []);
     setEditStatus(act.status);
     setEditingId(act.id);
     setDialogOpen(true);
