@@ -201,6 +201,21 @@ export function AppSidebar() {
                 </SidebarMenuItem>
               )}
 
+              {/* Precificação */}
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <NavLink
+                    to="/precificacao"
+                    onClick={() => handleNav("/precificacao")}
+                    className="hover:bg-sidebar-accent/50"
+                    activeClassName="bg-sidebar-accent text-primary font-medium"
+                  >
+                    <Calculator className="mr-2 h-4 w-4" />
+                    {!collapsed && <span>Precificação</span>}
+                  </NavLink>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+
               {/* Assistente */}
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
