@@ -189,6 +189,10 @@ export function useDbStrategies() {
     return data ? data.map(mapRow) : [];
   };
 
+  const permanentDeleteStrategy = async (id: string) => {
+    await supabase.from("strategies").delete().eq("id", id);
+  };
+
   const duplicateStrategy = async (id: string): Promise<DbStrategy | null> => {
     const original = strategies.find((s) => s.id === id);
     if (!original || !user) return null;
@@ -202,5 +206,5 @@ export function useDbStrategies() {
     });
   };
 
-  return { strategies, loading, createStrategy, updateStrategy, deleteStrategy, duplicateStrategy, restoreStrategy, fetchDeletedStrategies, refetch: fetchStrategies };
+  return { strategies, loading, createStrategy, updateStrategy, deleteStrategy, duplicateStrategy, restoreStrategy, fetchDeletedStrategies, permanentDeleteStrategy, refetch: fetchStrategies };
 }

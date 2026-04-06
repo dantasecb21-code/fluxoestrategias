@@ -4,7 +4,7 @@ import { useDbStrategies, DbStrategy } from "@/hooks/useDbStrategies";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Plus, Copy, Pencil, Trash2, FileText, Zap, Clock, UserCheck, Undo2, ChevronDown, ChevronRight, CheckCircle2 } from "lucide-react";
+import { Plus, Copy, Pencil, Trash2, FileText, Zap, Clock, UserCheck, Undo2, ChevronDown, ChevronRight, CheckCircle2, X } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { formatDateBR, shortName } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -24,7 +24,7 @@ function calcProgress(categories: any[]) {
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const { strategies, loading, deleteStrategy, duplicateStrategy, restoreStrategy, fetchDeletedStrategies } = useDbStrategies();
+  const { strategies, loading, deleteStrategy, duplicateStrategy, restoreStrategy, fetchDeletedStrategies, permanentDeleteStrategy } = useDbStrategies();
   const [showTrash, setShowTrash] = useState(false);
   const [deletedStrategies, setDeletedStrategies] = useState<DbStrategy[]>([]);
   const [loadingTrash, setLoadingTrash] = useState(false);
@@ -57,6 +57,13 @@ export default function Dashboard() {
     await restoreStrategy(id);
     setDeletedStrategies((prev) => prev.filter((s) => s.id !== id));
     toast.success("Estratégia restaurada!");
+  };
+
+  const handlePermanentDelete = async (id: string) => {
+    if (!confirm("Tem certeza que deseja excluir permanentemente? Esta ação não pode ser desfeita.")) return;
+    await permanentDeleteStrategy(id);
+    setDeletedStrategies((prev) => prev.filter((s) => s.id !== id));
+    toast.success("Estratégia excluída permanentemente!");
   };
   const renderStrategyCard = (s: DbStrategy) => {
     const progress = calcProgress(s.categories);
@@ -219,9 +226,14 @@ export default function Dashboard() {
                         Excluída em {s.deleted_at ? new Date(s.deleted_at).toLocaleDateString("pt-BR") : "—"}
                       </p>
                     </div>
-                    <Button size="sm" variant="outline" onClick={() => handleRestore(s.id)} className="gap-1.5">
-                      <Undo2 className="h-3.5 w-3.5" /> Restaurar
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      <Button size="sm" variant="outline" onClick={() => handleRestore(s.id)} className="gap-1.5">
+                        <Undo2 className="h-3.5 w-3.5" /> Restaurar
+                      </Button>
+                      <Button size="sm" variant="destructive" onClick={() => handlePermanentDelete(s.id)} className="gap-1.5">
+                        <X className="h-3.5 w-3.5" /> Excluir
+                      </Button>
+                    </div>
                   </div>
                 </Card>
               ))
