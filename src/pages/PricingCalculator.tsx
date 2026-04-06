@@ -19,10 +19,11 @@ export default function PricingCalculator() {
   const totalFeePercent = commission + paymentProcessingRate;
   const logisticsAdd = hasLogistics ? logisticsExtra : 0;
 
-  // Price = (cost + logistics) / (1 - totalFee/100)
-  const suggestedPrice = totalFeePercent < 100
+  // Price = (cost + logistics) / (1 - totalFee/100), rounded to x.99
+  const rawPrice = totalFeePercent < 100
     ? (cost + logisticsAdd) / (1 - totalFeePercent / 100)
     : 0;
+  const suggestedPrice = rawPrice > 0 ? Math.ceil(rawPrice) - 0.01 : 0;
 
   const profit = suggestedPrice - cost - logisticsAdd;
   const feeAmount = suggestedPrice * (totalFeePercent / 100);
@@ -166,6 +167,15 @@ export default function PricingCalculator() {
                     <strong>Resumo:</strong> Com comissão de {commission}% + processamento de {paymentProcessingRate}%
                     {hasLogistics ? " + logística" : ""}, o preço de <strong>R$ {suggestedPrice.toFixed(2)}</strong> cobre 
                     todos os custos e mantém a margem.
+                  </p>
+                </div>
+
+                <div className="rounded-lg border border-warning/30 bg-warning/5 p-3">
+                  <p className="text-xs text-warning font-medium mb-1">⚠️ Observação importante</p>
+                  <p className="text-xs text-muted-foreground">
+                    A plataforma possui um processo criterioso para atualização de preços. Dependendo do cenário, 
+                    pode ser necessário modificar o <strong>título</strong> e a <strong>descrição</strong> do item 
+                    ao realizar o aumento de preço.
                   </p>
                 </div>
               </>
