@@ -126,7 +126,7 @@ export default function PendingActivities() {
     setDescription("");
     setDeadline("");
     setPriority("medium");
-    setAssignedTo("");
+    setAssignedTo([]);
     setEditStatus("pending");
     setEditingId(null);
     setFreeText("");
