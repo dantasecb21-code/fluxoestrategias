@@ -78,7 +78,7 @@ export default function PricingCalculator() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="commission">Comissão + Distribuição (%)</Label>
+              <Label htmlFor="commission">Comissão e Distribuição (Tarifa 99Food) (%)</Label>
               <Input
                 id="commission"
                 type="number"
