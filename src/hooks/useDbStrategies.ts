@@ -206,5 +206,5 @@ export function useDbStrategies() {
     });
   };
 
-  return { strategies, loading, createStrategy, updateStrategy, deleteStrategy, duplicateStrategy, restoreStrategy, fetchDeletedStrategies, refetch: fetchStrategies };
+  return { strategies, loading, createStrategy, updateStrategy, deleteStrategy, duplicateStrategy, restoreStrategy, fetchDeletedStrategies, permanentDeleteStrategy, refetch: fetchStrategies };
 }
