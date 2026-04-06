@@ -78,7 +78,7 @@ export default function PricingCalculator() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="commission">Comissão + Distribuição (%)</Label>
+              <Label htmlFor="commission">Comissão e Distribuição (Tarifa 99Food) (%)</Label>
               <Input
                 id="commission"
                 type="number"
@@ -131,7 +131,7 @@ export default function PricingCalculator() {
             <CardDescription>Preço sugerido para o item</CardDescription>
           </CardHeader>
           <CardContent className="space-y-5">
-            {cost > 0 && commission > 0 ? (
+            {cost > 0 ? (
               <>
                 <div className="rounded-xl border-2 border-primary/50 bg-primary/5 p-6 text-center space-y-1">
                   <p className="text-sm text-muted-foreground">Preço Sugerido</p>
