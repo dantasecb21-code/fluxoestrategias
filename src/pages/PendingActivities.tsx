@@ -410,19 +410,24 @@ export default function PendingActivities() {
                   </div>
                 </div>
                 <div>
-                  <Label>Gestor Responsável *</Label>
-                  <Select value={assignedTo} onValueChange={setAssignedTo}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione o gestor" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {operationalUsers.map((u) => (
-                        <SelectItem key={u.user_id} value={u.user_id}>
-                          {shortName(u.display_name) || u.user_id}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Label>Gestor Responsável * {assignedTo.length > 0 && <span className="text-xs text-muted-foreground">({assignedTo.length} selecionado{assignedTo.length > 1 ? "s" : ""})</span>}</Label>
+                  <div className="mt-1.5 space-y-1 max-h-40 overflow-y-auto rounded-md border border-border p-2">
+                    {operationalUsers.map((u) => {
+                      const checked = assignedTo.includes(u.user_id);
+                      return (
+                        <label key={u.user_id} className={`flex items-center gap-2 px-2 py-1.5 rounded-md cursor-pointer transition-colors ${checked ? "bg-primary/20" : "hover:bg-accent/50"}`}>
+                          <Checkbox
+                            checked={checked}
+                            onCheckedChange={(v) => {
+                              if (v) setAssignedTo((prev) => [...prev, u.user_id]);
+                              else setAssignedTo((prev) => prev.filter((id) => id !== u.user_id));
+                            }}
+                          />
+                          <span className="text-sm">{shortName(u.display_name) || u.user_id}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
                 </div>
                 {editingId && (
                   <div>
