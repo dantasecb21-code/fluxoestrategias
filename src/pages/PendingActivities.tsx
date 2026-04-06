@@ -84,7 +84,7 @@ export default function PendingActivities() {
   const [description, setDescription] = useState("");
   const [deadline, setDeadline] = useState("");
   const [priority, setPriority] = useState("medium");
-  const [assignedTo, setAssignedTo] = useState("");
+  const [assignedTo, setAssignedTo] = useState<string[]>([]);
   const [editStatus, setEditStatus] = useState("pending");
   const [submitting, setSubmitting] = useState(false);
   const [freeText, setFreeText] = useState("");
