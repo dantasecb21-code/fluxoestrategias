@@ -169,6 +169,15 @@ export default function PricingCalculator() {
                     todos os custos e mantém a margem.
                   </p>
                 </div>
+
+                <div className="rounded-lg border border-warning/30 bg-warning/5 p-3">
+                  <p className="text-xs text-warning font-medium mb-1">⚠️ Observação importante</p>
+                  <p className="text-xs text-muted-foreground">
+                    A plataforma possui um processo criterioso para atualização de preços. Dependendo do cenário, 
+                    pode ser necessário modificar o <strong>título</strong> e a <strong>descrição</strong> do item 
+                    ao realizar o aumento de preço.
+                  </p>
+                </div>
               </>
             ) : (
               <div className="text-center py-12 text-muted-foreground">
