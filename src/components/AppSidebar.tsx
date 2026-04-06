@@ -253,7 +253,7 @@ export function AppSidebar() {
 
         {/* User info + logout */}
         <div className="mt-auto p-4 border-t border-sidebar-border">
-          {user && (
+          {user && !collapsed && (
             <div className="mb-2 cursor-pointer hover:opacity-80 flex items-center gap-2" onClick={() => navigate(`/perfil/${user.id}`)}>
               <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center overflow-hidden shrink-0">
                 {avatarUrl ? (
@@ -262,13 +262,11 @@ export function AppSidebar() {
                   <span className="text-xs font-bold text-muted-foreground">{displayName?.charAt(0)?.toUpperCase() || "?"}</span>
                 )}
               </div>
-              {!collapsed && (
-                <div className="min-w-0">
-                  {displayName && <p className="text-xs text-foreground font-medium truncate">{shortName(displayName)}</p>}
-                  <p className="text-[10px] text-muted-foreground">{roleLabel}</p>
-                  <p className="text-[10px] text-primary">Ver perfil →</p>
-                </div>
-              )}
+              <div className="min-w-0">
+                {displayName && <p className="text-xs text-foreground font-medium truncate">{shortName(displayName)}</p>}
+                <p className="text-[10px] text-muted-foreground">{roleLabel}</p>
+                <p className="text-[10px] text-primary">Ver perfil →</p>
+              </div>
             </div>
           )}
           <Button
