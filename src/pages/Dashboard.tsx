@@ -226,9 +226,14 @@ export default function Dashboard() {
                         Excluída em {s.deleted_at ? new Date(s.deleted_at).toLocaleDateString("pt-BR") : "—"}
                       </p>
                     </div>
-                    <Button size="sm" variant="outline" onClick={() => handleRestore(s.id)} className="gap-1.5">
-                      <Undo2 className="h-3.5 w-3.5" /> Restaurar
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      <Button size="sm" variant="outline" onClick={() => handleRestore(s.id)} className="gap-1.5">
+                        <Undo2 className="h-3.5 w-3.5" /> Restaurar
+                      </Button>
+                      <Button size="sm" variant="destructive" onClick={() => handlePermanentDelete(s.id)} className="gap-1.5">
+                        <X className="h-3.5 w-3.5" /> Excluir
+                      </Button>
+                    </div>
                   </div>
                 </Card>
               ))
