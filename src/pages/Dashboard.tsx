@@ -24,7 +24,7 @@ function calcProgress(categories: any[]) {
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const { strategies, loading, deleteStrategy, duplicateStrategy, restoreStrategy, fetchDeletedStrategies } = useDbStrategies();
+  const { strategies, loading, deleteStrategy, duplicateStrategy, restoreStrategy, fetchDeletedStrategies, permanentDeleteStrategy } = useDbStrategies();
   const [showTrash, setShowTrash] = useState(false);
   const [deletedStrategies, setDeletedStrategies] = useState<DbStrategy[]>([]);
   const [loadingTrash, setLoadingTrash] = useState(false);
