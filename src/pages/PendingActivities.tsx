@@ -209,8 +209,8 @@ export default function PendingActivities() {
   };
 
   const handleSubmit = async () => {
-    if (!description.trim() || !assignedTo) {
-      toast.error("Preencha a descrição e selecione o gestor responsável.");
+    if (!description.trim() || assignedTo.length === 0) {
+      toast.error("Preencha a descrição e selecione ao menos um gestor responsável.");
       return;
     }
     if (!user) return;
@@ -223,7 +223,7 @@ export default function PendingActivities() {
         description: description.trim(),
         deadline,
         priority,
-        assigned_to: assignedTo,
+        assigned_to: assignedTo[0],
         status: editStatus,
       } as any).eq("id", editingId);
       if (error) {
@@ -235,19 +235,20 @@ export default function PendingActivities() {
         fetchActivities();
       }
     } else {
-      const { error } = await supabase.from("pending_activities").insert({
+      const rows = assignedTo.map((uid) => ({
         client_name: clientName.trim(),
         store_name: storeName.trim(),
         description: description.trim(),
         deadline,
         priority,
-        assigned_to: assignedTo,
+        assigned_to: uid,
         created_by: user.id,
-      } as any);
+      }));
+      const { error } = await supabase.from("pending_activities").insert(rows as any);
       if (error) {
         toast.error("Erro ao criar atividade.");
       } else {
-        toast.success("Atividade criada com sucesso!");
+        toast.success(assignedTo.length > 1 ? `${assignedTo.length} atividades criadas!` : "Atividade criada com sucesso!");
         resetForm();
         setDialogOpen(false);
         fetchActivities();
