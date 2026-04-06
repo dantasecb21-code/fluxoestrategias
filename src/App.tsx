@@ -21,6 +21,7 @@ import StoreRequests from "./pages/StoreRequests";
 import ResetPassword from "./pages/ResetPassword";
 import OperationalRanking from "./pages/OperationalRanking";
 import PendingActivities from "./pages/PendingActivities";
+import PricingCalculator from "./pages/PricingCalculator";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
