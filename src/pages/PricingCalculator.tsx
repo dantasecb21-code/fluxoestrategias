@@ -19,10 +19,11 @@ export default function PricingCalculator() {
   const totalFeePercent = commission + paymentProcessingRate;
   const logisticsAdd = hasLogistics ? logisticsExtra : 0;
 
-  // Price = (cost + logistics) / (1 - totalFee/100)
-  const suggestedPrice = totalFeePercent < 100
+  // Price = (cost + logistics) / (1 - totalFee/100), rounded to x.99
+  const rawPrice = totalFeePercent < 100
     ? (cost + logisticsAdd) / (1 - totalFeePercent / 100)
     : 0;
+  const suggestedPrice = rawPrice > 0 ? Math.ceil(rawPrice) - 0.01 : 0;
 
   const profit = suggestedPrice - cost - logisticsAdd;
   const feeAmount = suggestedPrice * (totalFeePercent / 100);
