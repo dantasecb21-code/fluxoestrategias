@@ -126,7 +126,7 @@ export default function StrategyNotes() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-6 space-y-5">
+    <div className="max-w-4xl mx-auto space-y-5">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="font-heading font-bold text-2xl text-foreground">

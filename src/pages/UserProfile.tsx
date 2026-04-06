@@ -129,7 +129,7 @@ export default function UserProfile() {
   if (!profile) return <div className="flex items-center justify-center h-64 text-muted-foreground">Perfil não encontrado</div>;
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-6 space-y-5">
+    <div className="max-w-2xl mx-auto space-y-5">
       <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="text-muted-foreground">
         <ArrowLeft className="h-4 w-4 mr-1" /> Voltar
       </Button>
