@@ -200,7 +200,7 @@ export default function PendingStrategies() {
           ) : (
             pendingStrategies.map((s) => {
               const progress = calcProgress(s.categories);
-              const isOverdue = s.deadline && new Date(s.deadline) < now;
+              const isOverdue = s.deadline && new Date(s.deadline) < new Date();
               return (
                 <Card
                   key={s.id}
