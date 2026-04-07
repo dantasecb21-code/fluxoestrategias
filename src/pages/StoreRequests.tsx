@@ -612,68 +612,141 @@ export default function StoreRequests() {
         )}
       </div>
 
-      {requests.length === 0 ? (
-        <Card className="p-8 text-center text-muted-foreground">
-          <Store className="h-10 w-10 mx-auto mb-3 opacity-40" />
-          <p>Nenhuma solicitação de loja nova encontrada.</p>
-        </Card>
-      ) : (
-        <div className="space-y-8">
-          {/* Loja a criar */}
-          {(() => {
-            const toCreate = requests.filter((r) => (r.store_creation_status || "pending") === "pending").sort((a, b) => new Date(a.meeting_date || a.created_at).getTime() - new Date(b.meeting_date || b.created_at).getTime());
-            if (!toCreate.length) return null;
-            return (
-              <div className="space-y-4">
-                <div className="flex items-center gap-2">
-                  <Clock className="h-5 w-5 text-warning" />
-                  <h2 className="font-heading font-semibold text-lg text-foreground">Loja a criar</h2>
-                  <Badge variant="outline" className="ml-1 text-xs">{toCreate.length}</Badge>
-                </div>
-                <div className="grid gap-4">
-                  {toCreate.map((req) => renderRequestCard(req))}
-                </div>
-              </div>
-            );
-          })()}
-
-          {/* Criação em andamento */}
-          {(() => {
-            const inProg = requests.filter((r) => r.store_creation_status === "in_progress").sort((a, b) => new Date(a.meeting_date || a.created_at).getTime() - new Date(b.meeting_date || b.created_at).getTime());
-            if (!inProg.length) return null;
-            return (
-              <div className="space-y-4">
-                <div className="flex items-center gap-2">
-                  <Hammer className="h-5 w-5 text-primary" />
-                  <h2 className="font-heading font-semibold text-lg text-foreground">Criação em andamento</h2>
-                  <Badge variant="outline" className="ml-1 text-xs">{inProg.length}</Badge>
-                </div>
-                <div className="grid gap-4">
-                  {inProg.map((req) => renderRequestCard(req))}
-                </div>
-              </div>
-            );
-          })()}
-
-          {/* Loja criada */}
-          {(() => {
-            const created = requests.filter((r) => r.store_creation_status === "created").sort((a, b) => new Date(a.meeting_date || a.created_at).getTime() - new Date(b.meeting_date || b.created_at).getTime());
-            if (!created.length) return null;
-            return (
-              <div className="space-y-4">
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="h-5 w-5 text-emerald-500" />
-                  <h2 className="font-heading font-semibold text-lg text-foreground">Loja criada</h2>
-                  <Badge variant="outline" className="ml-1 text-xs">{created.length}</Badge>
-                </div>
-                <div className="grid gap-4">
-                  {created.map((req) => renderRequestCard(req))}
-                </div>
-              </div>
-            );
-          })()}
+      {/* Summary stats */}
+      {requests.length > 0 && (
+        <div className="grid grid-cols-3 gap-3">
+          <Card className="p-3 text-center">
+            <p className="font-heading font-bold text-xl text-warning">{requests.filter(r => (r.store_creation_status || "pending") === "pending").length}</p>
+            <p className="text-xs text-muted-foreground">A criar</p>
+          </Card>
+          <Card className="p-3 text-center">
+            <p className="font-heading font-bold text-xl text-primary">{requests.filter(r => r.store_creation_status === "in_progress").length}</p>
+            <p className="text-xs text-muted-foreground">Em andamento</p>
+          </Card>
+          <Card className="p-3 text-center">
+            <p className="font-heading font-bold text-xl text-success">{requests.filter(r => r.store_creation_status === "created").length}</p>
+            <p className="text-xs text-muted-foreground">Criadas</p>
+          </Card>
         </div>
       )}
+
+      {/* Filters */}
+      {requests.length > 0 && (
+        <div className="flex flex-wrap items-center gap-3">
+          <Filter className="h-4 w-4 text-muted-foreground" />
+          <Select value={filterStatus} onValueChange={setFilterStatus}>
+            <SelectTrigger className="w-[160px] h-9 text-xs">
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos os status</SelectItem>
+              <SelectItem value="pending">Pendente</SelectItem>
+              <SelectItem value="in_progress">Em andamento</SelectItem>
+              <SelectItem value="completed">Concluída</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={filterCreation} onValueChange={setFilterCreation}>
+            <SelectTrigger className="w-[180px] h-9 text-xs">
+              <SelectValue placeholder="Etapa de criação" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas as etapas</SelectItem>
+              <SelectItem value="pending">Loja a criar</SelectItem>
+              <SelectItem value="in_progress">Criação em andamento</SelectItem>
+              <SelectItem value="created">Loja criada</SelectItem>
+            </SelectContent>
+          </Select>
+          {(filterStatus !== "all" || filterCreation !== "all") && (
+            <Button variant="ghost" size="sm" className="text-xs h-8" onClick={() => { setFilterStatus("all"); setFilterCreation("all"); }}>
+              Limpar filtros
+            </Button>
+          )}
+        </div>
+      )}
+
+      {(() => {
+        const filtered = requests.filter(r => {
+          if (filterStatus !== "all" && r.status !== filterStatus) return false;
+          if (filterCreation !== "all" && (r.store_creation_status || "pending") !== filterCreation) return false;
+          return true;
+        });
+
+        if (requests.length === 0) {
+          return (
+            <Card className="p-8 text-center text-muted-foreground">
+              <Store className="h-10 w-10 mx-auto mb-3 opacity-40" />
+              <p>Nenhuma solicitação de loja nova encontrada.</p>
+            </Card>
+          );
+        }
+
+        if (filtered.length === 0) {
+          return (
+            <Card className="p-8 text-center text-muted-foreground">
+              <Filter className="h-10 w-10 mx-auto mb-3 opacity-40" />
+              <p>Nenhuma solicitação encontrada com os filtros selecionados.</p>
+            </Card>
+          );
+        }
+
+        return (
+          <div className="space-y-8">
+            {/* Loja a criar */}
+            {(() => {
+              const toCreate = filtered.filter((r) => (r.store_creation_status || "pending") === "pending").sort((a, b) => new Date(a.meeting_date || a.created_at).getTime() - new Date(b.meeting_date || b.created_at).getTime());
+              if (!toCreate.length) return null;
+              return (
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2">
+                    <Clock className="h-5 w-5 text-warning" />
+                    <h2 className="font-heading font-semibold text-lg text-foreground">Loja a criar</h2>
+                    <Badge variant="outline" className="ml-1 text-xs">{toCreate.length}</Badge>
+                  </div>
+                  <div className="grid gap-4">
+                    {toCreate.map((req) => renderRequestCard(req))}
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* Criação em andamento */}
+            {(() => {
+              const inProg = filtered.filter((r) => r.store_creation_status === "in_progress").sort((a, b) => new Date(a.meeting_date || a.created_at).getTime() - new Date(b.meeting_date || b.created_at).getTime());
+              if (!inProg.length) return null;
+              return (
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2">
+                    <Hammer className="h-5 w-5 text-primary" />
+                    <h2 className="font-heading font-semibold text-lg text-foreground">Criação em andamento</h2>
+                    <Badge variant="outline" className="ml-1 text-xs">{inProg.length}</Badge>
+                  </div>
+                  <div className="grid gap-4">
+                    {inProg.map((req) => renderRequestCard(req))}
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* Loja criada */}
+            {(() => {
+              const created = filtered.filter((r) => r.store_creation_status === "created").sort((a, b) => new Date(a.meeting_date || a.created_at).getTime() - new Date(b.meeting_date || b.created_at).getTime());
+              if (!created.length) return null;
+              return (
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="h-5 w-5 text-success" />
+                    <h2 className="font-heading font-semibold text-lg text-foreground">Loja criada</h2>
+                    <Badge variant="outline" className="ml-1 text-xs">{created.length}</Badge>
+                  </div>
+                  <div className="grid gap-4">
+                    {created.map((req) => renderRequestCard(req))}
+                  </div>
+                </div>
+              );
+            })()}
+          </div>
+        );
+      })()}
     </div>
   );
 }
