@@ -4,7 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Mic, MicOff, Plus, Save, Trash2, FileText, Image as ImageIcon, X } from "lucide-react";
+import { Plus, Save, Trash2, FileText, Image as ImageIcon } from "lucide-react";
 import { toast } from "sonner";
 
 interface Note {
@@ -22,10 +22,7 @@ export default function StrategyNotes() {
   const [activeNote, setActiveNote] = useState<Note | null>(null);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const [isRecording, setIsRecording] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const recognitionRef = useRef<any>(null);
-  const editorRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -183,57 +180,6 @@ export default function StrategyNotes() {
     });
   };
 
-  // Speech Recognition
-  const toggleRecording = () => {
-    if (isRecording) {
-      recognitionRef.current?.stop();
-      setIsRecording(false);
-      return;
-    }
-
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-      toast.error("Seu navegador não suporta reconhecimento de voz. Use Chrome ou Edge.");
-      return;
-    }
-
-    const recognition = new SpeechRecognition();
-    recognition.lang = "pt-BR";
-    recognition.continuous = true;
-    recognition.interimResults = true;
-    recognitionRef.current = recognition;
-
-    let finalTranscript = "";
-
-    recognition.onresult = (event: any) => {
-      let interim = "";
-      for (let i = event.resultIndex; i < event.results.length; i++) {
-        const transcript = event.results[i][0].transcript;
-        if (event.results[i].isFinal) {
-          finalTranscript += transcript + " ";
-        } else {
-          interim = transcript;
-        }
-      }
-      setContent((prev) => {
-        const base = prev.endsWith("\n") || prev === "" ? prev : prev + "\n";
-        return base + finalTranscript + (interim ? interim : "");
-      });
-    };
-
-    recognition.onerror = () => {
-      setIsRecording(false);
-      toast.error("Erro no reconhecimento de voz");
-    };
-
-    recognition.onend = () => {
-      setIsRecording(false);
-    };
-
-    recognition.start();
-    setIsRecording(true);
-    toast.success("Gravando... Fale agora!");
-  };
 
   // Check if content has images
   const hasImages = /!\[.*?\]\(.*?\)/.test(content);
@@ -245,7 +191,7 @@ export default function StrategyNotes() {
           <h1 className="font-heading font-bold text-2xl text-foreground">
             Bloco de <span className="text-primary">Notas</span>
           </h1>
-          <p className="text-sm text-muted-foreground">Escreva, grave áudios ou cole imagens para organizar suas estratégias</p>
+          <p className="text-sm text-muted-foreground">Escreva ou cole imagens para organizar suas estratégias</p>
         </div>
         <Button size="sm" onClick={handleNew}>
           <Plus className="h-4 w-4 mr-1" /> Nova nota
@@ -326,15 +272,6 @@ export default function StrategyNotes() {
 
           <div className="flex items-center gap-2 flex-wrap">
             <Button
-              variant={isRecording ? "destructive" : "outline"}
-              size="sm"
-              onClick={toggleRecording}
-              className={isRecording ? "animate-pulse" : ""}
-            >
-              {isRecording ? <><MicOff className="h-4 w-4 mr-1" /> Parar gravação</> : <><Mic className="h-4 w-4 mr-1" /> Gravar áudio</>}
-            </Button>
-
-            <Button
               variant="outline"
               size="sm"
               onClick={() => fileInputRef.current?.click()}
@@ -355,7 +292,6 @@ export default function StrategyNotes() {
               <Save className="h-4 w-4 mr-1" /> Salvar nota
             </Button>
 
-            {isRecording && <span className="text-xs text-destructive animate-pulse">● Gravando...</span>}
             {uploading && <span className="text-xs text-primary animate-pulse">📷 Enviando...</span>}
           </div>
 
