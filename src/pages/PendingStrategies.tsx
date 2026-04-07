@@ -136,20 +136,29 @@ export default function PendingStrategies() {
                 <SelectItem value="returned">Devolvida</SelectItem>
               </SelectContent>
             </Select>
-            <Select value={filterDeadline} onValueChange={(v) => setFilterDeadline(v as DeadlineFilter)}>
-              <SelectTrigger className="w-full sm:w-[200px]">
-                <SelectValue placeholder="Prazo" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos os prazos</SelectItem>
-                <SelectItem value="overdue">
-                  <span className="flex items-center gap-1.5 text-destructive">⚠ Atrasadas</span>
-                </SelectItem>
-                <SelectItem value="7days">Vence em 7 dias</SelectItem>
-                <SelectItem value="15days">Vence em 15 dias</SelectItem>
-                <SelectItem value="30days">Vence em 30 dias</SelectItem>
-              </SelectContent>
-            </Select>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="w-full sm:w-[200px] justify-start text-left font-normal">
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {filterDate ? format(filterDate, "dd/MM/yyyy") : "Filtrar por data"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={filterDate}
+                  onSelect={setFilterDate}
+                  locale={ptBR}
+                  modifiers={{ hasDeadline: deadlineDates }}
+                  modifiersClassNames={{ hasDeadline: "bg-primary/20 font-bold text-primary" }}
+                />
+              </PopoverContent>
+            </Popover>
+            {filterDate && (
+              <Button size="icon" variant="ghost" className="h-9 w-9 shrink-0" onClick={() => setFilterDate(undefined)}>
+                <X className="h-4 w-4" />
+              </Button>
+            )}
             {hasActiveFilters && (
               <Button
                 variant="ghost"
