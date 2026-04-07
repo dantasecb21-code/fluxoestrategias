@@ -155,78 +155,76 @@ export default function AssistantChat() {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-7rem)] max-w-4xl mx-auto">
+    <div className="flex flex-col h-[calc(100vh-7rem)] max-w-3xl mx-auto">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-border">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-card/50 backdrop-blur-sm rounded-t-xl mt-2">
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-xl bg-primary flex items-center justify-center">
-            <Bot className="h-5 w-5 text-primary-foreground" />
+          <div className="h-9 w-9 rounded-full bg-primary/15 flex items-center justify-center">
+            <Bot className="h-5 w-5 text-primary" />
           </div>
           <div>
-            <h1 className="font-heading font-bold text-lg text-foreground">Chatinho Gepeto</h1>
-            <p className="text-xs text-muted-foreground">Tire dúvidas sobre a plataforma com prints e passo a passo</p>
+            <h1 className="font-heading font-semibold text-base text-foreground leading-tight">Chatinho Gepeto</h1>
+            <p className="text-[11px] text-muted-foreground">Tire dúvidas sobre a plataforma</p>
           </div>
         </div>
         {messages.length > 0 && (
-          <Button variant="ghost" size="sm" onClick={handleClear} className="text-muted-foreground hover:text-destructive">
-            <Trash2 className="h-4 w-4 mr-1" /> Limpar
+          <Button variant="ghost" size="sm" onClick={handleClear} className="text-muted-foreground hover:text-destructive h-8 text-xs gap-1.5">
+            <Trash2 className="h-3.5 w-3.5" /> Limpar
           </Button>
         )}
       </div>
 
       {/* Messages */}
-      <ScrollArea className="flex-1 p-4" ref={scrollRef}>
+      <ScrollArea className="flex-1 px-4 py-3" ref={scrollRef}>
         {messages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-center gap-4 py-16">
-            <div className="h-16 w-16 rounded-2xl bg-primary/10 flex items-center justify-center">
-              <Bot className="h-8 w-8 text-primary" />
+          <div className="flex flex-col items-center justify-center h-full text-center gap-3 py-12">
+            <div className="h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center">
+              <Bot className="h-7 w-7 text-primary" />
             </div>
             <div>
-              <h2 className="font-heading font-semibold text-foreground mb-1">Olá! Sou o Chatinho Gepeto</h2>
-              <p className="text-sm text-muted-foreground max-w-md">
-                Pergunte qualquer coisa sobre a plataforma: como alterar nome, criar categorias, configurar entrega, promoções, avaliações e mais. Vou te mostrar com prints!
+              <h2 className="font-heading font-semibold text-foreground text-base mb-0.5">Olá! Sou o Chatinho Gepeto</h2>
+              <p className="text-xs text-muted-foreground max-w-sm leading-relaxed">
+                Pergunte sobre a plataforma: categorias, entrega, promoções, avaliações e mais.
               </p>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-4 w-full max-w-lg">
+            <div className="grid grid-cols-2 gap-2 mt-3 w-full max-w-md">
               {[
                 "Como alterar a categoria da loja?",
                 "Como criar categorias no cardápio?",
                 "Como configurar entrega pela loja?",
                 "Como melhorar as avaliações?",
               ].map((suggestion) => (
-                <Button
+                <button
                   key={suggestion}
-                  variant="outline"
-                  size="sm"
-                  className="text-left justify-start h-auto py-2 px-3 text-xs"
+                  className="text-left p-2.5 rounded-lg border border-border bg-card hover:bg-accent/50 hover:border-primary/30 transition-all text-xs text-muted-foreground hover:text-foreground"
                   onClick={() => {
                     setInput(suggestion);
                     setTimeout(() => textareaRef.current?.focus(), 100);
                   }}
                 >
                   {suggestion}
-                </Button>
+                </button>
               ))}
             </div>
           </div>
         ) : (
-          <div className="space-y-4 pb-4">
+          <div className="space-y-3 pb-2">
             {messages.map((msg) => (
-              <div key={msg.id} className={`flex gap-3 ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
+              <div key={msg.id} className={`flex gap-2.5 ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
                 {msg.role === "assistant" && (
-                  <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 mt-1">
-                    <Bot className="h-4 w-4 text-primary" />
+                  <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
+                    <Bot className="h-3.5 w-3.5 text-primary" />
                   </div>
                 )}
-                <Card
-                  className={`max-w-[85%] p-3 ${
+                <div
+                  className={`max-w-[80%] rounded-2xl px-3.5 py-2.5 ${
                     msg.role === "user"
-                      ? "bg-primary text-primary-foreground border-primary"
-                      : "bg-card border-border"
+                      ? "bg-primary text-primary-foreground rounded-br-md"
+                      : "bg-card border border-border rounded-bl-md"
                   }`}
                 >
                   {msg.role === "assistant" ? (
-                    <div className="prose prose-sm dark:prose-invert max-w-none">
+                    <div className="prose prose-sm dark:prose-invert max-w-none text-sm leading-relaxed">
                       <ReactMarkdown
                         remarkPlugins={[remarkGfm]}
                         components={{
@@ -237,26 +235,26 @@ export default function AssistantChat() {
                       </ReactMarkdown>
                     </div>
                   ) : (
-                    <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                    <p className="text-sm whitespace-pre-wrap leading-relaxed">{msg.content}</p>
                   )}
-                </Card>
+                </div>
                 {msg.role === "user" && (
-                  <div className="h-8 w-8 rounded-lg bg-muted flex items-center justify-center shrink-0 mt-1">
-                    <User className="h-4 w-4 text-muted-foreground" />
+                  <div className="h-7 w-7 rounded-full bg-muted flex items-center justify-center shrink-0 mt-0.5">
+                    <User className="h-3.5 w-3.5 text-muted-foreground" />
                   </div>
                 )}
               </div>
             ))}
             {isLoading && messages[messages.length - 1]?.role === "user" && (
-              <div className="flex gap-3 justify-start">
-                <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                  <Bot className="h-4 w-4 text-primary" />
+              <div className="flex gap-2.5 justify-start">
+                <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                  <Bot className="h-3.5 w-3.5 text-primary" />
                 </div>
-                <Card className="bg-card border-border p-3">
+                <div className="bg-card border border-border rounded-2xl rounded-bl-md px-3.5 py-2.5">
                   <div className="flex items-center gap-2 text-muted-foreground text-sm">
-                    <Loader2 className="h-4 w-4 animate-spin" /> Pensando...
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" /> Pensando...
                   </div>
-                </Card>
+                </div>
               </div>
             )}
           </div>
@@ -264,21 +262,21 @@ export default function AssistantChat() {
       </ScrollArea>
 
       {/* Input */}
-      <div className="p-4 border-t border-border">
-        <div className="flex gap-2 items-end">
+      <div className="px-4 py-3 border-t border-border">
+        <div className="flex gap-2 items-end bg-muted/50 rounded-xl p-1.5 border border-border focus-within:border-primary/40 transition-colors">
           <Textarea
             ref={textareaRef}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Digite sua dúvida... (ex: Como alterar o nome da loja?)"
-            className="min-h-[44px] max-h-32 resize-none bg-background"
+            className="min-h-[40px] max-h-28 resize-none bg-transparent border-0 focus-visible:ring-0 text-sm placeholder:text-muted-foreground/60"
             rows={1}
           />
           <Button
             onClick={handleSend}
             disabled={!input.trim() || isLoading}
-            className="h-11 w-11 shrink-0 bg-primary text-primary-foreground hover:bg-primary/90"
+            className="h-9 w-9 shrink-0 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90"
             size="icon"
           >
             {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
