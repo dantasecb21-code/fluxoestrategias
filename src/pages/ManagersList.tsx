@@ -409,7 +409,7 @@ export default function ManagersList() {
                       Tipo: {s.strategy_type === "initial" ? "Inicial" : "Repreci ficação"}
                     </p>
                     {s.deadline && (
-                      <p className="text-xs text-muted-foreground">Prazo: {s.deadline}</p>
+                      <p className="text-xs text-muted-foreground">Prazo: {formatDateBR(s.deadline)}</p>
                     )}
                   </Card>
                 );

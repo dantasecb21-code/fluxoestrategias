@@ -490,7 +490,7 @@ export default function PendingActivities() {
             <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
               {act.deadline && (
                 <span className="flex items-center gap-1">
-                  <Clock className="h-3.5 w-3.5" /> Prazo: {act.deadline}
+                  <Clock className="h-3.5 w-3.5" /> Prazo: {formatDateBR(act.deadline)}
                 </span>
               )}
               {canManage && (
