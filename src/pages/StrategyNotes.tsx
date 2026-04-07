@@ -191,7 +191,7 @@ export default function StrategyNotes() {
           <h1 className="font-heading font-bold text-2xl text-foreground">
             Bloco de <span className="text-primary">Notas</span>
           </h1>
-          <p className="text-sm text-muted-foreground">Escreva, grave áudios ou cole imagens para organizar suas estratégias</p>
+          <p className="text-sm text-muted-foreground">Escreva ou cole imagens para organizar suas estratégias</p>
         </div>
         <Button size="sm" onClick={handleNew}>
           <Plus className="h-4 w-4 mr-1" /> Nova nota
