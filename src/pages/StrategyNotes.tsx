@@ -180,57 +180,6 @@ export default function StrategyNotes() {
     });
   };
 
-  // Speech Recognition
-  const toggleRecording = () => {
-    if (isRecording) {
-      recognitionRef.current?.stop();
-      setIsRecording(false);
-      return;
-    }
-
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-      toast.error("Seu navegador não suporta reconhecimento de voz. Use Chrome ou Edge.");
-      return;
-    }
-
-    const recognition = new SpeechRecognition();
-    recognition.lang = "pt-BR";
-    recognition.continuous = true;
-    recognition.interimResults = true;
-    recognitionRef.current = recognition;
-
-    let finalTranscript = "";
-
-    recognition.onresult = (event: any) => {
-      let interim = "";
-      for (let i = event.resultIndex; i < event.results.length; i++) {
-        const transcript = event.results[i][0].transcript;
-        if (event.results[i].isFinal) {
-          finalTranscript += transcript + " ";
-        } else {
-          interim = transcript;
-        }
-      }
-      setContent((prev) => {
-        const base = prev.endsWith("\n") || prev === "" ? prev : prev + "\n";
-        return base + finalTranscript + (interim ? interim : "");
-      });
-    };
-
-    recognition.onerror = () => {
-      setIsRecording(false);
-      toast.error("Erro no reconhecimento de voz");
-    };
-
-    recognition.onend = () => {
-      setIsRecording(false);
-    };
-
-    recognition.start();
-    setIsRecording(true);
-    toast.success("Gravando... Fale agora!");
-  };
 
   // Check if content has images
   const hasImages = /!\[.*?\]\(.*?\)/.test(content);
