@@ -166,7 +166,7 @@ export default function StoreRequests() {
   const resetForm = () => {
     setStoreName("");
     setClientName("");
-    setStoreCreated(false);
+    setStoreCreationStatus("pending");
     setPlatformAccess(false);
     setMeetingDate("");
     setObservation("");
