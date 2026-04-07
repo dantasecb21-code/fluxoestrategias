@@ -69,7 +69,7 @@ export default function StoreRequests() {
   // Form state
   const [storeName, setStoreName] = useState("");
   const [clientName, setClientName] = useState("");
-  const [storeCreated, setStoreCreated] = useState(false);
+  const [storeCreationStatus, setStoreCreationStatus] = useState("pending");
   const [platformAccess, setPlatformAccess] = useState(false);
   const [meetingDate, setMeetingDate] = useState("");
   const [observation, setObservation] = useState("");
