@@ -17,28 +17,40 @@ export default function StrategyCalendar() {
   const { role } = useAuth();
   const { strategies, loading } = useDbStrategies();
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
+  const [filterManager, setFilterManager] = useState("all");
 
   const isOperational = role === "operational";
+  const canFilter = role === "admin" || role === "strategic";
 
   const activeStrategies = useMemo(
     () => strategies.filter((s) => deriveStrategyDisplayStatus(s) !== "completed"),
     [strategies]
   );
 
+  const operationalManagers = useMemo(() => {
+    const names = [...new Set(activeStrategies.map((s) => s.operational_manager).filter(Boolean))];
+    return names.sort();
+  }, [activeStrategies]);
+
+  const managerFiltered = useMemo(() => {
+    if (filterManager === "all") return activeStrategies;
+    return activeStrategies.filter((s) => s.operational_manager === filterManager);
+  }, [activeStrategies, filterManager]);
+
   const deadlineDates = useMemo(() => {
     const dates: Date[] = [];
-    activeStrategies.forEach((s) => {
+    managerFiltered.forEach((s) => {
       if (s.deadline) dates.push(parseISO(s.deadline));
     });
     return dates;
-  }, [activeStrategies]);
+  }, [managerFiltered]);
 
   const filteredStrategies = useMemo(() => {
     if (!selectedDate) return [];
-    return activeStrategies.filter(
+    return managerFiltered.filter(
       (s) => s.deadline && isSameDay(parseISO(s.deadline), selectedDate)
     );
-  }, [activeStrategies, selectedDate]);
+  }, [managerFiltered, selectedDate]);
 
   const handleNavigate = (id: string) => {
     if (isOperational) {
