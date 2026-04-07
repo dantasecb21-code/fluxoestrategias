@@ -66,7 +66,7 @@ export default function PricingCalculator() {
           </CardHeader>
           <CardContent className="space-y-5">
             <div className="space-y-2">
-              <Label htmlFor="item-cost">Custo do Item (R$)</Label>
+              <Label htmlFor="item-cost">Preço do Balcão(R$)</Label>
               <Input
                 id="item-cost"
                 type="number"
