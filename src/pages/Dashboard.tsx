@@ -174,6 +174,32 @@ export default function Dashboard() {
         </Button>
       </div>
 
+      {/* Search & Filter */}
+      {strategies.length > 0 && (
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Pesquisar loja..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+          <Select value={filterManager} onValueChange={setFilterManager}>
+            <SelectTrigger className="w-full sm:w-[220px]">
+              <SelectValue placeholder="Filtrar por gestor" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos os gestores</SelectItem>
+              {operationalManagers.map((name) => (
+                <SelectItem key={name} value={name}>{shortName(name)}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+
       {/* List */}
       {loading ? (
         <p className="text-muted-foreground">Carregando...</p>
