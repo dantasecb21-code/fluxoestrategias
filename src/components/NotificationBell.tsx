@@ -1,20 +1,22 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Bell, AlertTriangle, RotateCcw, Clock, ClipboardList, Check } from "lucide-react";
+import { Bell, AlertTriangle, RotateCcw, Clock, ClipboardList, Check, Store } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useDbStrategies } from "@/hooks/useDbStrategies";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import { deriveStrategyDisplayStatus } from "@/lib/strategyStatus";
 import { useNavigate } from "react-router-dom";
 import { shortName } from "@/lib/utils";
 
 interface Notification {
   id: string;
-  type: "returned" | "overdue" | "expiring" | "assigned";
+  type: "returned" | "overdue" | "expiring" | "assigned" | "new_store";
   title: string;
   subtitle: string;
   strategyId: string;
   timestamp: string;
+  route?: string;
 }
 
 const DISMISSED_KEY = "notifications-dismissed";
@@ -33,12 +35,29 @@ function saveDismissedIds(ids: Set<string>) {
 export function NotificationBell() {
   const [open, setOpen] = useState(false);
   const [dismissedIds, setDismissedIds] = useState<Set<string>>(getDismissedIds);
+  const [storeRequests, setStoreRequests] = useState<any[]>([]);
   const ref = useRef<HTMLDivElement>(null);
   const { strategies } = useDbStrategies();
   const { role } = useAuth();
   const navigate = useNavigate();
 
   const isOperational = role === "operational";
+  const isStrategicOrAdmin = role === "strategic" || role === "admin";
+
+  // Fetch pending store requests for strategic/admin users
+  useEffect(() => {
+    if (!isStrategicOrAdmin) return;
+    const fetchStoreRequests = async () => {
+      const { data } = await supabase
+        .from("store_requests")
+        .select("id, store_name, client_name, status, created_at")
+        .in("status", ["pending", "in_progress"]);
+      setStoreRequests(data || []);
+    };
+    fetchStoreRequests();
+    const interval = setInterval(fetchStoreRequests, 30000);
+    return () => clearInterval(interval);
+  }, [isStrategicOrAdmin]);
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -91,18 +110,33 @@ export function NotificationBell() {
     }
   });
 
+  // Add store request notifications for strategic/admin
+  if (isStrategicOrAdmin) {
+    storeRequests.forEach((sr) => {
+      notifications.push({
+        id: `store-request-${sr.id}`,
+        type: "new_store",
+        title: sr.status === "pending" ? "Nova loja para criar estratégia" : "Loja em andamento",
+        subtitle: sr.store_name || "Sem nome",
+        strategyId: sr.id,
+        timestamp: sr.created_at,
+        route: "/lojas-novas",
+      });
+    });
+  }
+
   // Clean up dismissed IDs that no longer exist (only when strategies are loaded)
   useEffect(() => {
-    if (strategies.length === 0) return;
+    if (strategies.length === 0 && storeRequests.length === 0) return;
     const validIds = new Set(notifications.map(n => n.id));
     const cleaned = new Set([...dismissedIds].filter(id => validIds.has(id)));
     if (cleaned.size !== dismissedIds.size) {
       setDismissedIds(cleaned);
       saveDismissedIds(cleaned);
     }
-  }, [strategies.length, notifications.length]);
+  }, [strategies.length, notifications.length, storeRequests.length]);
 
-  const priority = { returned: 0, overdue: 1, expiring: 2, assigned: 3 };
+  const priority = { returned: 0, overdue: 1, expiring: 2, new_store: 3, assigned: 4 };
   notifications.sort((a, b) => priority[a.type] - priority[b.type]);
 
   const undismissedCount = notifications.filter(n => !dismissedIds.has(n.id)).length;
@@ -126,18 +160,20 @@ export function NotificationBell() {
       case "returned": return <RotateCcw className="h-4 w-4 text-destructive" />;
       case "overdue": return <AlertTriangle className="h-4 w-4 text-destructive" />;
       case "expiring": return <Clock className="h-4 w-4 text-warning" />;
+      case "new_store": return <Store className="h-4 w-4 text-primary" />;
       case "assigned": return <ClipboardList className="h-4 w-4 text-primary" />;
     }
   };
 
   const handleClick = (n: Notification) => {
-    // Dismiss on click
     const next = new Set(dismissedIds);
     next.add(n.id);
     setDismissedIds(next);
     saveDismissedIds(next);
     setOpen(false);
-    if (isOperational) {
+    if (n.route) {
+      navigate(n.route);
+    } else if (isOperational) {
       navigate(`/operacional/${n.strategyId}`);
     } else {
       navigate(`/estrategia/${n.strategyId}`);
