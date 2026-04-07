@@ -7,9 +7,11 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Users, Trash2, AlertTriangle, Store, Pencil, Check, X } from "lucide-react";
 import { toast } from "sonner";
-import { calcManagerStats } from "@/lib/strategyStatus";
+import { calcManagerStats, deriveStrategyDisplayStatus, getStatusLabel, getStatusBadgeProps } from "@/lib/strategyStatus";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -31,12 +33,22 @@ interface OperationalManager {
   store_count: number;
 }
 
+type StatusFilter = "completed" | "pending_approval" | "in_progress" | "pending";
+
+const STATUS_FILTER_LABELS: Record<StatusFilter, string> = {
+  completed: "Concluídas",
+  pending_approval: "Aguardando",
+  in_progress: "Em andamento",
+  pending: "Pendentes",
+};
+
 export default function ManagersList() {
   const [managers, setManagers] = useState<OperationalManager[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingLimit, setEditingLimit] = useState<string | null>(null);
   const [editingCount, setEditingCount] = useState<string | null>(null);
   const [editValue, setEditValue] = useState("");
+  const [storesDialog, setStoresDialog] = useState<{ managerId: string; managerName: string; status: StatusFilter } | null>(null);
   const { strategies } = useDbStrategies();
   const navigate = useNavigate();
 
@@ -139,6 +151,18 @@ export default function ManagersList() {
     const statsB = calcManagerStats(strategies, b.user_id);
     return statsB.completed - statsA.completed || statsB.completionRate - statsA.completionRate;
   });
+
+  const getFilteredStrategies = () => {
+    if (!storesDialog) return [];
+    return strategies.filter((s) => {
+      if (s.assigned_to !== storesDialog.managerId) return false;
+      const displayStatus = deriveStrategyDisplayStatus(s);
+      if (storesDialog.status === "in_progress") {
+        return displayStatus === "in_progress" || displayStatus === "returned";
+      }
+      return displayStatus === storesDialog.status;
+    });
+  };
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -305,24 +329,36 @@ export default function ManagersList() {
                   )}
                 </div>
 
-                {/* Stats */}
+                {/* Stats - clickable */}
                 <div className="grid grid-cols-4 gap-3 mb-3">
-                  <div className="text-center p-2 rounded-lg bg-success/10">
+                  <button
+                    className="text-center p-2 rounded-lg bg-success/10 hover:bg-success/20 transition-colors cursor-pointer"
+                    onClick={() => setStoresDialog({ managerId: m.user_id, managerName: m.display_name, status: "completed" })}
+                  >
                     <p className="font-heading font-bold text-lg text-success">{stats.completed}</p>
                     <p className="text-xs text-muted-foreground">Concluídas</p>
-                  </div>
-                  <div className="text-center p-2 rounded-lg bg-blue-500/10">
+                  </button>
+                  <button
+                    className="text-center p-2 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 transition-colors cursor-pointer"
+                    onClick={() => setStoresDialog({ managerId: m.user_id, managerName: m.display_name, status: "pending_approval" })}
+                  >
                     <p className="font-heading font-bold text-lg text-blue-400">{stats.pendingApproval}</p>
                     <p className="text-xs text-muted-foreground">Aguardando</p>
-                  </div>
-                  <div className="text-center p-2 rounded-lg bg-primary/10">
+                  </button>
+                  <button
+                    className="text-center p-2 rounded-lg bg-primary/10 hover:bg-primary/20 transition-colors cursor-pointer"
+                    onClick={() => setStoresDialog({ managerId: m.user_id, managerName: m.display_name, status: "in_progress" })}
+                  >
                     <p className="font-heading font-bold text-lg text-primary">{stats.inProgress}</p>
                     <p className="text-xs text-muted-foreground">Em andamento</p>
-                  </div>
-                  <div className="text-center p-2 rounded-lg bg-warning/10">
+                  </button>
+                  <button
+                    className="text-center p-2 rounded-lg bg-warning/10 hover:bg-warning/20 transition-colors cursor-pointer"
+                    onClick={() => setStoresDialog({ managerId: m.user_id, managerName: m.display_name, status: "pending" })}
+                  >
                     <p className="font-heading font-bold text-lg text-warning">{stats.pending}</p>
                     <p className="text-xs text-muted-foreground">Pendentes</p>
-                  </div>
+                  </button>
                 </div>
 
                 <div className="space-y-1">
@@ -337,6 +373,50 @@ export default function ManagersList() {
           })}
         </div>
       )}
+
+      {/* Dialog de lojas por status */}
+      <Dialog open={!!storesDialog} onOpenChange={(open) => { if (!open) setStoresDialog(null); }}>
+        <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Store className="h-5 w-5 text-primary" />
+              {storesDialog && `${STATUS_FILTER_LABELS[storesDialog.status]} — ${shortName(storesDialog.managerName)}`}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2 mt-2">
+            {(() => {
+              const filtered = getFilteredStrategies();
+              if (filtered.length === 0) {
+                return (
+                  <p className="text-sm text-muted-foreground text-center py-6">
+                    Nenhuma loja nesse status.
+                  </p>
+                );
+              }
+              return filtered.map((s: any) => {
+                const displayStatus = deriveStrategyDisplayStatus(s);
+                const badgeProps = getStatusBadgeProps(displayStatus);
+                return (
+                  <Card key={s.id} className="p-3 space-y-1">
+                    <div className="flex items-center justify-between">
+                      <h4 className="font-semibold text-sm text-foreground">{s.store_name || "Sem nome"}</h4>
+                      <Badge className={badgeProps.className} variant={badgeProps.variant}>
+                        {getStatusLabel(displayStatus)}
+                      </Badge>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Tipo: {s.strategy_type === "initial" ? "Inicial" : "Repreci ficação"}
+                    </p>
+                    {s.deadline && (
+                      <p className="text-xs text-muted-foreground">Prazo: {s.deadline}</p>
+                    )}
+                  </Card>
+                );
+              });
+            })()}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
