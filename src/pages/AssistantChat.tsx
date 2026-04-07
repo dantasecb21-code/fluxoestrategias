@@ -18,6 +18,93 @@ type Message = {
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/assistant-chat`;
 
+const FAQ_CATEGORIES = [
+  {
+    label: "Cardápio",
+    icon: UtensilsCrossed,
+    questions: [
+      "Como criar categorias no cardápio?",
+      "Como adicionar itens ao cardápio?",
+      "Como editar ou remover um item?",
+      "Como alterar a ordem dos itens?",
+      "Como adicionar complementos e adicionais?",
+      "Como configurar tamanhos e variações?",
+    ],
+  },
+  {
+    label: "Configurações da Loja",
+    icon: Settings,
+    questions: [
+      "Como alterar o nome da loja?",
+      "Como alterar a categoria da loja?",
+      "Como mudar o endereço da loja?",
+      "Como configurar horário de funcionamento?",
+      "Como pausar a loja temporariamente?",
+      "Como ativar ou desativar a loja?",
+    ],
+  },
+  {
+    label: "Entrega e Logística",
+    icon: Truck,
+    questions: [
+      "Como configurar entrega pela loja?",
+      "Como definir área de entrega?",
+      "Como configurar taxa de entrega?",
+      "Como configurar tempo de preparo?",
+      "Como funciona a entrega pela plataforma?",
+    ],
+  },
+  {
+    label: "Promoções e Cupons",
+    icon: Tag,
+    questions: [
+      "Como criar um cupom de desconto?",
+      "Como criar uma promoção?",
+      "Como ativar combo promocional?",
+      "Como funciona o programa de fidelidade?",
+    ],
+  },
+  {
+    label: "Avaliações e Clientes",
+    icon: Star,
+    questions: [
+      "Como melhorar as avaliações?",
+      "Como responder avaliações dos clientes?",
+      "Como lidar com avaliações negativas?",
+      "Como aumentar a recorrência de clientes?",
+    ],
+  },
+  {
+    label: "Fotos e Imagens",
+    icon: Image,
+    questions: [
+      "Como alterar a foto de capa?",
+      "Como alterar o logo da loja?",
+      "Como adicionar fotos nos itens?",
+      "Qual o tamanho ideal das imagens?",
+    ],
+  },
+  {
+    label: "Financeiro e Pagamentos",
+    icon: CreditCard,
+    questions: [
+      "Como ver o extrato de vendas?",
+      "Como funcionam os repasses?",
+      "Como configurar formas de pagamento?",
+    ],
+  },
+  {
+    label: "Pedidos e Operação",
+    icon: MessageSquare,
+    questions: [
+      "Como aceitar pedidos?",
+      "Como cancelar um pedido?",
+      "Como configurar pedido mínimo?",
+      "Como funciona o chat com o cliente?",
+    ],
+  },
+];
+
 export default function AssistantChat() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
