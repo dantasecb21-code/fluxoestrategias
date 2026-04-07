@@ -7,9 +7,13 @@ import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Clock, AlertTriangle, UserCheck, Eye, Search, Filter } from "lucide-react";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Clock, AlertTriangle, UserCheck, Eye, Search, Filter, CalendarIcon, X } from "lucide-react";
 import { formatDateBR, shortName } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { format, isSameDay, parseISO } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import OverdueAlert from "@/components/OverdueAlert";
 
 function calcProgress(categories: any[]) {
