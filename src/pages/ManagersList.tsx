@@ -62,8 +62,9 @@ export default function ManagersList() {
       const userIds = roles.map((r) => r.user_id);
       const { data: profiles } = await supabase
         .from("profiles")
-        .select("user_id, display_name, whatsapp, avatar_url, store_limit, store_count")
-        .in("user_id", userIds);
+        .select("user_id, display_name, whatsapp, avatar_url, store_limit, store_count, approved")
+        .in("user_id", userIds)
+        .eq("approved", true);
 
       if (profiles) {
         setManagers(profiles.map((p) => ({
