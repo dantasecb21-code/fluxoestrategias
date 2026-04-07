@@ -288,10 +288,7 @@ export default function AssistantChat() {
                         <button
                           key={q}
                           className="text-left px-3 py-2 rounded-lg hover:bg-accent/50 transition-colors text-xs text-muted-foreground hover:text-foreground"
-                          onClick={() => {
-                            setInput(q);
-                            setTimeout(() => handleSend(), 50);
-                          }}
+                          onClick={() => handleSend(q)}
                         >
                           {q}
                         </button>
