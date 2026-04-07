@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDbStrategies } from "@/hooks/useDbStrategies";
+import { formatDateBR } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -55,7 +56,7 @@ export default function OperationalDashboard() {
             </h3>
             <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1">
               <span className="flex items-center gap-1">
-                <Clock className="h-3 w-3" /> Prazo: {s.deadline || "Não definido"}
+                <Clock className="h-3 w-3" /> Prazo: {s.deadline ? formatDateBR(s.deadline) : "Não definido"}
               </span>
             </div>
           </div>

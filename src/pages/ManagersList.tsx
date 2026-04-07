@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { shortName } from "@/lib/utils";
+import { shortName, formatDateBR } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useDbStrategies } from "@/hooks/useDbStrategies";
 import { Card } from "@/components/ui/card";
@@ -409,7 +409,7 @@ export default function ManagersList() {
                       Tipo: {s.strategy_type === "initial" ? "Inicial" : "Repreci ficação"}
                     </p>
                     {s.deadline && (
-                      <p className="text-xs text-muted-foreground">Prazo: {s.deadline}</p>
+                      <p className="text-xs text-muted-foreground">Prazo: {formatDateBR(s.deadline)}</p>
                     )}
                   </Card>
                 );

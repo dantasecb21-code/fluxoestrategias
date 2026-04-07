@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
-import { shortName } from "@/lib/utils";
+import { shortName, formatDateBR } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Card } from "@/components/ui/card";
@@ -490,7 +490,7 @@ export default function PendingActivities() {
             <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
               {act.deadline && (
                 <span className="flex items-center gap-1">
-                  <Clock className="h-3.5 w-3.5" /> Prazo: {act.deadline}
+                  <Clock className="h-3.5 w-3.5" /> Prazo: {formatDateBR(act.deadline)}
                 </span>
               )}
               {canManage && (
