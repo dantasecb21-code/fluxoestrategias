@@ -213,7 +213,7 @@ export function CategoryCard({
                   </p>
                   {item.text && <p className="text-xs text-muted-foreground mt-0.5">{item.text}</p>}
                 </div>
-                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
                   {onMoveItem && (
                     <>
                       <Button
