@@ -21,7 +21,7 @@ interface StoreRequest {
   id: string;
   store_name: string;
   client_name: string;
-  store_created: boolean;
+  store_creation_status: string;
   platform_access_confirmed: boolean;
   meeting_date: string;
   observation: string;
