@@ -27,23 +27,13 @@ function calcProgress(categories: any[]) {
   return { percent, completed, inProgress, pending, total };
 }
 
-type DeadlineFilter = "all" | "overdue" | "7days" | "15days" | "30days";
-
-const DEADLINE_LABELS: Record<DeadlineFilter, string> = {
-  all: "Todos os prazos",
-  overdue: "Atrasadas",
-  "7days": "Vence em 7 dias",
-  "15days": "Vence em 15 dias",
-  "30days": "Vence em 30 dias",
-};
-
 export default function PendingStrategies() {
   const navigate = useNavigate();
   const { strategies, loading } = useDbStrategies();
   const [searchTerm, setSearchTerm] = useState("");
   const [filterManager, setFilterManager] = useState("all");
   const [filterStatus, setFilterStatus] = useState("all");
-  const [filterDeadline, setFilterDeadline] = useState<DeadlineFilter>("all");
+  const [filterDate, setFilterDate] = useState<Date | undefined>(undefined);
 
   const allPending = useMemo(() =>
     strategies
