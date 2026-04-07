@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { shortName } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -61,6 +61,7 @@ export default function StoreRequests() {
   const isAdmin = role === "admin";
   const [requests, setRequests] = useState<StoreRequest[]>([]);
   const [strategicUsers, setStrategicUsers] = useState<StrategicUser[]>([]);
+  const [assigneeNames, setAssigneeNames] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -78,35 +79,89 @@ export default function StoreRequests() {
   const [freeText, setFreeText] = useState("");
   const [parsing, setParsing] = useState(false);
 
-  const fetchRequests = async () => {
+  const fetchRequests = useCallback(async () => {
     const { data } = await supabase
       .from("store_requests")
       .select("*")
       .order("created_at", { ascending: false });
-    if (data) setRequests(data as unknown as StoreRequest[]);
-    setLoading(false);
-  };
 
-  const fetchStrategicUsers = async () => {
+    const requestRows = (data as unknown as StoreRequest[]) ?? [];
+    setRequests(requestRows);
+
+    const assignedUserIds = [...new Set(
+      requestRows
+        .map((request) => request.assigned_to)
+        .filter((value): value is string => Boolean(value)),
+    )];
+
+    if (!assignedUserIds.length) {
+      setAssigneeNames({});
+      setLoading(false);
+      return;
+    }
+
+    const { data: assignees } = await supabase
+      .from("profiles")
+      .select("user_id, display_name")
+      .in("user_id", assignedUserIds);
+
+    setAssigneeNames(
+      Object.fromEntries((assignees ?? []).map((profile) => [profile.user_id, profile.display_name])),
+    );
+    setLoading(false);
+  }, []);
+
+  const fetchStrategicUsers = useCallback(async () => {
     const { data: roles } = await supabase
       .from("user_roles")
-      .select("user_id, role")
-      .in("role", ["strategic", "admin"]);
-    if (!roles?.length) return;
+      .select("user_id")
+      .eq("role", "strategic");
+
+    if (!roles?.length) {
+      setStrategicUsers([]);
+      return;
+    }
 
     const userIds = [...new Set(roles.map((r) => r.user_id))];
     const { data: profiles } = await supabase
       .from("profiles")
       .select("user_id, display_name")
       .in("user_id", userIds)
-      .eq("approved", true);
-    if (profiles) setStrategicUsers(profiles);
-  };
+      .eq("approved", true)
+      .order("display_name", { ascending: true });
+
+    setStrategicUsers((profiles ?? []) as StrategicUser[]);
+  }, []);
 
   useEffect(() => {
     fetchRequests();
     fetchStrategicUsers();
-  }, []);
+  }, [fetchRequests, fetchStrategicUsers]);
+
+  useEffect(() => {
+    const channelId = `store-requests-strategic-users-${Math.random().toString(36).slice(2)}`;
+    const channel = supabase.channel(channelId);
+
+    channel
+      .on("postgres_changes", {
+        event: "*",
+        schema: "public",
+        table: "user_roles",
+      }, () => {
+        fetchStrategicUsers();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [fetchStrategicUsers]);
+
+  useEffect(() => {
+    if (assignedTo && !strategicUsers.some((strategicUser) => strategicUser.user_id === assignedTo)) {
+      setAssignedTo("");
+    }
+  }, [assignedTo, strategicUsers]);
 
   const resetForm = () => {
     setStoreName("");
@@ -224,8 +279,8 @@ export default function StoreRequests() {
 
   const getAssigneeName = (userId: string | null) => {
     if (!userId) return "—";
-    const found = strategicUsers.find((u) => u.user_id === userId);
-    return found?.display_name ? shortName(found.display_name) : "Estrategista";
+    const displayName = assigneeNames[userId];
+    return displayName ? shortName(displayName) : "Estrategista";
   };
 
   if (loading) {
