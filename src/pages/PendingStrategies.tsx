@@ -168,7 +168,7 @@ export default function PendingStrategies() {
                   setSearchTerm("");
                   setFilterManager("all");
                   setFilterStatus("all");
-                  setFilterDeadline("all");
+                  setFilterDate(undefined);
                 }}
               >
                 Limpar filtros
