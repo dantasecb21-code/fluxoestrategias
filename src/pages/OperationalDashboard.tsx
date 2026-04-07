@@ -55,7 +55,7 @@ export default function OperationalDashboard() {
               {s.store_name || "Sem nome"}
             </h3>
             <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1">
-              <span className="flex items-center gap-1">
+              <span className={`flex items-center gap-1 ${s.deadline && new Date(s.deadline) < new Date() ? "text-destructive" : ""}`}>
                 <Clock className="h-3 w-3" /> Prazo: {s.deadline ? formatDateBR(s.deadline) : "Não definido"}
               </span>
             </div>
