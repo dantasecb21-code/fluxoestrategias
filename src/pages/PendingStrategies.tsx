@@ -226,7 +226,7 @@ export default function PendingStrategies() {
                       <h3 className="font-heading font-semibold text-foreground text-lg truncate flex items-center gap-2">
                         {s.store_name || "Sem nome"}
                         {isOverdue && (
-                          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-destructive/20 text-destructive border border-destructive/30 shrink-0">Atrasada</span>
+                          <span className="h-2 w-2 rounded-full bg-destructive shrink-0" title="Atrasada" />
                         )}
                       </h3>
                       <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground mt-1">
