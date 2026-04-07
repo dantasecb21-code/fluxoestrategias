@@ -54,50 +54,34 @@ export default function PendingStrategies() {
     return names.sort();
   }, [allPending]);
 
-  const now = new Date();
+  // Collect all deadline dates for calendar highlighting
+  const deadlineDates = useMemo(() => {
+    const dates: Date[] = [];
+    allPending.forEach((s) => {
+      if (s.deadline) dates.push(parseISO(s.deadline));
+    });
+    return dates;
+  }, [allPending]);
 
   const pendingStrategies = useMemo(() => {
     return allPending.filter((s) => {
-      // Search
       if (searchTerm && !s.store_name.toLowerCase().includes(searchTerm.toLowerCase())) return false;
-
-      // Manager filter
       if (filterManager !== "all" && s.operational_manager !== filterManager) return false;
-
-      // Status filter
       if (filterStatus !== "all") {
         const ds = deriveStrategyDisplayStatus(s);
         if (filterStatus !== ds) return false;
       }
-
-      // Deadline filter
-      if (filterDeadline !== "all" && s.deadline) {
-        const deadlineDate = new Date(s.deadline);
-        const diffDays = Math.ceil((deadlineDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-
-        switch (filterDeadline) {
-          case "overdue":
-            if (diffDays >= 0) return false;
-            break;
-          case "7days":
-            if (diffDays < 0 || diffDays > 7) return false;
-            break;
-          case "15days":
-            if (diffDays < 0 || diffDays > 15) return false;
-            break;
-          case "30days":
-            if (diffDays < 0 || diffDays > 30) return false;
-            break;
-        }
-      } else if (filterDeadline === "overdue" && !s.deadline) {
+      if (filterDate && s.deadline) {
+        const deadlineDate = parseISO(s.deadline);
+        if (!isSameDay(deadlineDate, filterDate)) return false;
+      } else if (filterDate && !s.deadline) {
         return false;
       }
-
       return true;
     });
-  }, [allPending, searchTerm, filterManager, filterStatus, filterDeadline]);
+  }, [allPending, searchTerm, filterManager, filterStatus, filterDate]);
 
-  const hasActiveFilters = searchTerm || filterManager !== "all" || filterStatus !== "all" || filterDeadline !== "all";
+  const hasActiveFilters = searchTerm || filterManager !== "all" || filterStatus !== "all" || !!filterDate;
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
