@@ -272,15 +272,6 @@ export default function StrategyNotes() {
 
           <div className="flex items-center gap-2 flex-wrap">
             <Button
-              variant={isRecording ? "destructive" : "outline"}
-              size="sm"
-              onClick={toggleRecording}
-              className={isRecording ? "animate-pulse" : ""}
-            >
-              {isRecording ? <><MicOff className="h-4 w-4 mr-1" /> Parar gravação</> : <><Mic className="h-4 w-4 mr-1" /> Gravar áudio</>}
-            </Button>
-
-            <Button
               variant="outline"
               size="sm"
               onClick={() => fileInputRef.current?.click()}
@@ -301,7 +292,6 @@ export default function StrategyNotes() {
               <Save className="h-4 w-4 mr-1" /> Salvar nota
             </Button>
 
-            {isRecording && <span className="text-xs text-destructive animate-pulse">● Gravando...</span>}
             {uploading && <span className="text-xs text-primary animate-pulse">📷 Enviando...</span>}
           </div>
 
