@@ -4,7 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Mic, MicOff, Plus, Save, Trash2, FileText, Image as ImageIcon, X } from "lucide-react";
+import { Plus, Save, Trash2, FileText, Image as ImageIcon } from "lucide-react";
 import { toast } from "sonner";
 
 interface Note {
