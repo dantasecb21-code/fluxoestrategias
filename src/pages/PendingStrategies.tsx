@@ -54,14 +54,16 @@ export default function PendingStrategies() {
     return names.sort();
   }, [allPending]);
 
-  // Collect all deadline dates for calendar highlighting
+  // Collect deadline dates filtered by selected manager
   const deadlineDates = useMemo(() => {
     const dates: Date[] = [];
     allPending.forEach((s) => {
-      if (s.deadline) dates.push(parseISO(s.deadline));
+      if (!s.deadline) return;
+      if (filterManager !== "all" && s.operational_manager !== filterManager) return;
+      dates.push(parseISO(s.deadline));
     });
     return dates;
-  }, [allPending]);
+  }, [allPending, filterManager]);
 
   const pendingStrategies = useMemo(() => {
     return allPending.filter((s) => {
