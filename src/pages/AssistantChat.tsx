@@ -177,35 +177,43 @@ export default function AssistantChat() {
       {/* Messages */}
       <ScrollArea className="flex-1 px-4 py-3" ref={scrollRef}>
         {messages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-center gap-3 py-12">
-            <div className="h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center">
-              <Bot className="h-7 w-7 text-primary" />
+          <div className="flex flex-col gap-4 py-6">
+            <div className="text-center">
+              <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-2">
+                <Bot className="h-6 w-6 text-primary" />
+              </div>
+              <h2 className="font-heading font-semibold text-foreground text-base">Olá! Sou o Chatinho Gepeto</h2>
+              <p className="text-xs text-muted-foreground mt-0.5">Clique em qualquer pergunta para enviar direto</p>
             </div>
-            <div>
-              <h2 className="font-heading font-semibold text-foreground text-base mb-0.5">Olá! Sou o Chatinho Gepeto</h2>
-              <p className="text-xs text-muted-foreground max-w-sm leading-relaxed">
-                Pergunte sobre a plataforma: categorias, entrega, promoções, avaliações e mais.
-              </p>
-            </div>
-            <div className="grid grid-cols-2 gap-2 mt-3 w-full max-w-md">
-              {[
-                "Como alterar a categoria da loja?",
-                "Como criar categorias no cardápio?",
-                "Como configurar entrega pela loja?",
-                "Como melhorar as avaliações?",
-              ].map((suggestion) => (
-                <button
-                  key={suggestion}
-                  className="text-left p-2.5 rounded-lg border border-border bg-card hover:bg-accent/50 hover:border-primary/30 transition-all text-xs text-muted-foreground hover:text-foreground"
-                  onClick={() => {
-                    setInput(suggestion);
-                    setTimeout(() => textareaRef.current?.focus(), 100);
-                  }}
-                >
-                  {suggestion}
-                </button>
+
+            <Accordion type="multiple" className="w-full max-w-lg mx-auto">
+              {FAQ_CATEGORIES.map((cat) => (
+                <AccordionItem key={cat.label} value={cat.label} className="border-border">
+                  <AccordionTrigger className="text-sm font-medium text-foreground hover:text-primary py-2.5 gap-2">
+                    <span className="flex items-center gap-2">
+                      <cat.icon className="h-4 w-4 text-primary" />
+                      {cat.label}
+                    </span>
+                  </AccordionTrigger>
+                  <AccordionContent className="pb-2">
+                    <div className="flex flex-col gap-1">
+                      {cat.questions.map((q) => (
+                        <button
+                          key={q}
+                          className="text-left px-3 py-2 rounded-lg hover:bg-accent/50 transition-colors text-xs text-muted-foreground hover:text-foreground"
+                          onClick={() => {
+                            setInput(q);
+                            setTimeout(() => handleSend(), 50);
+                          }}
+                        >
+                          {q}
+                        </button>
+                      ))}
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
               ))}
-            </div>
+            </Accordion>
           </div>
         ) : (
           <div className="space-y-3 pb-2">
