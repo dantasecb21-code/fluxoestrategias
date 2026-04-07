@@ -461,101 +461,42 @@ export default function StoreRequests() {
           <p>Nenhuma solicitação de loja nova encontrada.</p>
         </Card>
       ) : (
-        <div className="grid gap-4">
-          {requests.map((req) => {
-            const isStrategic = role === "strategic" && req.assigned_to === user?.id;
-
+        <div className="space-y-8">
+          {/* Loja a criar */}
+          {(() => {
+            const toCreate = requests.filter((r) => !r.store_created);
+            if (!toCreate.length) return null;
             return (
-              <Card
-                key={req.id}
-                className={`p-4 space-y-3 ${isStrategic && req.status !== "completed" ? "cursor-pointer hover:border-primary/50 transition-colors" : ""}`}
-                onClick={() => {
-                  if (isStrategic && req.status !== "completed") {
-                    // Mark as in_progress and navigate to new strategy
-                    if (req.status === "pending") {
-                      supabase.from("store_requests").update({ status: "in_progress" } as any).eq("id", req.id);
-                    }
-                    const params = new URLSearchParams();
-                    params.set("store", req.store_name);
-                    params.set("manager", displayName || "");
-                    params.set("store_request_id", req.id);
-                    navigate(`/nova?${params.toString()}`);
-                  }
-                }}
-              >
-                <div className="flex items-start justify-between">
-                  <div>
-                    <h3 className="font-semibold text-foreground text-lg">{req.store_name}</h3>
-                    <p className="text-sm text-muted-foreground flex items-center gap-1">
-                      <User className="h-3.5 w-3.5" />
-                      Cliente: {req.client_name}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Badge className={`${STATUS_COLORS[req.status] || ""} flex items-center gap-1.5`}>
-                      <span className={`h-2 w-2 rounded-full ${STATUS_DOT_COLORS[req.status] || ""}`} />
-                      {STATUS_LABELS[req.status] || req.status}
-                    </Badge>
-                    {isStrategic && req.status !== "completed" && (
-                      <ArrowRight className="h-4 w-4 text-primary" />
-                    )}
-                  </div>
+              <div className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <Clock className="h-5 w-5 text-warning" />
+                  <h2 className="font-heading font-semibold text-lg text-foreground">Loja a criar</h2>
+                  <Badge variant="outline" className="ml-1 text-xs">{toCreate.length}</Badge>
                 </div>
-
-                <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
-                  <span className="flex items-center gap-1">
-                    {req.store_created ? (
-                      <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
-                    ) : (
-                      <Clock className="h-3.5 w-3.5 text-warning" />
-                    )}
-                    Loja {req.store_created ? "criada" : "a criar"}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    {req.platform_access_confirmed ? (
-                      <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
-                    ) : (
-                      <Clock className="h-3.5 w-3.5 text-warning" />
-                    )}
-                    Acesso MiBusca {req.platform_access_confirmed ? "confirmado" : "pendente"}
-                  </span>
-                  {req.meeting_date && (
-                    <span className="flex items-center gap-1">
-                      <Clock className="h-3.5 w-3.5" />
-                      Reunião: {req.meeting_date}
-                    </span>
-                  )}
-                  {isAdmin && (
-                    <span>Estrategista: {getAssigneeName(req.assigned_to)}</span>
-                  )}
+                <div className="grid gap-4">
+                  {toCreate.map((req) => renderRequestCard(req))}
                 </div>
-
-                {req.observation && (
-                  <p className="text-sm text-muted-foreground bg-muted/50 p-2 rounded">
-                    {req.observation}
-                  </p>
-                )}
-
-                <div className="text-xs text-muted-foreground">
-                  Criado em {format(new Date(req.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
-                </div>
-
-                {/* Admin actions */}
-                {isAdmin && (
-                  <div className="flex items-center gap-2 pt-1" onClick={(e) => e.stopPropagation()}>
-                    <Button size="sm" variant="outline" onClick={() => openEdit(req)}>
-                      <Pencil className="h-3.5 w-3.5 mr-1" />
-                      Editar
-                    </Button>
-                    <Button size="sm" variant="destructive" onClick={() => handleDelete(req.id)}>
-                      <Trash2 className="h-3.5 w-3.5 mr-1" />
-                      Excluir
-                    </Button>
-                  </div>
-                )}
-              </Card>
+              </div>
             );
-          })}
+          })()}
+
+          {/* Loja criada */}
+          {(() => {
+            const created = requests.filter((r) => r.store_created);
+            if (!created.length) return null;
+            return (
+              <div className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+                  <h2 className="font-heading font-semibold text-lg text-foreground">Loja criada</h2>
+                  <Badge variant="outline" className="ml-1 text-xs">{created.length}</Badge>
+                </div>
+                <div className="grid gap-4">
+                  {created.map((req) => renderRequestCard(req))}
+                </div>
+              </div>
+            );
+          })()}
         </div>
       )}
     </div>
