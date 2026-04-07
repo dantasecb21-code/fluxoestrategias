@@ -7,9 +7,13 @@ import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Clock, AlertTriangle, UserCheck, Eye, Search, Filter } from "lucide-react";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Clock, AlertTriangle, UserCheck, Eye, Search, Filter, CalendarIcon, X } from "lucide-react";
 import { formatDateBR, shortName } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { format, isSameDay, parseISO } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import OverdueAlert from "@/components/OverdueAlert";
 
 function calcProgress(categories: any[]) {
@@ -23,23 +27,13 @@ function calcProgress(categories: any[]) {
   return { percent, completed, inProgress, pending, total };
 }
 
-type DeadlineFilter = "all" | "overdue" | "7days" | "15days" | "30days";
-
-const DEADLINE_LABELS: Record<DeadlineFilter, string> = {
-  all: "Todos os prazos",
-  overdue: "Atrasadas",
-  "7days": "Vence em 7 dias",
-  "15days": "Vence em 15 dias",
-  "30days": "Vence em 30 dias",
-};
-
 export default function PendingStrategies() {
   const navigate = useNavigate();
   const { strategies, loading } = useDbStrategies();
   const [searchTerm, setSearchTerm] = useState("");
   const [filterManager, setFilterManager] = useState("all");
   const [filterStatus, setFilterStatus] = useState("all");
-  const [filterDeadline, setFilterDeadline] = useState<DeadlineFilter>("all");
+  const [filterDate, setFilterDate] = useState<Date | undefined>(undefined);
 
   const allPending = useMemo(() =>
     strategies
@@ -60,50 +54,34 @@ export default function PendingStrategies() {
     return names.sort();
   }, [allPending]);
 
-  const now = new Date();
+  // Collect all deadline dates for calendar highlighting
+  const deadlineDates = useMemo(() => {
+    const dates: Date[] = [];
+    allPending.forEach((s) => {
+      if (s.deadline) dates.push(parseISO(s.deadline));
+    });
+    return dates;
+  }, [allPending]);
 
   const pendingStrategies = useMemo(() => {
     return allPending.filter((s) => {
-      // Search
       if (searchTerm && !s.store_name.toLowerCase().includes(searchTerm.toLowerCase())) return false;
-
-      // Manager filter
       if (filterManager !== "all" && s.operational_manager !== filterManager) return false;
-
-      // Status filter
       if (filterStatus !== "all") {
         const ds = deriveStrategyDisplayStatus(s);
         if (filterStatus !== ds) return false;
       }
-
-      // Deadline filter
-      if (filterDeadline !== "all" && s.deadline) {
-        const deadlineDate = new Date(s.deadline);
-        const diffDays = Math.ceil((deadlineDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-
-        switch (filterDeadline) {
-          case "overdue":
-            if (diffDays >= 0) return false;
-            break;
-          case "7days":
-            if (diffDays < 0 || diffDays > 7) return false;
-            break;
-          case "15days":
-            if (diffDays < 0 || diffDays > 15) return false;
-            break;
-          case "30days":
-            if (diffDays < 0 || diffDays > 30) return false;
-            break;
-        }
-      } else if (filterDeadline === "overdue" && !s.deadline) {
+      if (filterDate && s.deadline) {
+        const deadlineDate = parseISO(s.deadline);
+        if (!isSameDay(deadlineDate, filterDate)) return false;
+      } else if (filterDate && !s.deadline) {
         return false;
       }
-
       return true;
     });
-  }, [allPending, searchTerm, filterManager, filterStatus, filterDeadline]);
+  }, [allPending, searchTerm, filterManager, filterStatus, filterDate]);
 
-  const hasActiveFilters = searchTerm || filterManager !== "all" || filterStatus !== "all" || filterDeadline !== "all";
+  const hasActiveFilters = searchTerm || filterManager !== "all" || filterStatus !== "all" || !!filterDate;
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -158,20 +136,29 @@ export default function PendingStrategies() {
                 <SelectItem value="returned">Devolvida</SelectItem>
               </SelectContent>
             </Select>
-            <Select value={filterDeadline} onValueChange={(v) => setFilterDeadline(v as DeadlineFilter)}>
-              <SelectTrigger className="w-full sm:w-[200px]">
-                <SelectValue placeholder="Prazo" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos os prazos</SelectItem>
-                <SelectItem value="overdue">
-                  <span className="flex items-center gap-1.5 text-destructive">⚠ Atrasadas</span>
-                </SelectItem>
-                <SelectItem value="7days">Vence em 7 dias</SelectItem>
-                <SelectItem value="15days">Vence em 15 dias</SelectItem>
-                <SelectItem value="30days">Vence em 30 dias</SelectItem>
-              </SelectContent>
-            </Select>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="w-full sm:w-[200px] justify-start text-left font-normal">
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {filterDate ? format(filterDate, "dd/MM/yyyy") : "Filtrar por data"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={filterDate}
+                  onSelect={setFilterDate}
+                  locale={ptBR}
+                  modifiers={{ hasDeadline: deadlineDates }}
+                  modifiersClassNames={{ hasDeadline: "bg-primary/20 font-bold text-primary" }}
+                />
+              </PopoverContent>
+            </Popover>
+            {filterDate && (
+              <Button size="icon" variant="ghost" className="h-9 w-9 shrink-0" onClick={() => setFilterDate(undefined)}>
+                <X className="h-4 w-4" />
+              </Button>
+            )}
             {hasActiveFilters && (
               <Button
                 variant="ghost"
@@ -181,7 +168,7 @@ export default function PendingStrategies() {
                   setSearchTerm("");
                   setFilterManager("all");
                   setFilterStatus("all");
-                  setFilterDeadline("all");
+                  setFilterDate(undefined);
                 }}
               >
                 Limpar filtros
@@ -213,7 +200,7 @@ export default function PendingStrategies() {
           ) : (
             pendingStrategies.map((s) => {
               const progress = calcProgress(s.categories);
-              const isOverdue = s.deadline && new Date(s.deadline) < now;
+              const isOverdue = s.deadline && new Date(s.deadline) < new Date();
               return (
                 <Card
                   key={s.id}
