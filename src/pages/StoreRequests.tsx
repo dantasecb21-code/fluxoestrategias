@@ -85,6 +85,8 @@ export default function StoreRequests() {
   const [submitting, setSubmitting] = useState(false);
   const [freeText, setFreeText] = useState("");
   const [parsing, setParsing] = useState(false);
+  const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [filterCreation, setFilterCreation] = useState<string>("all");
 
   const fetchRequests = useCallback(async () => {
     const { data } = await supabase
