@@ -57,8 +57,8 @@ export default function Dashboard() {
       return dateA - dateB;
     });
 
-  const activeStrategies = sortByPriority(strategies.filter((s) => deriveStrategyDisplayStatus(s) !== "completed"));
-  const completedStrategies = strategies.filter((s) => deriveStrategyDisplayStatus(s) === "completed");
+  const activeStrategies = sortByPriority(filterStrategies(strategies.filter((s) => deriveStrategyDisplayStatus(s) !== "completed")));
+  const completedStrategies = filterStrategies(strategies.filter((s) => deriveStrategyDisplayStatus(s) === "completed"));
 
   const toggleTrash = async () => {
     if (!showTrash) {
