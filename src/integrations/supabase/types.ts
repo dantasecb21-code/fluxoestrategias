@@ -142,7 +142,7 @@ export type Database = {
           observation: string
           platform_access_confirmed: boolean
           status: string
-          store_created: boolean
+          store_creation_status: string
           store_name: string
           updated_at: string
         }
@@ -156,7 +156,7 @@ export type Database = {
           observation?: string
           platform_access_confirmed?: boolean
           status?: string
-          store_created?: boolean
+          store_creation_status?: string
           store_name?: string
           updated_at?: string
         }
@@ -170,7 +170,7 @@ export type Database = {
           observation?: string
           platform_access_confirmed?: boolean
           status?: string
-          store_created?: boolean
+          store_creation_status?: string
           store_name?: string
           updated_at?: string
         }
