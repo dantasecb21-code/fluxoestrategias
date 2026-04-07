@@ -107,12 +107,19 @@ export default function UserApproval() {
   };
 
   const handleRoleChange = async (userId: string, newRole: string) => {
-    const { error } = await supabase
+    // Delete all existing roles for this user, then insert the new one
+    const { error: deleteError } = await supabase
       .from("user_roles")
-      .update({ role: newRole as any })
+      .delete()
       .eq("user_id", userId);
 
-    if (error) { toast.error("Erro ao alterar tipo de acesso"); return; }
+    if (deleteError) { toast.error("Erro ao alterar tipo de acesso"); return; }
+
+    const { error: insertError } = await supabase
+      .from("user_roles")
+      .insert({ user_id: userId, role: newRole as any });
+
+    if (insertError) { toast.error("Erro ao alterar tipo de acesso"); return; }
     toast.success(`Tipo de acesso alterado para ${roleLabel(newRole)}`);
     setUsers((prev) => prev.map((u) => u.user_id === userId ? { ...u, role: newRole } : u));
   };
