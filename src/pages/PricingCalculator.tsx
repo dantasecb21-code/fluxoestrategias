@@ -66,7 +66,7 @@ export default function PricingCalculator() {
           </CardHeader>
           <CardContent className="space-y-5">
             <div className="space-y-2">
-              <Label htmlFor="item-cost">Custo do Item (R$)</Label>
+              <Label htmlFor="item-cost">Preço do Balcão(R$)</Label>
               <Input
                 id="item-cost"
                 type="number"
@@ -143,7 +143,7 @@ export default function PricingCalculator() {
 
                 <div className="space-y-3">
                   <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Custo do item</span>
+                    <span className="text-muted-foreground">Preço do Balcão</span>
                     <span className="font-medium">R$ {cost.toFixed(2)}</span>
                   </div>
                   {hasLogistics && (
@@ -182,7 +182,7 @@ export default function PricingCalculator() {
             ) : (
               <div className="text-center py-12 text-muted-foreground">
                 <Calculator className="h-12 w-12 mx-auto mb-3 opacity-30" />
-                <p className="text-sm">Preencha o custo do item e a comissão para ver o resultado</p>
+                <p className="text-sm">Preencha o preço do balcão e a comissão para ver o resultado</p>
               </div>
             )}
           </CardContent>
