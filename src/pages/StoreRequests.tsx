@@ -729,9 +729,9 @@ export default function StoreRequests() {
               );
             })()}
 
-            {/* Loja criada */}
+            {/* Loja criada (pendente de estratégia) */}
             {(() => {
-              const created = filtered.filter((r) => r.store_creation_status === "created").sort((a, b) => new Date(a.meeting_date || a.created_at).getTime() - new Date(b.meeting_date || b.created_at).getTime());
+              const created = filtered.filter((r) => r.store_creation_status === "created" && r.status !== "completed").sort((a, b) => new Date(a.meeting_date || a.created_at).getTime() - new Date(b.meeting_date || b.created_at).getTime());
               if (!created.length) return null;
               return (
                 <div className="space-y-4">
@@ -744,6 +744,41 @@ export default function StoreRequests() {
                     {created.map((req) => renderRequestCard(req))}
                   </div>
                 </div>
+              );
+            })()}
+
+            {/* Concluídas - collapsible summary */}
+            {(() => {
+              const completed = filtered.filter((r) => r.status === "completed").sort((a, b) => new Date(b.updated_at || b.created_at).getTime() - new Date(a.updated_at || a.created_at).getTime());
+              if (!completed.length) return null;
+              return (
+                <Collapsible open={showCompleted} onOpenChange={setShowCompleted}>
+                  <CollapsibleTrigger asChild>
+                    <button className="flex items-center gap-2 font-heading font-semibold text-lg text-foreground hover:text-primary transition-colors w-full text-left">
+                      {showCompleted ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                      <CheckCircle2 className="h-5 w-5 text-success" />
+                      Concluídas ({completed.length})
+                    </button>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="mt-3">
+                    <div className="grid gap-2">
+                      {completed.map((req) => (
+                        <div key={req.id} className="flex items-center justify-between p-3 rounded-lg border border-border bg-card/50 hover:bg-accent/30 transition-colors">
+                          <div className="flex items-center gap-3 min-w-0">
+                            <CheckCircle2 className="h-4 w-4 text-success shrink-0" />
+                            <div className="min-w-0">
+                              <p className="text-sm font-medium text-foreground truncate">{req.store_name}</p>
+                              <p className="text-xs text-muted-foreground truncate">Cliente: {req.client_name}</p>
+                            </div>
+                          </div>
+                          <span className="text-xs text-muted-foreground shrink-0 ml-3">
+                            {format(new Date(req.updated_at || req.created_at), "dd/MM/yyyy")}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </CollapsibleContent>
+                </Collapsible>
               );
             })()}
           </div>
