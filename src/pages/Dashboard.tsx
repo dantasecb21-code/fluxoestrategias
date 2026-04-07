@@ -1,10 +1,12 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDbStrategies, DbStrategy } from "@/hooks/useDbStrategies";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Plus, Copy, Pencil, Trash2, FileText, Zap, Clock, UserCheck, Undo2, ChevronDown, ChevronRight, CheckCircle2, X } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Plus, Copy, Pencil, Trash2, FileText, Zap, Clock, UserCheck, Undo2, ChevronDown, ChevronRight, CheckCircle2, X, Search } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { formatDateBR, shortName } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -29,6 +31,21 @@ export default function Dashboard() {
   const [deletedStrategies, setDeletedStrategies] = useState<DbStrategy[]>([]);
   const [loadingTrash, setLoadingTrash] = useState(false);
   const [showCompleted, setShowCompleted] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterManager, setFilterManager] = useState("all");
+
+  const operationalManagers = useMemo(() => {
+    const names = [...new Set(strategies.map((s) => s.operational_manager).filter(Boolean))];
+    return names.sort();
+  }, [strategies]);
+
+  const filterStrategies = (list: DbStrategy[]) => {
+    return list.filter((s) => {
+      const matchSearch = !searchTerm || s.store_name.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchManager = filterManager === "all" || s.operational_manager === filterManager;
+      return matchSearch && matchManager;
+    });
+  };
 
   const sortByPriority = (list: DbStrategy[]) =>
     [...list].sort((a, b) => {
@@ -40,8 +57,8 @@ export default function Dashboard() {
       return dateA - dateB;
     });
 
-  const activeStrategies = sortByPriority(strategies.filter((s) => deriveStrategyDisplayStatus(s) !== "completed"));
-  const completedStrategies = strategies.filter((s) => deriveStrategyDisplayStatus(s) === "completed");
+  const activeStrategies = sortByPriority(filterStrategies(strategies.filter((s) => deriveStrategyDisplayStatus(s) !== "completed")));
+  const completedStrategies = filterStrategies(strategies.filter((s) => deriveStrategyDisplayStatus(s) === "completed"));
 
   const toggleTrash = async () => {
     if (!showTrash) {
@@ -156,6 +173,32 @@ export default function Dashboard() {
           <Plus className="h-5 w-5 mr-2" /> Nova Estratégia
         </Button>
       </div>
+
+      {/* Search & Filter */}
+      {strategies.length > 0 && (
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Pesquisar loja..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+          <Select value={filterManager} onValueChange={setFilterManager}>
+            <SelectTrigger className="w-full sm:w-[220px]">
+              <SelectValue placeholder="Filtrar por gestor" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos os gestores</SelectItem>
+              {operationalManagers.map((name) => (
+                <SelectItem key={name} value={name}>{shortName(name)}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
 
       {/* List */}
       {loading ? (
