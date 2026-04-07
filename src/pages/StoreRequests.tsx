@@ -637,7 +637,7 @@ export default function StoreRequests() {
 
           {/* Criação em andamento */}
           {(() => {
-            const inProg = requests.filter((r) => r.store_creation_status === "in_progress");
+            const inProg = requests.filter((r) => r.store_creation_status === "in_progress").sort((a, b) => new Date(a.meeting_date || a.created_at).getTime() - new Date(b.meeting_date || b.created_at).getTime());
             if (!inProg.length) return null;
             return (
               <div className="space-y-4">
