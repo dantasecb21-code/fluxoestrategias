@@ -22,10 +22,7 @@ export default function StrategyNotes() {
   const [activeNote, setActiveNote] = useState<Note | null>(null);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const [isRecording, setIsRecording] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const recognitionRef = useRef<any>(null);
-  const editorRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
