@@ -7,7 +7,8 @@ import { formatDateBR, shortName } from "@/lib/utils";
 import { Calendar } from "@/components/ui/calendar";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CalendarDays, Clock, UserCheck, ChevronRight } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { CalendarDays, Clock, UserCheck, ChevronRight, Users } from "lucide-react";
 import { parseISO, isSameDay, format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
