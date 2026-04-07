@@ -76,6 +76,23 @@ export default function StrategyCalendar() {
         </p>
       </div>
 
+      {canFilter && operationalManagers.length > 0 && (
+        <div className="flex items-center gap-2">
+          <Users className="h-4 w-4 text-muted-foreground" />
+          <Select value={filterManager} onValueChange={setFilterManager}>
+            <SelectTrigger className="w-[220px]">
+              <SelectValue placeholder="Filtrar por gestor" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos os gestores</SelectItem>
+              {operationalManagers.map((name) => (
+                <SelectItem key={name} value={name}>{shortName(name)}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-[auto_1fr] gap-6">
         {/* Calendar */}
         <Card className="p-4 w-fit self-start">
