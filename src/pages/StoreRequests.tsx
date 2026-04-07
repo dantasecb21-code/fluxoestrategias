@@ -771,9 +771,21 @@ export default function StoreRequests() {
                               <p className="text-xs text-muted-foreground truncate">Cliente: {req.client_name}</p>
                             </div>
                           </div>
-                          <span className="text-xs text-muted-foreground shrink-0 ml-3">
-                            {format(new Date(req.updated_at || req.created_at), "dd/MM/yyyy")}
-                          </span>
+                          <div className="flex items-center gap-2 shrink-0 ml-3">
+                            <span className="text-xs text-muted-foreground">
+                              {format(new Date(req.updated_at || req.created_at), "dd/MM/yyyy")}
+                            </span>
+                            {isAdmin && (
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                                onClick={() => handleDelete(req.id)}
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </Button>
+                            )}
+                          </div>
                         </div>
                       ))}
                     </div>
