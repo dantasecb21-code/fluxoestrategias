@@ -88,6 +88,7 @@ export default function StoreRequests() {
   const [parsing, setParsing] = useState(false);
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [filterCreation, setFilterCreation] = useState<string>("all");
+  const [showCompleted, setShowCompleted] = useState(false);
 
   const fetchRequests = useCallback(async () => {
     const { data } = await supabase
