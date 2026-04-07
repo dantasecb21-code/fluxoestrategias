@@ -31,6 +31,21 @@ export default function Dashboard() {
   const [deletedStrategies, setDeletedStrategies] = useState<DbStrategy[]>([]);
   const [loadingTrash, setLoadingTrash] = useState(false);
   const [showCompleted, setShowCompleted] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterManager, setFilterManager] = useState("all");
+
+  const operationalManagers = useMemo(() => {
+    const names = [...new Set(strategies.map((s) => s.operational_manager).filter(Boolean))];
+    return names.sort();
+  }, [strategies]);
+
+  const filterStrategies = (list: DbStrategy[]) => {
+    return list.filter((s) => {
+      const matchSearch = !searchTerm || s.store_name.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchManager = filterManager === "all" || s.operational_manager === filterManager;
+      return matchSearch && matchManager;
+    });
+  };
 
   const sortByPriority = (list: DbStrategy[]) =>
     [...list].sort((a, b) => {
