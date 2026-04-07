@@ -1,9 +1,9 @@
 import { useState, useRef, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Send, Loader2, Bot, User, Trash2 } from "lucide-react";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Send, Loader2, Bot, User, Trash2, UtensilsCrossed, Truck, Tag, Star, Settings, Image, CreditCard, MessageSquare } from "lucide-react";
 import { toast } from "sonner";
 import ReactMarkdown, { Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
