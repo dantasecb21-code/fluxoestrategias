@@ -149,16 +149,16 @@ export default function PricingCalculator() {
                   {hasLogistics && (
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Custo logístico adicionado</span>
-                      <span className="font-medium">+ R$ {logisticsExtra.toFixed(2)}</span>
+                      <span className="font-medium text-orange-500">+ R$ {logisticsExtra.toFixed(2)}</span>
                     </div>
                   )}
                   <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Total de taxas ({totalFeePercent.toFixed(1)}%)</span>
-                    <span className="font-medium text-destructive">- R$ {feeAmount.toFixed(2)}</span>
+                    <span className="text-muted-foreground">Taxas da plataforma ({totalFeePercent.toFixed(1)}%)</span>
+                    <span className="font-medium text-orange-500">+ R$ {feeAmount.toFixed(2)}</span>
                   </div>
                   <div className="border-t pt-3 flex justify-between text-sm">
-                    <span className="text-muted-foreground">Receita líquida estimada</span>
-                    <span className="font-medium text-green-600">R$ {(suggestedPrice - feeAmount).toFixed(2)}</span>
+                    <span className="text-muted-foreground">Preço final com taxas incluídas</span>
+                    <span className="font-medium text-green-600">R$ {suggestedPrice.toFixed(2)}</span>
                   </div>
                 </div>
 
