@@ -377,7 +377,7 @@ export default function StoreRequests() {
           {req.meeting_date && (
             <span className="flex items-center gap-1">
               <Clock className="h-3.5 w-3.5" />
-              Reunião: {req.meeting_date}
+              Reunião: {format(new Date(req.meeting_date), "dd/MM/yyyy")}
             </span>
           )}
           {isAdmin && (
