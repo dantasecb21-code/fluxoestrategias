@@ -285,25 +285,6 @@ export default function UserProfile() {
         </Card>
       )}
 
-      {/* Store count - operational only */}
-      {userRole === "operational" && (
-        <Card className="p-5">
-          <div className="flex items-center gap-3">
-            <Store className="h-5 w-5 text-primary" />
-            <h3 className="font-heading font-semibold text-foreground">Lojas</h3>
-          </div>
-          <div className="flex items-center gap-4 mt-3">
-            <div className="text-center p-3 rounded-lg bg-primary/10 flex-1">
-              <p className="font-heading font-bold text-2xl text-primary">{(profile as any).store_count ?? 0}</p>
-              <p className="text-xs text-muted-foreground">Atuais</p>
-            </div>
-            <div className="text-center p-3 rounded-lg bg-muted flex-1">
-              <p className="font-heading font-bold text-2xl text-foreground">{(profile as any).store_limit ?? 10}</p>
-              <p className="text-xs text-muted-foreground">Limite</p>
-            </div>
-          </div>
-        </Card>
-      )}
 
       {managerStats && managerStats.total > 0 && (
         <Card className="p-5 space-y-3">
