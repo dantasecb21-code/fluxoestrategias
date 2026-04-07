@@ -7,7 +7,8 @@ import { formatDateBR, shortName } from "@/lib/utils";
 import { Calendar } from "@/components/ui/calendar";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CalendarDays, Clock, UserCheck, ChevronRight } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { CalendarDays, Clock, UserCheck, ChevronRight, Users } from "lucide-react";
 import { parseISO, isSameDay, format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -16,28 +17,40 @@ export default function StrategyCalendar() {
   const { role } = useAuth();
   const { strategies, loading } = useDbStrategies();
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
+  const [filterManager, setFilterManager] = useState("all");
 
   const isOperational = role === "operational";
+  const canFilter = role === "admin" || role === "strategic";
 
   const activeStrategies = useMemo(
     () => strategies.filter((s) => deriveStrategyDisplayStatus(s) !== "completed"),
     [strategies]
   );
 
+  const operationalManagers = useMemo(() => {
+    const names = [...new Set(activeStrategies.map((s) => s.operational_manager).filter(Boolean))];
+    return names.sort();
+  }, [activeStrategies]);
+
+  const managerFiltered = useMemo(() => {
+    if (filterManager === "all") return activeStrategies;
+    return activeStrategies.filter((s) => s.operational_manager === filterManager);
+  }, [activeStrategies, filterManager]);
+
   const deadlineDates = useMemo(() => {
     const dates: Date[] = [];
-    activeStrategies.forEach((s) => {
+    managerFiltered.forEach((s) => {
       if (s.deadline) dates.push(parseISO(s.deadline));
     });
     return dates;
-  }, [activeStrategies]);
+  }, [managerFiltered]);
 
   const filteredStrategies = useMemo(() => {
     if (!selectedDate) return [];
-    return activeStrategies.filter(
+    return managerFiltered.filter(
       (s) => s.deadline && isSameDay(parseISO(s.deadline), selectedDate)
     );
-  }, [activeStrategies, selectedDate]);
+  }, [managerFiltered, selectedDate]);
 
   const handleNavigate = (id: string) => {
     if (isOperational) {
@@ -62,6 +75,23 @@ export default function StrategyCalendar() {
           Clique em uma data para ver as lojas com prazo nesse dia.
         </p>
       </div>
+
+      {canFilter && operationalManagers.length > 0 && (
+        <div className="flex items-center gap-2">
+          <Users className="h-4 w-4 text-muted-foreground" />
+          <Select value={filterManager} onValueChange={setFilterManager}>
+            <SelectTrigger className="w-[220px]">
+              <SelectValue placeholder="Filtrar por gestor" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos os gestores</SelectItem>
+              {operationalManagers.map((name) => (
+                <SelectItem key={name} value={name}>{shortName(name)}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-[auto_1fr] gap-6">
         {/* Calendar */}
