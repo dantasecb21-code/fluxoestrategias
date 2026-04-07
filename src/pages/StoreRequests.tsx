@@ -619,7 +619,7 @@ export default function StoreRequests() {
         <div className="space-y-8">
           {/* Loja a criar */}
           {(() => {
-            const toCreate = requests.filter((r) => (r.store_creation_status || "pending") === "pending");
+            const toCreate = requests.filter((r) => (r.store_creation_status || "pending") === "pending").sort((a, b) => new Date(a.meeting_date || a.created_at).getTime() - new Date(b.meeting_date || b.created_at).getTime());
             if (!toCreate.length) return null;
             return (
               <div className="space-y-4">
@@ -637,7 +637,7 @@ export default function StoreRequests() {
 
           {/* Criação em andamento */}
           {(() => {
-            const inProg = requests.filter((r) => r.store_creation_status === "in_progress");
+            const inProg = requests.filter((r) => r.store_creation_status === "in_progress").sort((a, b) => new Date(a.meeting_date || a.created_at).getTime() - new Date(b.meeting_date || b.created_at).getTime());
             if (!inProg.length) return null;
             return (
               <div className="space-y-4">
@@ -655,7 +655,7 @@ export default function StoreRequests() {
 
           {/* Loja criada */}
           {(() => {
-            const created = requests.filter((r) => r.store_creation_status === "created");
+            const created = requests.filter((r) => r.store_creation_status === "created").sort((a, b) => new Date(a.meeting_date || a.created_at).getTime() - new Date(b.meeting_date || b.created_at).getTime());
             if (!created.length) return null;
             return (
               <div className="space-y-4">
