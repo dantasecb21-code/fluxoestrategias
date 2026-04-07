@@ -655,7 +655,7 @@ export default function StoreRequests() {
 
           {/* Loja criada */}
           {(() => {
-            const created = requests.filter((r) => r.store_creation_status === "created");
+            const created = requests.filter((r) => r.store_creation_status === "created").sort((a, b) => new Date(a.meeting_date || a.created_at).getTime() - new Date(b.meeting_date || b.created_at).getTime());
             if (!created.length) return null;
             return (
               <div className="space-y-4">
