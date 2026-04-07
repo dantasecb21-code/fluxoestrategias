@@ -125,16 +125,6 @@ export function NotificationBell() {
     });
   }
 
-  // Clean up dismissed IDs that no longer exist (only when strategies are loaded)
-  useEffect(() => {
-    if (strategies.length === 0 && storeRequests.length === 0) return;
-    const validIds = new Set(notifications.map(n => n.id));
-    const cleaned = new Set([...dismissedIds].filter(id => validIds.has(id)));
-    if (cleaned.size !== dismissedIds.size) {
-      setDismissedIds(cleaned);
-      saveDismissedIds(cleaned);
-    }
-  }, [strategies.length, notifications.length, storeRequests.length]);
 
   const priority = { returned: 0, overdue: 1, expiring: 2, new_store: 3, assigned: 4 };
   notifications.sort((a, b) => priority[a.type] - priority[b.type]);
