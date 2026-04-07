@@ -143,46 +143,9 @@ export default function PricingCalculator() {
 
                 <div className="space-y-3">
                   <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Custo do item</span>
-                    <span className="font-medium">R$ {cost.toFixed(2)}</span>
-                  </div>
-                  {hasLogistics && (
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Custo logístico adicionado</span>
-                      <span className="font-medium">+ R$ {logisticsExtra.toFixed(2)}</span>
-                    </div>
-                  )}
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Total de taxas ({totalFeePercent.toFixed(1)}%)</span>
-                    <span className="font-medium text-destructive">- R$ {feeAmount.toFixed(2)}</span>
-                  </div>
-                  <div className="border-t pt-3 flex justify-between text-sm">
-                    <span className="text-muted-foreground">Receita líquida estimada</span>
-                    <span className="font-medium text-green-600">R$ {(suggestedPrice - feeAmount).toFixed(2)}</span>
-                  </div>
-                </div>
-
-                <div className="rounded-lg bg-muted/50 p-3">
-                  <p className="text-xs text-muted-foreground">
-                    <strong>Resumo:</strong> Com comissão de {commission}% + processamento de {paymentProcessingRate}%
-                    {hasLogistics ? " + logística" : ""}, o preço de <strong>R$ {suggestedPrice.toFixed(2)}</strong> cobre 
-                    todos os custos e mantém a margem.
-                  </p>
-                </div>
-
-                <div className="rounded-lg border border-warning/30 bg-warning/5 p-3">
-                  <p className="text-xs text-warning font-medium mb-1">⚠️ Observação importante</p>
-                  <p className="text-xs text-muted-foreground">
-                    A plataforma possui um processo criterioso para atualização de preços. Dependendo do cenário, 
-                    pode ser necessário modificar o <strong>título</strong> e a <strong>descrição</strong> do item 
-                    ao realizar o aumento de preço.
-                  </p>
-                </div>
-              </>
-            ) : (
-              <div className="text-center py-12 text-muted-foreground">
-                <Calculator className="h-12 w-12 mx-auto mb-3 opacity-30" />
-                <p className="text-sm">Preencha o custo do item e a comissão para ver o resultado</p>
+                    <span className="text-muted-foreground">Preço do Balcão</span>
+...
+                <p className="text-sm">Preencha o preço do balcão e a comissão para ver o resultado</p>
               </div>
             )}
           </CardContent>
