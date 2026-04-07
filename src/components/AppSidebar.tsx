@@ -216,6 +216,21 @@ export function AppSidebar() {
                 </SidebarMenuButton>
               </SidebarMenuItem>
 
+              {/* Bloco de Notas */}
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <NavLink
+                    to="/notas"
+                    onClick={() => handleNav("/notas")}
+                    className="hover:bg-sidebar-accent/50"
+                    activeClassName="bg-sidebar-accent text-primary font-medium"
+                  >
+                    <FileText className="mr-2 h-4 w-4" />
+                    {!collapsed && <span>Bloco de Notas</span>}
+                  </NavLink>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+
               {/* Assistente */}
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
