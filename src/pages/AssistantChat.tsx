@@ -1,9 +1,9 @@
 import { useState, useRef, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Send, Loader2, Bot, User, Trash2 } from "lucide-react";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Send, Loader2, Bot, User, Trash2, UtensilsCrossed, Truck, Tag, Star, Settings, Image, CreditCard, MessageSquare } from "lucide-react";
 import { toast } from "sonner";
 import ReactMarkdown, { Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -18,6 +18,93 @@ type Message = {
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/assistant-chat`;
 
+const FAQ_CATEGORIES = [
+  {
+    label: "Cardápio",
+    icon: UtensilsCrossed,
+    questions: [
+      "Como criar categorias no cardápio?",
+      "Como adicionar itens ao cardápio?",
+      "Como editar ou remover um item?",
+      "Como alterar a ordem dos itens?",
+      "Como adicionar complementos e adicionais?",
+      "Como configurar tamanhos e variações?",
+    ],
+  },
+  {
+    label: "Configurações da Loja",
+    icon: Settings,
+    questions: [
+      "Como alterar o nome da loja?",
+      "Como alterar a categoria da loja?",
+      "Como mudar o endereço da loja?",
+      "Como configurar horário de funcionamento?",
+      "Como pausar a loja temporariamente?",
+      "Como ativar ou desativar a loja?",
+    ],
+  },
+  {
+    label: "Entrega e Logística",
+    icon: Truck,
+    questions: [
+      "Como configurar entrega pela loja?",
+      "Como definir área de entrega?",
+      "Como configurar taxa de entrega?",
+      "Como configurar tempo de preparo?",
+      "Como funciona a entrega pela plataforma?",
+    ],
+  },
+  {
+    label: "Promoções e Cupons",
+    icon: Tag,
+    questions: [
+      "Como criar um cupom de desconto?",
+      "Como criar uma promoção?",
+      "Como ativar combo promocional?",
+      "Como funciona o programa de fidelidade?",
+    ],
+  },
+  {
+    label: "Avaliações e Clientes",
+    icon: Star,
+    questions: [
+      "Como melhorar as avaliações?",
+      "Como responder avaliações dos clientes?",
+      "Como lidar com avaliações negativas?",
+      "Como aumentar a recorrência de clientes?",
+    ],
+  },
+  {
+    label: "Fotos e Imagens",
+    icon: Image,
+    questions: [
+      "Como alterar a foto de capa?",
+      "Como alterar o logo da loja?",
+      "Como adicionar fotos nos itens?",
+      "Qual o tamanho ideal das imagens?",
+    ],
+  },
+  {
+    label: "Financeiro e Pagamentos",
+    icon: CreditCard,
+    questions: [
+      "Como ver o extrato de vendas?",
+      "Como funcionam os repasses?",
+      "Como configurar formas de pagamento?",
+    ],
+  },
+  {
+    label: "Pedidos e Operação",
+    icon: MessageSquare,
+    questions: [
+      "Como aceitar pedidos?",
+      "Como cancelar um pedido?",
+      "Como configurar pedido mínimo?",
+      "Como funciona o chat com o cliente?",
+    ],
+  },
+];
+
 export default function AssistantChat() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
@@ -31,8 +118,8 @@ export default function AssistantChat() {
     }
   }, [messages]);
 
-  const handleSend = async () => {
-    const text = input.trim();
+  const handleSend = async (directText?: string) => {
+    const text = (directText || input).trim();
     if (!text || isLoading) return;
 
     const userMsg: Message = { id: crypto.randomUUID(), role: "user", content: text };
@@ -177,35 +264,40 @@ export default function AssistantChat() {
       {/* Messages */}
       <ScrollArea className="flex-1 px-4 py-3" ref={scrollRef}>
         {messages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-center gap-3 py-12">
-            <div className="h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center">
-              <Bot className="h-7 w-7 text-primary" />
+          <div className="flex flex-col gap-4 py-6">
+            <div className="text-center">
+              <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-2">
+                <Bot className="h-6 w-6 text-primary" />
+              </div>
+              <h2 className="font-heading font-semibold text-foreground text-base">Olá! Sou o Chatinho Gepeto</h2>
+              <p className="text-xs text-muted-foreground mt-0.5">Clique em qualquer pergunta para enviar direto</p>
             </div>
-            <div>
-              <h2 className="font-heading font-semibold text-foreground text-base mb-0.5">Olá! Sou o Chatinho Gepeto</h2>
-              <p className="text-xs text-muted-foreground max-w-sm leading-relaxed">
-                Pergunte sobre a plataforma: categorias, entrega, promoções, avaliações e mais.
-              </p>
-            </div>
-            <div className="grid grid-cols-2 gap-2 mt-3 w-full max-w-md">
-              {[
-                "Como alterar a categoria da loja?",
-                "Como criar categorias no cardápio?",
-                "Como configurar entrega pela loja?",
-                "Como melhorar as avaliações?",
-              ].map((suggestion) => (
-                <button
-                  key={suggestion}
-                  className="text-left p-2.5 rounded-lg border border-border bg-card hover:bg-accent/50 hover:border-primary/30 transition-all text-xs text-muted-foreground hover:text-foreground"
-                  onClick={() => {
-                    setInput(suggestion);
-                    setTimeout(() => textareaRef.current?.focus(), 100);
-                  }}
-                >
-                  {suggestion}
-                </button>
+
+            <Accordion type="multiple" className="w-full max-w-lg mx-auto">
+              {FAQ_CATEGORIES.map((cat) => (
+                <AccordionItem key={cat.label} value={cat.label} className="border-border">
+                  <AccordionTrigger className="text-sm font-medium text-foreground hover:text-primary py-2.5 gap-2">
+                    <span className="flex items-center gap-2">
+                      <cat.icon className="h-4 w-4 text-primary" />
+                      {cat.label}
+                    </span>
+                  </AccordionTrigger>
+                  <AccordionContent className="pb-2">
+                    <div className="flex flex-col gap-1">
+                      {cat.questions.map((q) => (
+                        <button
+                          key={q}
+                          className="text-left px-3 py-2 rounded-lg hover:bg-accent/50 transition-colors text-xs text-muted-foreground hover:text-foreground"
+                          onClick={() => handleSend(q)}
+                        >
+                          {q}
+                        </button>
+                      ))}
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
               ))}
-            </div>
+            </Accordion>
           </div>
         ) : (
           <div className="space-y-3 pb-2">
@@ -274,7 +366,7 @@ export default function AssistantChat() {
             rows={1}
           />
           <Button
-            onClick={handleSend}
+            onClick={() => handleSend()}
             disabled={!input.trim() || isLoading}
             className="h-9 w-9 shrink-0 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90"
             size="icon"
