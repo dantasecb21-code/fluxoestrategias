@@ -33,25 +33,11 @@ export default function StrategyCalendar() {
   }, [activeStrategies]);
 
   const filteredStrategies = useMemo(() => {
-    if (!selectedDate) return activeStrategies;
+    if (!selectedDate) return [];
     return activeStrategies.filter(
       (s) => s.deadline && isSameDay(parseISO(s.deadline), selectedDate)
     );
   }, [activeStrategies, selectedDate]);
-
-  const strategiesByDate = useMemo(() => {
-    const map: Record<string, typeof activeStrategies> = {};
-    filteredStrategies.forEach((s) => {
-      const key = s.deadline || "sem-prazo";
-      if (!map[key]) map[key] = [];
-      map[key].push(s);
-    });
-    return Object.entries(map).sort(([a], [b]) => {
-      if (a === "sem-prazo") return 1;
-      if (b === "sem-prazo") return -1;
-      return a.localeCompare(b);
-    });
-  }, [filteredStrategies]);
 
   const handleNavigate = (id: string) => {
     if (isOperational) {
@@ -73,7 +59,7 @@ export default function StrategyCalendar() {
           </h1>
         </div>
         <p className="text-muted-foreground">
-          Visualize os prazos das estratégias no calendário.
+          Clique em uma data para ver as lojas com prazo nesse dia.
         </p>
       </div>
 
@@ -101,88 +87,54 @@ export default function StrategyCalendar() {
           )}
         </Card>
 
-        {/* Strategy list */}
-        <div className="space-y-4">
-          <p className="text-sm text-muted-foreground">
-            {selectedDate
-              ? `${filteredStrategies.length} estratégia(s) em ${format(selectedDate, "dd/MM/yyyy")}`
-              : `${filteredStrategies.length} estratégia(s) pendente(s)`}
-          </p>
-
-          {loading ? (
-            <p className="text-muted-foreground">Carregando...</p>
-          ) : filteredStrategies.length === 0 ? (
+        {/* Store list */}
+        <div className="space-y-2">
+          {!selectedDate ? (
             <Card className="p-8 text-center border-dashed">
               <CalendarDays className="h-8 w-8 text-muted-foreground mx-auto mb-3" />
               <p className="text-muted-foreground">
-                {selectedDate
-                  ? "Nenhuma estratégia nesta data."
-                  : "Nenhuma estratégia pendente."}
+                Selecione uma data no calendário para ver as lojas.
               </p>
             </Card>
           ) : (
-            strategiesByDate.map(([dateKey, items]) => (
-              <div key={dateKey}>
-                <h3 className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wider">
-                  {dateKey === "sem-prazo"
-                    ? "Sem prazo definido"
-                    : formatDateBR(dateKey)}
-                </h3>
-                <div className="space-y-2">
-                  {items.map((s) => {
-                    const displayStatus = deriveStrategyDisplayStatus(s);
-                    const badgeProps = getStatusBadgeProps(displayStatus);
-                    const isOverdue =
-                      s.deadline && new Date(s.deadline) < new Date();
-
-                    return (
-                      <Card
-                        key={s.id}
-                        className={`p-4 hover:border-primary/30 transition-colors cursor-pointer ${
-                          isOverdue ? "border-destructive/30" : ""
-                        }`}
-                        onClick={() => handleNavigate(s.id)}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="min-w-0 flex-1">
-                            <div className="flex items-center gap-2">
-                              <h4 className="font-medium text-foreground truncate">
-                                {s.store_name || "Sem nome"}
-                              </h4>
-                              <Badge
-                                variant={badgeProps.variant}
-                                className={`text-[10px] py-0 px-1.5 h-4 shrink-0 ${badgeProps.className}`}
-                              >
-                                {getStatusLabel(displayStatus)}
-                              </Badge>
-                            </div>
-                            <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground mt-1">
-                              {s.operational_manager && (
-                                <span className="flex items-center gap-1">
-                                  <UserCheck className="h-3 w-3" />
-                                  {shortName(s.operational_manager)}
-                                </span>
-                              )}
-                              {s.deadline && (
-                                <span
-                                  className={`flex items-center gap-1 ${
-                                    isOverdue ? "text-destructive" : ""
-                                  }`}
-                                >
-                                  <Clock className="h-3 w-3" />
-                                  Prazo: {formatDateBR(s.deadline)}
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                          <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0 ml-2" />
+            <>
+              <p className="text-sm text-muted-foreground mb-3">
+                {filteredStrategies.length} loja(s) em {format(selectedDate, "dd/MM/yyyy")}
+              </p>
+              {filteredStrategies.length === 0 ? (
+                <Card className="p-6 text-center border-dashed">
+                  <p className="text-muted-foreground">Nenhuma loja com prazo nesta data.</p>
+                </Card>
+              ) : (
+                filteredStrategies.map((s) => {
+                  const isOverdue = s.deadline && new Date(s.deadline) < new Date();
+                  const displayStatus = deriveStrategyDisplayStatus(s);
+                  const badgeProps = getStatusBadgeProps(displayStatus);
+                  return (
+                    <Card
+                      key={s.id}
+                      className={`p-3 hover:border-primary/30 transition-colors cursor-pointer ${isOverdue ? "border-destructive/30" : ""}`}
+                      onClick={() => handleNavigate(s.id)}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span className="font-medium text-foreground text-sm truncate">
+                            {s.store_name || "Sem nome"}
+                          </span>
+                          <Badge
+                            variant={badgeProps.variant}
+                            className={`text-[10px] py-0 px-1.5 h-4 shrink-0 ${badgeProps.className}`}
+                          >
+                            {getStatusLabel(displayStatus)}
+                          </Badge>
                         </div>
-                      </Card>
-                    );
-                  })}
-                </div>
-              </div>
-            ))
+                        <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0 ml-2" />
+                      </div>
+                    </Card>
+                  );
+                })
+              )}
+            </>
           )}
         </div>
       </div>
