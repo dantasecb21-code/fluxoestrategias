@@ -12,7 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Store, Plus, Clock, CheckCircle2, User, ArrowRight, Pencil, Trash2, Sparkles, Loader2 } from "lucide-react";
+import { Store, Plus, Clock, CheckCircle2, User, ArrowRight, Pencil, Trash2, Sparkles, Loader2, Hammer } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -21,7 +21,7 @@ interface StoreRequest {
   id: string;
   store_name: string;
   client_name: string;
-  store_created: boolean;
+  store_creation_status: string;
   platform_access_confirmed: boolean;
   meeting_date: string;
   observation: string;
@@ -55,10 +55,17 @@ const STATUS_COLORS: Record<string, string> = {
   completed: "bg-emerald-500/20 text-emerald-600 border-emerald-500/30",
 };
 
+const CREATION_STATUS_LABELS: Record<string, string> = {
+  pending: "Loja a criar",
+  in_progress: "Criação em andamento",
+  created: "Loja criada",
+};
+
 export default function StoreRequests() {
   const { user, role, displayName } = useAuth();
   const navigate = useNavigate();
   const isAdmin = role === "admin";
+  const isStrategicUser = role === "strategic";
   const [requests, setRequests] = useState<StoreRequest[]>([]);
   const [strategicUsers, setStrategicUsers] = useState<StrategicUser[]>([]);
   const [assigneeNames, setAssigneeNames] = useState<Record<string, string>>({});
@@ -69,7 +76,7 @@ export default function StoreRequests() {
   // Form state
   const [storeName, setStoreName] = useState("");
   const [clientName, setClientName] = useState("");
-  const [storeCreated, setStoreCreated] = useState(false);
+  const [storeCreationStatus, setStoreCreationStatus] = useState("pending");
   const [platformAccess, setPlatformAccess] = useState(false);
   const [meetingDate, setMeetingDate] = useState("");
   const [observation, setObservation] = useState("");
@@ -166,7 +173,7 @@ export default function StoreRequests() {
   const resetForm = () => {
     setStoreName("");
     setClientName("");
-    setStoreCreated(false);
+    setStoreCreationStatus("pending");
     setPlatformAccess(false);
     setMeetingDate("");
     setObservation("");
@@ -201,7 +208,7 @@ export default function StoreRequests() {
   const openEdit = (req: StoreRequest) => {
     setStoreName(req.store_name);
     setClientName(req.client_name);
-    setStoreCreated(req.store_created);
+    setStoreCreationStatus(req.store_creation_status || "pending");
     setPlatformAccess(req.platform_access_confirmed);
     setMeetingDate(req.meeting_date);
     setObservation(req.observation);
@@ -221,6 +228,20 @@ export default function StoreRequests() {
     }
   };
 
+  const handleUpdateCreationStatus = async (id: string, newStatus: string) => {
+    const { error } = await supabase
+      .from("store_requests")
+      .update({ store_creation_status: newStatus } as any)
+      .eq("id", id);
+
+    if (error) {
+      toast.error("Erro ao atualizar status da loja.");
+    } else {
+      toast.success(`Status atualizado para "${CREATION_STATUS_LABELS[newStatus]}"`);
+      fetchRequests();
+    }
+  };
+
   const handleSubmit = async () => {
     if (!storeName.trim() || !clientName.trim() || !assignedTo) {
       toast.error("Preencha os campos obrigatórios: nome da loja, nome do cliente e estrategista.");
@@ -234,7 +255,7 @@ export default function StoreRequests() {
       const { error } = await supabase.from("store_requests").update({
         store_name: storeName.trim(),
         client_name: clientName.trim(),
-        store_created: storeCreated,
+        store_creation_status: storeCreationStatus,
         platform_access_confirmed: platformAccess,
         meeting_date: meetingDate,
         observation: observation.trim(),
@@ -254,7 +275,7 @@ export default function StoreRequests() {
       const { error } = await supabase.from("store_requests").insert({
         store_name: storeName.trim(),
         client_name: clientName.trim(),
-        store_created: storeCreated,
+        store_creation_status: storeCreationStatus,
         platform_access_confirmed: platformAccess,
         meeting_date: meetingDate,
         observation: observation.trim(),
@@ -274,13 +295,21 @@ export default function StoreRequests() {
     setSubmitting(false);
   };
 
-
-
-
   const getAssigneeName = (userId: string | null) => {
     if (!userId) return "—";
-    const displayName = assigneeNames[userId];
-    return displayName ? shortName(displayName) : "Estrategista";
+    const dn = assigneeNames[userId];
+    return dn ? shortName(dn) : "Estrategista";
+  };
+
+  const getCreationStatusIcon = (status: string) => {
+    switch (status) {
+      case "created":
+        return <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />;
+      case "in_progress":
+        return <Hammer className="h-3.5 w-3.5 text-primary" />;
+      default:
+        return <Clock className="h-3.5 w-3.5 text-warning" />;
+    }
   };
 
   if (loading) {
@@ -293,13 +322,15 @@ export default function StoreRequests() {
 
   const renderRequestCard = (req: StoreRequest) => {
     const isStrategic = role === "strategic" && req.assigned_to === user?.id;
+    const canNavigate = isStrategic && req.status !== "completed" && req.store_creation_status === "created";
+    const creationStatus = req.store_creation_status || "pending";
 
     return (
       <Card
         key={req.id}
-        className={`p-4 space-y-3 ${isStrategic && req.status !== "completed" ? "cursor-pointer hover:border-primary/50 transition-colors" : ""}`}
+        className={`p-4 space-y-3 ${canNavigate ? "cursor-pointer hover:border-primary/50 transition-colors" : ""}`}
         onClick={() => {
-          if (isStrategic && req.status !== "completed") {
+          if (canNavigate) {
             if (req.status === "pending") {
               supabase.from("store_requests").update({ status: "in_progress" } as any).eq("id", req.id);
             }
@@ -324,7 +355,7 @@ export default function StoreRequests() {
               <span className={`h-2 w-2 rounded-full ${STATUS_DOT_COLORS[req.status] || ""}`} />
               {STATUS_LABELS[req.status] || req.status}
             </Badge>
-            {isStrategic && req.status !== "completed" && (
+            {canNavigate && (
               <ArrowRight className="h-4 w-4 text-primary" />
             )}
           </div>
@@ -332,12 +363,8 @@ export default function StoreRequests() {
 
         <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
           <span className="flex items-center gap-1">
-            {req.store_created ? (
-              <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
-            ) : (
-              <Clock className="h-3.5 w-3.5 text-warning" />
-            )}
-            Loja {req.store_created ? "criada" : "a criar"}
+            {getCreationStatusIcon(creationStatus)}
+            {CREATION_STATUS_LABELS[creationStatus] || "Loja a criar"}
           </span>
           <span className="flex items-center gap-1">
             {req.platform_access_confirmed ? (
@@ -368,18 +395,46 @@ export default function StoreRequests() {
           Criado em {format(new Date(req.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
         </div>
 
-        {isAdmin && (
-          <div className="flex items-center gap-2 pt-1" onClick={(e) => e.stopPropagation()}>
-            <Button size="sm" variant="outline" onClick={() => openEdit(req)}>
-              <Pencil className="h-3.5 w-3.5 mr-1" />
-              Editar
+        {/* Action buttons */}
+        <div className="flex items-center gap-2 pt-1 flex-wrap" onClick={(e) => e.stopPropagation()}>
+          {/* Strategic user actions for creation status */}
+          {isStrategic && req.assigned_to === user?.id && creationStatus === "pending" && (
+            <Button
+              size="sm"
+              variant="outline"
+              className="border-primary/30 text-primary hover:bg-primary/10"
+              onClick={() => handleUpdateCreationStatus(req.id, "in_progress")}
+            >
+              <Hammer className="h-3.5 w-3.5 mr-1" />
+              Criação em andamento
             </Button>
-            <Button size="sm" variant="destructive" onClick={() => handleDelete(req.id)}>
-              <Trash2 className="h-3.5 w-3.5 mr-1" />
-              Excluir
+          )}
+          {isStrategic && req.assigned_to === user?.id && creationStatus === "in_progress" && (
+            <Button
+              size="sm"
+              variant="outline"
+              className="border-emerald-500/30 text-emerald-500 hover:bg-emerald-500/10"
+              onClick={() => handleUpdateCreationStatus(req.id, "created")}
+            >
+              <CheckCircle2 className="h-3.5 w-3.5 mr-1" />
+              Marcar como criada
             </Button>
-          </div>
-        )}
+          )}
+
+          {/* Admin actions */}
+          {isAdmin && (
+            <>
+              <Button size="sm" variant="outline" onClick={() => openEdit(req)}>
+                <Pencil className="h-3.5 w-3.5 mr-1" />
+                Editar
+              </Button>
+              <Button size="sm" variant="destructive" onClick={() => handleDelete(req.id)}>
+                <Trash2 className="h-3.5 w-3.5 mr-1" />
+                Excluir
+              </Button>
+            </>
+          )}
+        </div>
       </Card>
     );
   };
@@ -412,7 +467,7 @@ export default function StoreRequests() {
                 <DialogTitle>{editingId ? "Editar Solicitação" : "Nova Solicitação de Loja"}</DialogTitle>
               </DialogHeader>
               <div className="space-y-4 mt-2">
-                {/* AI Free Text Parser - collapsible, compact */}
+                {/* AI Free Text Parser */}
                 {!editingId && (
                   <div className="rounded-lg border border-primary/20 overflow-hidden">
                     <div className="flex items-center gap-2 px-3 py-2 bg-primary/10">
@@ -460,27 +515,34 @@ export default function StoreRequests() {
                     placeholder="Ex: João Silva"
                   />
                 </div>
-                <div className="flex items-center gap-6">
-                  <div className="flex items-center gap-2">
-                    <Checkbox
-                      id="store-created"
-                      checked={storeCreated}
-                      onCheckedChange={(v) => setStoreCreated(v === true)}
-                    />
-                    <Label htmlFor="store-created" className="cursor-pointer text-sm">
-                      Loja já está criada
-                    </Label>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Checkbox
-                      id="platform-access"
-                      checked={platformAccess}
-                      onCheckedChange={(v) => setPlatformAccess(v === true)}
-                    />
-                    <Label htmlFor="platform-access" className="cursor-pointer text-sm">
-                      Acesso MiBusca confirmado
-                    </Label>
-                  </div>
+                <div className="space-y-2">
+                  <Label>Status de criação da loja</Label>
+                  <Select value={storeCreationStatus} onValueChange={setStoreCreationStatus}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="pending">
+                        <span className="flex items-center gap-2"><Clock className="h-3.5 w-3.5 text-warning" /> Loja a criar</span>
+                      </SelectItem>
+                      <SelectItem value="in_progress">
+                        <span className="flex items-center gap-2"><Hammer className="h-3.5 w-3.5 text-primary" /> Criação em andamento</span>
+                      </SelectItem>
+                      <SelectItem value="created">
+                        <span className="flex items-center gap-2"><CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" /> Loja criada</span>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    id="platform-access"
+                    checked={platformAccess}
+                    onCheckedChange={(v) => setPlatformAccess(v === true)}
+                  />
+                  <Label htmlFor="platform-access" className="cursor-pointer text-sm">
+                    Acesso MiBusca confirmado
+                  </Label>
                 </div>
                 <div>
                   <Label>Data da Reunião Inicial</Label>
@@ -557,7 +619,7 @@ export default function StoreRequests() {
         <div className="space-y-8">
           {/* Loja a criar */}
           {(() => {
-            const toCreate = requests.filter((r) => !r.store_created);
+            const toCreate = requests.filter((r) => (r.store_creation_status || "pending") === "pending");
             if (!toCreate.length) return null;
             return (
               <div className="space-y-4">
@@ -573,9 +635,27 @@ export default function StoreRequests() {
             );
           })()}
 
+          {/* Criação em andamento */}
+          {(() => {
+            const inProg = requests.filter((r) => r.store_creation_status === "in_progress");
+            if (!inProg.length) return null;
+            return (
+              <div className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <Hammer className="h-5 w-5 text-primary" />
+                  <h2 className="font-heading font-semibold text-lg text-foreground">Criação em andamento</h2>
+                  <Badge variant="outline" className="ml-1 text-xs">{inProg.length}</Badge>
+                </div>
+                <div className="grid gap-4">
+                  {inProg.map((req) => renderRequestCard(req))}
+                </div>
+              </div>
+            );
+          })()}
+
           {/* Loja criada */}
           {(() => {
-            const created = requests.filter((r) => r.store_created);
+            const created = requests.filter((r) => r.store_creation_status === "created");
             if (!created.length) return null;
             return (
               <div className="space-y-4">
