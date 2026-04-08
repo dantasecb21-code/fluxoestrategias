@@ -28,13 +28,13 @@ export default function StrategyCalendar() {
   );
 
   const operationalManagers = useMemo(() => {
-    const names = [...new Set(activeStrategies.map((s) => s.operational_manager).filter(Boolean))];
+    const names = [...new Set(activeStrategies.map((s) => (s.operational_manager || "").trim()).filter(Boolean))];
     return names.sort();
   }, [activeStrategies]);
 
   const managerFiltered = useMemo(() => {
     if (filterManager === "all") return activeStrategies;
-    return activeStrategies.filter((s) => s.operational_manager === filterManager);
+    return activeStrategies.filter((s) => (s.operational_manager || "").trim() === filterManager);
   }, [activeStrategies, filterManager]);
 
   const deadlineDates = useMemo(() => {
