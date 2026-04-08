@@ -1,0 +1,1 @@
+UPDATE strategies SET operational_manager = 'Stefane Eloá Bacelar de Souza Santana' WHERE id = '839370ce-0c8e-48d2-84c1-39dc4d7e54a6' AND operational_manager = '';
