@@ -166,10 +166,21 @@ export function useDbStrategies() {
       }
     }
 
-    const updateData: Record<string, unknown> = { ...params };
-    if (params.categories) {
-      updateData.categories = params.categories as unknown as Json;
+    // Auto-fill started_at: when categories have any in_progress/completed item for the first time
+    const oldStrategy = strategies.find((s) => s.id === id);
+    if (params.categories && oldStrategy && !oldStrategy.started_at) {
+      const allItems = params.categories.flatMap((c) => c.items || []);
+      const hasActivity = allItems.some((i) => i.status === "in_progress" || i.status === "completed");
+      if (hasActivity) {
+        updateData.started_at = new Date().toISOString();
+      }
     }
+
+    // Auto-fill completed_at: when status changes to approved
+    if (params.status === "approved" && oldStrategy && oldStrategy.status !== "approved") {
+      updateData.completed_at = new Date().toISOString();
+    }
+
     const { error } = await supabase.from("strategies").update(updateData as any).eq("id", id);
     if (error) {
       console.error("Update strategy error:", error);
