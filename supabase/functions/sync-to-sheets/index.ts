@@ -70,7 +70,7 @@ Deno.serve(async (req) => {
       break;
     }
 
-    const result = await response.text();
+    const result = await response!.text();
     console.log(`Sync to sheets for strategy ${payload.id}: ${response.status} - ${result}`);
 
     return new Response(
