@@ -3,17 +3,20 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Store, User, CalendarDays, Tag } from "lucide-react";
+import { Store, User, CalendarDays, Tag, Globe } from "lucide-react";
 import { StrategyType, STRATEGY_TYPE_LABELS } from "@/hooks/useDbStrategies";
+import { Platform, PLATFORM_LABELS, PLATFORM_OPTIONS } from "@/components/PlatformBadge";
 
 interface StrategyMetaFormProps {
   meta: StrategyMeta;
   onChange: (meta: StrategyMeta) => void;
   strategyType: StrategyType;
   onTypeChange: (type: StrategyType) => void;
+  platform: Platform;
+  onPlatformChange: (platform: Platform) => void;
 }
 
-export function StrategyMetaForm({ meta, onChange, strategyType, onTypeChange }: StrategyMetaFormProps) {
+export function StrategyMetaForm({ meta, onChange, strategyType, onTypeChange, platform, onPlatformChange }: StrategyMetaFormProps) {
   const update = (key: keyof StrategyMeta, value: string) => {
     onChange({ ...meta, [key]: value });
   };
@@ -24,7 +27,25 @@ export function StrategyMetaForm({ meta, onChange, strategyType, onTypeChange }:
         <Store className="h-5 w-5 text-primary" />
         Informações da Estratégia
       </h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+        <div className="space-y-1.5">
+          <Label className="text-muted-foreground text-xs flex items-center gap-1">
+            <Globe className="h-3 w-3" /> Plataforma
+          </Label>
+          <Select value={platform} onValueChange={(v) => onPlatformChange(v as Platform)}>
+            <SelectTrigger className="bg-background">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {PLATFORM_OPTIONS.map((key) => (
+                <SelectItem key={key} value={key}>
+                  <span className={key === "ifood" ? "text-red-400" : "text-yellow-400"}>●</span>{" "}
+                  {PLATFORM_LABELS[key]}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
         <div className="space-y-1.5">
           <Label className="text-muted-foreground text-xs flex items-center gap-1">
             <Tag className="h-3 w-3" /> Tipo da Estratégia
