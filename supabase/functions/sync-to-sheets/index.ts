@@ -44,36 +44,77 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Google Apps Script Web Apps flow:
-    // 1. POST to /exec returns a 302 redirect to script.googleusercontent.com
-    // 2. The redirect URL only accepts GET (returns 405 for POST)
-    // 3. So we POST without following redirects, get the Location header, then GET it
+    // Google Apps Script Web Apps:
+    // POST to /macros/s/.../exec → 302 redirect to script.googleusercontent.com
+    // The redirect target only accepts GET, so we must:
+    // 1. POST with redirect: manual to get the Location header
+    // 2. Follow it with GET
+    const jsonBody = JSON.stringify(payload);
+    
     const postResponse = await fetch(SHEETS_WEBHOOK_URL, {
       method: "POST",
       headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify(payload),
+      body: jsonBody,
       redirect: "manual",
     });
 
-    // Consume post response body
-    await postResponse.text();
+    console.log(`POST response status: ${postResponse.status}, headers:`, Object.fromEntries(postResponse.headers.entries()));
 
-    const redirectUrl = postResponse.headers.get("location");
-    if (!redirectUrl) {
+    let redirectUrl = postResponse.headers.get("location");
+    
+    // If first response is also a redirect (e.g. 302 to another google domain), follow chain
+    if (!redirectUrl && postResponse.status >= 300 && postResponse.status < 400) {
+      await postResponse.text();
       return new Response(
-        JSON.stringify({ error: "No redirect from Apps Script", status: postResponse.status }),
+        JSON.stringify({ error: "Redirect without location header" }),
         { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Follow the redirect with GET
-    const getResponse = await fetch(redirectUrl, {
-      method: "GET",
-      redirect: "follow",
-    });
+    // If we got a non-redirect response, maybe Deno already followed it
+    if (!redirectUrl && postResponse.status !== 302) {
+      // Try another approach: use the URL with the body as a GET parameter
+      const encodedPayload = encodeURIComponent(jsonBody);
+      const getUrl = `${SHEETS_WEBHOOK_URL}?payload=${encodedPayload}`;
+      
+      const getResponse = await fetch(getUrl, {
+        method: "GET",
+        redirect: "follow",
+      });
+      
+      const result = await getResponse.text();
+      console.log(`GET fallback for strategy ${payload.id}: ${getResponse.status} - ${result.substring(0, 300)}`);
+      
+      return new Response(
+        JSON.stringify({ success: true, sheetsResponse: result }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
-    const result = await getResponse.text();
-    console.log(`Sync to sheets for strategy ${payload.id}: ${getResponse.status} - ${result.substring(0, 300)}`);
+    // Consume post response body
+    await postResponse.text();
+
+    // Follow redirect chain with GET
+    let finalResponse: Response | null = null;
+    let currentUrl = redirectUrl!;
+    
+    for (let i = 0; i < 5; i++) {
+      finalResponse = await fetch(currentUrl, {
+        method: "GET",
+        redirect: "manual",
+      });
+      
+      const nextLocation = finalResponse.headers.get("location");
+      if (finalResponse.status >= 300 && finalResponse.status < 400 && nextLocation) {
+        await finalResponse.text();
+        currentUrl = nextLocation;
+        continue;
+      }
+      break;
+    }
+
+    const result = await finalResponse!.text();
+    console.log(`Sync to sheets for strategy ${payload.id}: ${finalResponse!.status} - ${result.substring(0, 300)}`);
 
     return new Response(
       JSON.stringify({ success: true, sheetsResponse: result }),
