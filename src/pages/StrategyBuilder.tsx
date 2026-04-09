@@ -155,6 +155,7 @@ export default function StrategyBuilderPage() {
       setCategories(existing.categories);
       setAssignedTo(existing.assigned_to || "");
       setStrategyType((existing.strategy_type as StrategyType) || "initial");
+      setPlatform(existing.platform || "99food");
       setObservation(existing.observation || "");
       setSavedId(existing.id);
     }
@@ -456,7 +457,7 @@ export default function StrategyBuilderPage() {
         />
       ) : (
         <>
-          <StrategyMetaForm meta={meta} onChange={setMeta} strategyType={strategyType} onTypeChange={setStrategyType} />
+          <StrategyMetaForm meta={meta} onChange={setMeta} strategyType={strategyType} onTypeChange={setStrategyType} platform={platform as any} onPlatformChange={setPlatform as any} />
 
           {/* Assign to operational manager */}
           <Card className="p-4 border-border bg-card space-y-2">
