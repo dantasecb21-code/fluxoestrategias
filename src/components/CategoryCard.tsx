@@ -43,8 +43,6 @@ export function CategoryCard({
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
   const [editItemName, setEditItemName] = useState("");
   const [editItemText, setEditItemText] = useState("");
-  const [generatingAI, setGeneratingAI] = useState(false);
-  const [editGeneratingAI, setEditGeneratingAI] = useState(false);
 
   const handleSaveCatName = () => {
     if (catName.trim()) {
