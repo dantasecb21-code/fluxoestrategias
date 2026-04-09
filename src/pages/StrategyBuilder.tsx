@@ -213,6 +213,7 @@ export default function StrategyBuilderPage() {
         strategy_type: strategyType,
         observation,
         platform,
+      });
       clearDraft();
       toast.success("Estratégia atualizada!");
     } else {
