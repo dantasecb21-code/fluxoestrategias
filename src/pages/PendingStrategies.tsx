@@ -130,6 +130,16 @@ export default function PendingStrategies() {
             </Select>
           </div>
           <div className="flex flex-col sm:flex-row gap-3">
+            <Select value={filterPlatform} onValueChange={setFilterPlatform}>
+              <SelectTrigger className="w-full sm:w-[160px]">
+                <SelectValue placeholder="Plataforma" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas plataformas</SelectItem>
+                <SelectItem value="99food">99Food</SelectItem>
+                <SelectItem value="ifood">iFood</SelectItem>
+              </SelectContent>
+            </Select>
             <Select value={filterStatus} onValueChange={setFilterStatus}>
               <SelectTrigger className="w-full sm:w-[200px]">
                 <SelectValue placeholder="Status" />
