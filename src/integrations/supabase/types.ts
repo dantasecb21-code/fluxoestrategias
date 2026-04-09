@@ -183,6 +183,7 @@ export type Database = {
         Row: {
           assigned_to: string | null
           categories: Json
+          completed_at: string | null
           created_at: string
           deadline: string
           deleted_at: string | null
@@ -192,6 +193,7 @@ export type Database = {
           operational_manager: string
           platform: string
           returned: boolean
+          started_at: string | null
           status: string
           store_access_confirmed: boolean
           store_name: string
@@ -203,6 +205,7 @@ export type Database = {
         Insert: {
           assigned_to?: string | null
           categories?: Json
+          completed_at?: string | null
           created_at?: string
           deadline?: string
           deleted_at?: string | null
@@ -212,6 +215,7 @@ export type Database = {
           operational_manager?: string
           platform?: string
           returned?: boolean
+          started_at?: string | null
           status?: string
           store_access_confirmed?: boolean
           store_name?: string
@@ -223,6 +227,7 @@ export type Database = {
         Update: {
           assigned_to?: string | null
           categories?: Json
+          completed_at?: string | null
           created_at?: string
           deadline?: string
           deleted_at?: string | null
@@ -232,6 +237,7 @@ export type Database = {
           operational_manager?: string
           platform?: string
           returned?: boolean
+          started_at?: string | null
           status?: string
           store_access_confirmed?: boolean
           store_name?: string
