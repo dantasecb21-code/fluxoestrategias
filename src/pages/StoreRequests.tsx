@@ -13,8 +13,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Store, Plus, Clock, CheckCircle2, User, ArrowRight, Pencil, Trash2, Sparkles, Loader2, Hammer, Filter, ChevronDown, ChevronRight } from "lucide-react";
+import { Store, Plus, Clock, CheckCircle2, User, ArrowRight, Pencil, Trash2, Sparkles, Loader2, Hammer, Filter, ChevronDown, ChevronRight, Globe } from "lucide-react";
 import { toast } from "sonner";
+import { PlatformBadge, PLATFORM_LABELS, PLATFORM_OPTIONS, Platform } from "@/components/PlatformBadge";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -31,6 +32,7 @@ interface StoreRequest {
   created_by: string;
   created_at: string;
   updated_at: string;
+  platform: string;
 }
 
 interface StrategicUser {
@@ -88,6 +90,7 @@ export default function StoreRequests() {
   const [parsing, setParsing] = useState(false);
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [filterCreation, setFilterCreation] = useState<string>("all");
+  const [platformField, setPlatformField] = useState<string>("99food");
   const [showCompleted, setShowCompleted] = useState(false);
 
   const fetchRequests = useCallback(async () => {
@@ -185,6 +188,7 @@ export default function StoreRequests() {
     setEditStatus("pending");
     setEditingId(null);
     setFreeText("");
+    setPlatformField("99food");
   };
 
 
@@ -200,6 +204,7 @@ export default function StoreRequests() {
     setAssignedTo(req.assigned_to || "");
     setEditStatus(req.status);
     setEditingId(req.id);
+    setPlatformField(req.platform || "99food");
     setDialogOpen(true);
   };
 
@@ -246,6 +251,7 @@ export default function StoreRequests() {
         observation: observation.trim(),
         assigned_to: assignedTo,
         status: editStatus,
+        platform: platformField,
       } as any).eq("id", editingId);
 
       if (error) {
@@ -266,6 +272,7 @@ export default function StoreRequests() {
         observation: observation.trim(),
         assigned_to: assignedTo,
         created_by: user.id,
+        platform: platformField,
       } as any);
 
       if (error) {
@@ -323,13 +330,17 @@ export default function StoreRequests() {
             params.set("store", req.store_name);
             params.set("manager", displayName || "");
             params.set("store_request_id", req.id);
+            params.set("platform", req.platform || "99food");
             navigate(`/nova?${params.toString()}`);
           }
         }}
       >
         <div className="flex items-start justify-between">
           <div>
-            <h3 className="font-semibold text-foreground text-lg">{req.store_name}</h3>
+            <h3 className="font-semibold text-foreground text-lg flex items-center gap-2">
+              {req.store_name}
+              <PlatformBadge platform={req.platform || "99food"} />
+            </h3>
             <p className="text-sm text-muted-foreground flex items-center gap-1">
               <User className="h-3.5 w-3.5" />
               Cliente: {req.client_name}
@@ -461,6 +472,22 @@ export default function StoreRequests() {
                     onChange={(e) => setStoreName(e.target.value)}
                     placeholder="Ex: Pizzaria do João"
                   />
+                </div>
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-1"><Globe className="h-3.5 w-3.5" /> Plataforma *</Label>
+                  <Select value={platformField} onValueChange={setPlatformField}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {PLATFORM_OPTIONS.map((key) => (
+                        <SelectItem key={key} value={key}>
+                          <span className={key === "ifood" ? "text-red-400" : "text-yellow-400"}>●</span>{" "}
+                          {PLATFORM_LABELS[key]}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div>
                   <Label>Nome do Cliente *</Label>

@@ -89,6 +89,7 @@ export default function StrategyBuilderPage() {
   const prefillStore = searchParams.get("store") || "";
   const prefillManager = searchParams.get("manager") || "";
   const storeRequestId = searchParams.get("store_request_id") || "";
+  const prefillPlatform = searchParams.get("platform") || "";
 
   const [meta, setMeta] = useState<StrategyMeta>(() => {
     if (existing) {
@@ -105,7 +106,7 @@ export default function StrategyBuilderPage() {
   );
   const [assignedTo, setAssignedTo] = useState<string>(existing?.assigned_to || draft?.assignedTo || "");
   const [strategyType, setStrategyType] = useState<StrategyType>((existing?.strategy_type as StrategyType) || "initial");
-  const [platform, setPlatform] = useState<string>(existing?.platform || "99food");
+  const [platform, setPlatform] = useState<string>(existing?.platform || prefillPlatform || "99food");
   const [observation, setObservation] = useState<string>(existing?.observation || "");
   const [showReport, setShowReport] = useState(false);
   const [showDetailedProgress, setShowDetailedProgress] = useState(false);
