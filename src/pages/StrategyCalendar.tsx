@@ -80,18 +80,32 @@ export default function StrategyCalendar() {
         </p>
       </div>
 
-      {canFilter && operationalManagers.length > 0 && (
-        <div className="flex items-center gap-2">
-          <Users className="h-4 w-4 text-muted-foreground" />
-          <Select value={filterManager} onValueChange={setFilterManager}>
-            <SelectTrigger className="w-[220px]">
-              <SelectValue placeholder="Filtrar por gestor" />
+      {canFilter && (
+        <div className="flex items-center gap-2 flex-wrap">
+          {operationalManagers.length > 0 && (
+            <>
+              <Users className="h-4 w-4 text-muted-foreground" />
+              <Select value={filterManager} onValueChange={setFilterManager}>
+                <SelectTrigger className="w-[220px]">
+                  <SelectValue placeholder="Filtrar por gestor" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os gestores</SelectItem>
+                  {operationalManagers.map((name) => (
+                    <SelectItem key={name} value={name}>{shortName(name)}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </>
+          )}
+          <Select value={filterPlatform} onValueChange={setFilterPlatform}>
+            <SelectTrigger className="w-[160px]">
+              <SelectValue placeholder="Plataforma" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Todos os gestores</SelectItem>
-              {operationalManagers.map((name) => (
-                <SelectItem key={name} value={name}>{shortName(name)}</SelectItem>
-              ))}
+              <SelectItem value="all">Todas plataformas</SelectItem>
+              <SelectItem value="99food">99Food</SelectItem>
+              <SelectItem value="ifood">iFood</SelectItem>
             </SelectContent>
           </Select>
         </div>
