@@ -227,6 +227,7 @@ export default function PendingStrategies() {
                     <div className="min-w-0 flex-1">
                       <h3 className="font-heading font-semibold text-foreground text-lg truncate flex items-center gap-2">
                         {s.store_name || "Sem nome"}
+                        <PlatformBadge platform={s.platform} />
                         {isOverdue && (
                           <span className="h-2 w-2 rounded-full bg-destructive shrink-0" title="Atrasada" />
                         )}
