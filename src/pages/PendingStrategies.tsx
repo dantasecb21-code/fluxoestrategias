@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { format, isSameDay, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import OverdueAlert from "@/components/OverdueAlert";
+import { PlatformBadge } from "@/components/PlatformBadge";
 
 function calcProgress(categories: any[]) {
   const allItems = categories.flatMap((c: any) => c.items);
@@ -34,6 +35,7 @@ export default function PendingStrategies() {
   const [filterManager, setFilterManager] = useState("all");
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterDate, setFilterDate] = useState<Date | undefined>(undefined);
+  const [filterPlatform, setFilterPlatform] = useState("all");
 
   const allPending = useMemo(() =>
     strategies
@@ -69,6 +71,7 @@ export default function PendingStrategies() {
     return allPending.filter((s) => {
       if (searchTerm && !s.store_name.toLowerCase().includes(searchTerm.toLowerCase())) return false;
       if (filterManager !== "all" && s.operational_manager !== filterManager) return false;
+      if (filterPlatform !== "all" && s.platform !== filterPlatform) return false;
       if (filterStatus !== "all") {
         const ds = deriveStrategyDisplayStatus(s);
         if (filterStatus !== ds) return false;
@@ -81,9 +84,9 @@ export default function PendingStrategies() {
       }
       return true;
     });
-  }, [allPending, searchTerm, filterManager, filterStatus, filterDate]);
+  }, [allPending, searchTerm, filterManager, filterStatus, filterDate, filterPlatform]);
 
-  const hasActiveFilters = searchTerm || filterManager !== "all" || filterStatus !== "all" || !!filterDate;
+  const hasActiveFilters = searchTerm || filterManager !== "all" || filterStatus !== "all" || !!filterDate || filterPlatform !== "all";
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
