@@ -30,6 +30,8 @@ export interface DbStrategy {
   created_at: string;
   updated_at: string;
   deleted_at: string | null;
+  started_at: string | null;
+  completed_at: string | null;
 }
 
 function jsonToCategories(json: Json): StrategyCategory[] {
@@ -139,6 +141,8 @@ export function useDbStrategies() {
     store_access_confirmed?: boolean;
     returned?: boolean;
     platform?: string;
+    started_at?: string;
+    completed_at?: string;
   }) => {
     // Track status change in history
     if (params.status && user) {
@@ -166,6 +170,22 @@ export function useDbStrategies() {
     if (params.categories) {
       updateData.categories = params.categories as unknown as Json;
     }
+
+    // Auto-fill started_at: when categories have any in_progress/completed item for the first time
+    const oldStrategy = strategies.find((s) => s.id === id);
+    if (params.categories && oldStrategy && !oldStrategy.started_at) {
+      const allItems = params.categories.flatMap((c) => c.items || []);
+      const hasActivity = allItems.some((i) => i.status === "in_progress" || i.status === "completed");
+      if (hasActivity) {
+        updateData.started_at = new Date().toISOString();
+      }
+    }
+
+    // Auto-fill completed_at: when status changes to approved
+    if (params.status === "approved" && oldStrategy && oldStrategy.status !== "approved") {
+      updateData.completed_at = new Date().toISOString();
+    }
+
     const { error } = await supabase.from("strategies").update(updateData as any).eq("id", id);
     if (error) {
       console.error("Update strategy error:", error);
