@@ -12,6 +12,7 @@ import { formatDateBR, shortName } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { deriveStrategyDisplayStatus, getStatusLabel, getStatusBadgeProps } from "@/lib/strategyStatus";
 import { toast } from "sonner";
+import { PlatformBadge } from "@/components/PlatformBadge";
 
 function calcProgress(categories: any[]) {
   const allItems = categories.flatMap((c: any) => c.items);
@@ -33,6 +34,7 @@ export default function Dashboard() {
   const [showCompleted, setShowCompleted] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterManager, setFilterManager] = useState("all");
+  const [filterPlatform, setFilterPlatform] = useState("all");
 
   const operationalManagers = useMemo(() => {
     const names = [...new Set(strategies.map((s) => s.operational_manager).filter(Boolean))];
@@ -43,7 +45,8 @@ export default function Dashboard() {
     return list.filter((s) => {
       const matchSearch = !searchTerm || s.store_name.toLowerCase().includes(searchTerm.toLowerCase());
       const matchManager = filterManager === "all" || s.operational_manager === filterManager;
-      return matchSearch && matchManager;
+      const matchPlatform = filterPlatform === "all" || s.platform === filterPlatform;
+      return matchSearch && matchManager && matchPlatform;
     });
   };
 
