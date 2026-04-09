@@ -250,6 +250,7 @@ export default function StoreRequests() {
         observation: observation.trim(),
         assigned_to: assignedTo,
         status: editStatus,
+        platform: platformField,
       } as any).eq("id", editingId);
 
       if (error) {
@@ -270,6 +271,7 @@ export default function StoreRequests() {
         observation: observation.trim(),
         assigned_to: assignedTo,
         created_by: user.id,
+        platform: platformField,
       } as any);
 
       if (error) {
