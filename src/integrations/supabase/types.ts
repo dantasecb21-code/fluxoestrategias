@@ -140,6 +140,7 @@ export type Database = {
           id: string
           meeting_date: string
           observation: string
+          platform: string
           platform_access_confirmed: boolean
           status: string
           store_creation_status: string
@@ -154,6 +155,7 @@ export type Database = {
           id?: string
           meeting_date?: string
           observation?: string
+          platform?: string
           platform_access_confirmed?: boolean
           status?: string
           store_creation_status?: string
@@ -168,6 +170,7 @@ export type Database = {
           id?: string
           meeting_date?: string
           observation?: string
+          platform?: string
           platform_access_confirmed?: boolean
           status?: string
           store_creation_status?: string

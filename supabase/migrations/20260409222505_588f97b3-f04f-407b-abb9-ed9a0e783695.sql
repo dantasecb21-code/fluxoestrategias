@@ -1,0 +1,1 @@
+ALTER TABLE public.store_requests ADD COLUMN platform text NOT NULL DEFAULT '99food';
