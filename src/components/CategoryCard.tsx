@@ -75,25 +75,8 @@ export function CategoryCard({
     setEditingItemId(null);
   };
 
-  const handleGenerateAI = async (name: string, isEdit: boolean) => {
-    if (!name.trim()) return;
-    if (isEdit) setEditGeneratingAI(true);
-    else setGeneratingAI(true);
 
-    const aiText = await fetchAIText(name);
-    if (aiText) {
-      if (isEdit) setEditItemText(aiText);
-      else setNewItemText(aiText);
-    } else {
-      const fallback = generateStrategicText(name);
-      if (isEdit) setEditItemText(fallback);
-      else setNewItemText(fallback);
-      toast.info("IA indisponível, texto gerado localmente.");
-    }
 
-    if (isEdit) setEditGeneratingAI(false);
-    else setGeneratingAI(false);
-  };
 
   return (
     <Card className="border-border bg-card overflow-hidden">
