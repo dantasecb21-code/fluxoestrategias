@@ -84,22 +84,20 @@ export function AppSidebar() {
                 </SidebarMenuButton>
               </SidebarMenuItem>
 
-              {/* Ranking - operational only */}
-              {isOperational && (
-                <SidebarMenuItem>
-                  <SidebarMenuButton asChild>
-                    <NavLink
-                      to="/ranking"
-                      onClick={() => handleNav("/ranking")}
-                      className="hover:bg-sidebar-accent/50"
-                      activeClassName="bg-sidebar-accent text-primary font-medium"
-                    >
-                      <Trophy className="mr-2 h-4 w-4" />
-                      {!collapsed && <span>Ranking</span>}
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              )}
+              {/* Ranking - todos os usuários */}
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <NavLink
+                    to="/ranking"
+                    onClick={() => handleNav("/ranking")}
+                    className="hover:bg-sidebar-accent/50"
+                    activeClassName="bg-sidebar-accent text-primary font-medium"
+                  >
+                    <Trophy className="mr-2 h-4 w-4" />
+                    {!collapsed && <span>Ranking</span>}
+                  </NavLink>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
 
               {/* Lojas Novas */}
               {canManage && (
