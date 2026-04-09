@@ -174,15 +174,6 @@ export function CategoryCard({
                   <Button size="sm" onClick={handleSaveEdit}>
                     <Check className="h-3 w-3 mr-1" /> Salvar
                   </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => handleGenerateAI(editItemName, true)}
-                    disabled={editGeneratingAI || !editItemName.trim()}
-                  >
-                    {editGeneratingAI ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Sparkles className="h-3 w-3 mr-1" />}
-                    Gerar com IA
-                  </Button>
                   <Button size="sm" variant="ghost" onClick={() => setEditingItemId(null)}>
                     Cancelar
                   </Button>
@@ -266,15 +257,6 @@ export function CategoryCard({
               <div className="flex gap-2">
                 <Button size="sm" onClick={handleAddItem} disabled={!newItemName.trim()}>
                   <Plus className="h-3 w-3 mr-1" /> Adicionar
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => handleGenerateAI(newItemName, false)}
-                  disabled={generatingAI || !newItemName.trim()}
-                >
-                  {generatingAI ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Sparkles className="h-3 w-3 mr-1" />}
-                  Gerar com IA
                 </Button>
                 <Button size="sm" variant="ghost" onClick={() => { setAddingItem(false); setNewItemName(""); setNewItemText(""); }}>
                   Cancelar
