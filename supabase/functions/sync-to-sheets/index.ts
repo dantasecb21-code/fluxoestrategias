@@ -44,15 +44,18 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Forward to Google Apps Script Web App
-    const response = await fetch(SHEETS_WEBHOOK_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
+    // Use GET with payload as query parameter to avoid Google Apps Script
+    // redirect issues (Deno edge runtime doesn't respect redirect: "manual")
+    const encodedPayload = encodeURIComponent(JSON.stringify(payload));
+    const getUrl = `${SHEETS_WEBHOOK_URL}?payload=${encodedPayload}`;
+
+    const response = await fetch(getUrl, {
+      method: "GET",
+      redirect: "follow",
     });
 
     const result = await response.text();
-    console.log(`Sync to sheets for strategy ${payload.id}: ${response.status} - ${result}`);
+    console.log(`Sync to sheets for strategy ${payload.id}: ${response.status} - ${result.substring(0, 300)}`);
 
     return new Response(
       JSON.stringify({ success: true, sheetsResponse: result }),
