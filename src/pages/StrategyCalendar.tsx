@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { CalendarDays, Clock, UserCheck, ChevronRight, Users } from "lucide-react";
 import { parseISO, isSameDay, format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { PlatformBadge } from "@/components/PlatformBadge";
 
 export default function StrategyCalendar() {
   const navigate = useNavigate();
@@ -18,6 +19,7 @@ export default function StrategyCalendar() {
   const { strategies, loading } = useDbStrategies();
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [filterManager, setFilterManager] = useState("all");
+  const [filterPlatform, setFilterPlatform] = useState("all");
 
   const isOperational = role === "operational";
   const canFilter = role === "admin" || role === "strategic";
@@ -33,9 +35,11 @@ export default function StrategyCalendar() {
   }, [activeStrategies]);
 
   const managerFiltered = useMemo(() => {
-    if (filterManager === "all") return activeStrategies;
-    return activeStrategies.filter((s) => (s.operational_manager || "").trim() === filterManager);
-  }, [activeStrategies, filterManager]);
+    let filtered = activeStrategies;
+    if (filterManager !== "all") filtered = filtered.filter((s) => (s.operational_manager || "").trim() === filterManager);
+    if (filterPlatform !== "all") filtered = filtered.filter((s) => s.platform === filterPlatform);
+    return filtered;
+  }, [activeStrategies, filterManager, filterPlatform]);
 
   const deadlineDates = useMemo(() => {
     const dates: Date[] = [];
