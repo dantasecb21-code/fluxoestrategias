@@ -5,6 +5,7 @@ import { DEFAULT_CATEGORIES, StrategyCategory } from "@/types/strategy";
 import { StrategyMetaForm } from "@/components/StrategyMetaForm";
 import { CategoryCard } from "@/components/CategoryCard";
 import { StrategyReport } from "@/components/StrategyReport";
+import { FreeTextDistributor } from "@/components/FreeTextDistributor";
 import { useCategoryEditor } from "@/hooks/useStrategies";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -529,6 +530,9 @@ export default function StrategyBuilderPage() {
           </Card>
 
 
+
+          {/* Caixa de texto livre */}
+          <FreeTextDistributor categories={categories} onAddItem={editor.addItem} />
 
           <div className="space-y-4">
             {categories.map((cat) => (
