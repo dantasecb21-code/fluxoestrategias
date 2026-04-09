@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { useDbStrategies, StrategyType, STRATEGY_TYPE_LABELS } from "@/hooks/useDbStrategies";
-import { DEFAULT_CATEGORIES, StrategyCategory } from "@/types/strategy";
+import { DEFAULT_CATEGORIES, FIXED_CATEGORIES, StrategyCategory } from "@/types/strategy";
 import { StrategyMetaForm } from "@/components/StrategyMetaForm";
 import { CategoryCard } from "@/components/CategoryCard";
 import { StrategyReport } from "@/components/StrategyReport";
@@ -535,20 +535,24 @@ export default function StrategyBuilderPage() {
           <FreeTextDistributor categories={categories} onAddItem={editor.addItem} />
 
           <div className="space-y-4">
-            {categories.map((cat) => (
-              <CategoryCard
-                key={cat.id}
-                category={cat}
-                allCategories={categories}
-                onEditCategory={editor.editCategory}
-                onRemoveCategory={editor.removeCategory}
-                onAddItem={editor.addItem}
-                onEditItem={editor.editItem}
-                onRemoveItem={editor.removeItem}
-                onMoveItem={editor.moveItem}
-                onMoveItemToCategory={editor.moveItemToCategory}
-              />
-            ))}
+            {categories.map((cat) => {
+              const isFixed = FIXED_CATEGORIES.some((fc) => fc.name === cat.name);
+              return (
+                <CategoryCard
+                  key={cat.id}
+                  category={cat}
+                  allCategories={categories}
+                  isFixed={isFixed}
+                  onEditCategory={editor.editCategory}
+                  onRemoveCategory={editor.removeCategory}
+                  onAddItem={editor.addItem}
+                  onEditItem={editor.editItem}
+                  onRemoveItem={editor.removeItem}
+                  onMoveItem={editor.moveItem}
+                  onMoveItemToCategory={editor.moveItemToCategory}
+                />
+              );
+            })}
           </div>
 
           {addingCategory ? (
