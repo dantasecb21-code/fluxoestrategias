@@ -13,9 +13,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
 import { Card } from "@/components/ui/card";
-import { FileText, Plus, Save, Check, X, UserCheck, Sparkles, Loader2, ImagePlus, Mail, ChevronDown, ChevronRight, CheckCircle2, ShieldCheck, History } from "lucide-react";
+import { FileText, Plus, Save, Check, X, UserCheck, Loader2, Mail, ChevronDown, ChevronRight, CheckCircle2, ShieldCheck, History } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { AIFollowUpDialog } from "@/components/AIFollowUpDialog";
 import { toast } from "sonner";
 import { StrategyMeta } from "@/types/strategy";
 import { supabase } from "@/integrations/supabase/client";
@@ -116,20 +115,8 @@ export default function StrategyBuilderPage() {
   const [savedId, setSavedId] = useState<string | null>(id || null);
   const [managers, setManagers] = useState<Manager[]>([]);
 
-  // Free-text AI
-  const [freeText, setFreeText] = useState(draft?.freeText || "");
-  const [organizingAI, setOrganizingAI] = useState(false);
-
-  // Image upload
-  const [uploadedImage, setUploadedImage] = useState<string | null>(null);
-  const [uploadingImage, setUploadingImage] = useState(false);
   const [storeAccess, setStoreAccess] = useState(existing?.store_access_confirmed || false);
-  const imageInputRef = useRef<HTMLInputElement>(null);
 
-  // AI follow-up dialog state
-  const [aiDetection, setAiDetection] = useState<any>(null);
-  const [showFollowUp, setShowFollowUp] = useState(false);
-  const [generatingFromFollowUp, setGeneratingFromFollowUp] = useState(false);
 
   // History
   const [history, setHistory] = useState<{ id: string; user_name: string; action: string; field_changed: string; old_value: string; new_value: string; created_at: string }[]>([]);
