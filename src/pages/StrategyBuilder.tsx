@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { useDbStrategies, StrategyType, STRATEGY_TYPE_LABELS } from "@/hooks/useDbStrategies";
 import { DEFAULT_CATEGORIES, StrategyCategory } from "@/types/strategy";
@@ -138,9 +138,9 @@ export default function StrategyBuilderPage() {
   // Save draft to localStorage for new strategies
   useEffect(() => {
     if (!id) {
-      saveDraft({ meta, categories, assignedTo, freeText });
+      saveDraft({ meta, categories, assignedTo, freeText: "" });
     }
-  }, [meta, categories, assignedTo, freeText, id]);
+  }, [meta, categories, assignedTo, id]);
 
   useEffect(() => {
     if (existing) {
@@ -824,13 +824,8 @@ export default function StrategyBuilderPage() {
           </CollapsibleContent>
         </Collapsible>
       )}
-      <AIFollowUpDialog
-        open={showFollowUp}
-        onClose={() => { setShowFollowUp(false); setAiDetection(null); }}
-        detection={aiDetection}
-        onSubmit={handleFollowUpSubmit}
-        loading={generatingFromFollowUp}
-      />
+
+
     </div>
   );
 }
