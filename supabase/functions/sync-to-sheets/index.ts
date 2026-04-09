@@ -1,5 +1,3 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
-
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -48,12 +46,7 @@ function computeExecTime(startedAt: string | null, completedAt: string | null): 
 async function sendToSheets(sheetsUrl: string, payload: SyncPayload): Promise<{ success: boolean; result: string }> {
   const encodedPayload = encodeURIComponent(JSON.stringify(payload));
   const getUrl = `${sheetsUrl}?payload=${encodedPayload}`;
-
-  const response = await fetch(getUrl, {
-    method: "GET",
-    redirect: "follow",
-  });
-
+  const response = await fetch(getUrl, { method: "GET", redirect: "follow" });
   const result = await response.text();
   const success = result.includes('"success":true');
   return { success, result: result.substring(0, 300) };
@@ -67,7 +60,6 @@ Deno.serve(async (req) => {
   try {
     const SHEETS_WEBHOOK_URL = Deno.env.get("GOOGLE_SHEETS_WEBHOOK_URL");
     if (!SHEETS_WEBHOOK_URL) {
-      console.error("GOOGLE_SHEETS_WEBHOOK_URL not configured");
       return new Response(
         JSON.stringify({ error: "Sheets webhook URL not configured" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -76,31 +68,39 @@ Deno.serve(async (req) => {
 
     const body = await req.json();
 
-    // BULK SYNC MODE: { action: "sync_all" }
+    // BULK SYNC MODE
     if (body.action === "sync_all") {
+      console.log("Starting bulk sync...");
+      
       const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
       const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-      const supabase = createClient(supabaseUrl, serviceRoleKey);
 
-      const { data: strategies, error } = await supabase
-        .from("strategies")
-        .select("id, store_name, platform, strategy_type, manager_name, operational_manager, status, deadline, observation, created_at, started_at, completed_at")
-        .is("deleted_at", null)
-        .order("created_at");
+      const res = await fetch(
+        `${supabaseUrl}/rest/v1/strategies?deleted_at=is.null&order=created_at&select=id,store_name,platform,strategy_type,manager_name,operational_manager,status,deadline,observation,created_at,started_at,completed_at`,
+        {
+          headers: {
+            apikey: serviceRoleKey,
+            Authorization: `Bearer ${serviceRoleKey}`,
+          },
+        }
+      );
 
-      if (error) {
-        console.error("Error fetching strategies:", error.message);
+      if (!res.ok) {
+        const errText = await res.text();
+        console.error("Failed to fetch strategies:", errText);
         return new Response(
-          JSON.stringify({ error: error.message }),
+          JSON.stringify({ error: "Failed to fetch strategies" }),
           { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
 
+      const strategies = await res.json();
+      console.log(`Found ${strategies.length} strategies to sync`);
+
       let success = 0;
       let fail = 0;
-      const errors: string[] = [];
 
-      for (const s of strategies || []) {
+      for (const s of strategies) {
         const payload: SyncPayload = {
           id: s.id,
           created_at: s.created_at,
@@ -119,30 +119,24 @@ Deno.serve(async (req) => {
         };
 
         try {
-          const res = await sendToSheets(SHEETS_WEBHOOK_URL, payload);
-          if (res.success) {
-            success++;
-          } else {
-            fail++;
-            errors.push(`${s.store_name}: ${res.result}`);
-          }
-        } catch (e) {
+          const r = await sendToSheets(SHEETS_WEBHOOK_URL, payload);
+          if (r.success) success++;
+          else fail++;
+        } catch {
           fail++;
-          errors.push(`${s.store_name}: ${e instanceof Error ? e.message : "Unknown"}`);
         }
       }
 
-      console.log(`Bulk sync complete: ${success} ok, ${fail} failed out of ${strategies?.length || 0}`);
+      console.log(`Bulk sync complete: ${success} ok, ${fail} failed out of ${strategies.length}`);
 
       return new Response(
-        JSON.stringify({ success: true, total: strategies?.length || 0, synced: success, failed: fail, errors: errors.slice(0, 5) }),
+        JSON.stringify({ success: true, total: strategies.length, synced: success, failed: fail }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // SINGLE SYNC MODE (original behavior)
+    // SINGLE SYNC MODE
     const payload: SyncPayload = body;
-
     if (!payload.id) {
       return new Response(
         JSON.stringify({ error: "Missing strategy ID" }),
@@ -150,7 +144,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    const { success, result } = await sendToSheets(SHEETS_WEBHOOK_URL, payload);
+    const { result } = await sendToSheets(SHEETS_WEBHOOK_URL, payload);
     console.log(`Sync to sheets for strategy ${payload.id}: ${result}`);
 
     return new Response(
