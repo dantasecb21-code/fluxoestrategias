@@ -49,7 +49,8 @@ export function FreeTextDistributor({ categories, onAddItem }: FreeTextDistribut
     for (const line of parsedLines) {
       if (line.categoryId && line.text.trim()) {
         const name = line.text.length > 60 ? line.text.substring(0, 60) + "..." : line.text;
-        onAddItem(line.categoryId, { name: `- ${name}`, text: line.text });
+        const strategicDescription = generateStrategicText(line.text);
+        onAddItem(line.categoryId, { name: `- ${name}`, text: strategicDescription || line.text });
         added++;
       }
     }
