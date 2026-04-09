@@ -27,6 +27,7 @@ Deno.serve(async (req) => {
 
   try {
     const SHEETS_WEBHOOK_URL = Deno.env.get("GOOGLE_SHEETS_WEBHOOK_URL");
+    console.log("WEBHOOK URL length:", SHEETS_WEBHOOK_URL?.length, "starts with https:", SHEETS_WEBHOOK_URL?.startsWith("https"));
     if (!SHEETS_WEBHOOK_URL) {
       console.error("GOOGLE_SHEETS_WEBHOOK_URL not configured");
       return new Response(
