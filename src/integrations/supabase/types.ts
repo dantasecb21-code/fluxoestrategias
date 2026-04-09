@@ -187,6 +187,7 @@ export type Database = {
           manager_name: string
           observation: string
           operational_manager: string
+          platform: string
           returned: boolean
           status: string
           store_access_confirmed: boolean
@@ -206,6 +207,7 @@ export type Database = {
           manager_name?: string
           observation?: string
           operational_manager?: string
+          platform?: string
           returned?: boolean
           status?: string
           store_access_confirmed?: boolean
@@ -225,6 +227,7 @@ export type Database = {
           manager_name?: string
           observation?: string
           operational_manager?: string
+          platform?: string
           returned?: boolean
           status?: string
           store_access_confirmed?: boolean
