@@ -333,26 +333,36 @@ export default function StrategyBuilderPage() {
 
   const handleFollowUpSubmit = async (answers: Record<string, string>) => {
     setGeneratingFromFollowUp(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("organize-strategy", {
-        body: {
-          mode: "generate",
-          storeName: meta.storeName,
-          followUpAnswers: { detection: aiDetection, answers },
-        },
-      });
-      if (error) throw error;
-      if (data?.categories && Array.isArray(data.categories)) {
-        addAICategories(data.categories);
-        setShowFollowUp(false);
-        setAiDetection(null);
+    const body = {
+      mode: "generate",
+      storeName: meta.storeName,
+      followUpAnswers: { detection: aiDetection, answers },
+    };
+
+    let lastError: any = null;
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        if (attempt > 0) {
+          toast.info("Tentando novamente...");
+          await new Promise(r => setTimeout(r, 2000));
+        }
+        const data = await invokeOrganize(body);
+        if (data?.categories && Array.isArray(data.categories)) {
+          addAICategories(data.categories);
+          setShowFollowUp(false);
+          setAiDetection(null);
+        }
+        setGeneratingFromFollowUp(false);
+        return;
+      } catch (err: any) {
+        lastError = err;
+        console.error(`Follow-up attempt ${attempt + 1} failed:`, err);
+        if (err.status === 402) break;
       }
-    } catch (err: any) {
-      console.error(err);
-      toast.error("Erro ao gerar estratégia. Tente novamente.");
-    } finally {
-      setGeneratingFromFollowUp(false);
     }
+
+    toast.error(lastError?.message || "Erro ao gerar estratégia. Tente novamente.");
+    setGeneratingFromFollowUp(false);
   };
 
   const addAICategories = async (aiCategories: any[]) => {
