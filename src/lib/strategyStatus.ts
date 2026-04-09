@@ -83,3 +83,86 @@ export function calcManagerStats(strategies: any[], managerId: string): ManagerS
 
   return { total, completed, inProgress, pending, pendingApproval, completionRate };
 }
+
+// ── Derived statuses for dashboard/Google Sheets ──
+
+export type StatusPrazo =
+  | "no_prazo"
+  | "atrasada"
+  | "vencendo_em_breve"
+  | "finalizada_no_prazo"
+  | "finalizada_atrasada";
+
+export const STATUS_PRAZO_LABELS: Record<StatusPrazo, string> = {
+  no_prazo: "No Prazo",
+  atrasada: "Atrasada",
+  vencendo_em_breve: "Vencendo em breve",
+  finalizada_no_prazo: "Finalizada no prazo",
+  finalizada_atrasada: "Finalizada atrasada",
+};
+
+export const STATUS_PRAZO_COLORS: Record<StatusPrazo, string> = {
+  no_prazo: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30",
+  atrasada: "bg-destructive/20 text-destructive border-destructive/30",
+  vencendo_em_breve: "bg-warning/20 text-warning border-warning/30",
+  finalizada_no_prazo: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30",
+  finalizada_atrasada: "bg-orange-500/20 text-orange-400 border-orange-500/30",
+};
+
+/**
+ * Derives status_prazo based on deadline, completion, and current date.
+ */
+export function deriveStatusPrazo(strategy: {
+  status: string;
+  deadline: string;
+  completed_at?: string | null;
+}): StatusPrazo {
+  const now = new Date();
+  const deadline = strategy.deadline ? new Date(strategy.deadline + "T23:59:59") : null;
+  const isFinished = strategy.status === "approved";
+
+  if (isFinished && deadline) {
+    const completedAt = strategy.completed_at ? new Date(strategy.completed_at) : now;
+    return completedAt <= deadline ? "finalizada_no_prazo" : "finalizada_atrasada";
+  }
+
+  if (!deadline) return "no_prazo";
+
+  const diffMs = deadline.getTime() - now.getTime();
+  const diffDays = diffMs / (1000 * 60 * 60 * 24);
+
+  if (diffMs < 0) return "atrasada";
+  if (diffDays <= 2) return "vencendo_em_breve";
+  return "no_prazo";
+}
+
+export type StatusOperacional = "pendente" | "em_otimizacao" | "concluida";
+
+export const STATUS_OPERACIONAL_LABELS: Record<StatusOperacional, string> = {
+  pendente: "Pendente",
+  em_otimizacao: "Em otimização",
+  concluida: "Concluída",
+};
+
+export const STATUS_OPERACIONAL_COLORS: Record<StatusOperacional, string> = {
+  pendente: "bg-warning/20 text-warning border-warning/30",
+  em_otimizacao: "bg-primary/20 text-primary border-primary/30",
+  concluida: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30",
+};
+
+/**
+ * Derives status_operacional from strategy status + item states.
+ */
+export function deriveStatusOperacional(strategy: {
+  status: string;
+  categories: any[];
+}): StatusOperacional {
+  if (strategy.status === "approved") return "concluida";
+
+  const allItems = (strategy.categories || []).flatMap((c: any) => c.items || []);
+  const hasActivity = allItems.some(
+    (i: any) => i.status === "in_progress" || i.status === "completed"
+  );
+
+  return hasActivity ? "em_otimizacao" : "pendente";
+}
