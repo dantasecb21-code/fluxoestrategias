@@ -3,6 +3,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { StrategyCategory } from "@/types/strategy";
 import type { Json } from "@/integrations/supabase/types";
+import {
+  deriveStatusPrazo,
+  deriveStatusOperacional,
+  STATUS_PRAZO_LABELS,
+  STATUS_OPERACIONAL_LABELS,
+} from "@/lib/strategyStatus";
+import { STRATEGY_TYPE_LABELS as TYPE_LABELS_MAP } from "@/hooks/useDbStrategies";
 
 export type StrategyType = "initial" | "alignment" | "retention";
 
