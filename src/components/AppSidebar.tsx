@@ -246,17 +246,17 @@ export function AppSidebar() {
                 </SidebarMenuButton>
               </SidebarMenuItem>
 
-              {/* Assistente */}
+              {/* Central de Ajuda */}
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
                   <NavLink
-                    to="/assistente"
-                    onClick={() => handleNav("/assistente")}
+                    to="/ajuda"
+                    onClick={() => handleNav("/ajuda")}
                     className="hover:bg-sidebar-accent/50"
                     activeClassName="bg-sidebar-accent text-primary font-medium"
                   >
                     <MessageCircleQuestion className="mr-2 h-4 w-4" />
-                    {!collapsed && <span>Assistente</span>}
+                    {!collapsed && <span>Central de Ajuda</span>}
                   </NavLink>
                 </SidebarMenuButton>
               </SidebarMenuItem>

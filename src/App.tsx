@@ -15,7 +15,7 @@ import ManagersList from "./pages/ManagersList";
 import StrategyNotes from "./pages/StrategyNotes";
 import PendingStrategies from "./pages/PendingStrategies";
 import UserApproval from "./pages/UserApproval";
-import AssistantChat from "./pages/AssistantChat";
+import HelpCenter from "./pages/HelpCenter";
 import TrainingCourses from "./pages/TrainingCourses";
 import StoreRequests from "./pages/StoreRequests";
 import ResetPassword from "./pages/ResetPassword";
@@ -88,7 +88,7 @@ const App = () => (
             <Route path="/operacional/:id" element={<ProtectedRoute allowedRoles={["operational"]}><OperationalStrategyView /></ProtectedRoute>} />
             <Route path="/ranking" element={<ProtectedRoute allowedRoles={["operational"]}><OperationalRanking /></ProtectedRoute>} />
             <Route path="/perfil/:userId" element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
-            <Route path="/assistente" element={<ProtectedRoute><AssistantChat /></ProtectedRoute>} />
+            <Route path="/ajuda" element={<ProtectedRoute><HelpCenter /></ProtectedRoute>} />
             <Route path="/treinamentos" element={<ProtectedRoute allowedRoles={["admin", "strategic", "operational"]}><TrainingCourses /></ProtectedRoute>} />
             <Route path="/lojas-novas" element={<ProtectedRoute allowedRoles={["admin", "strategic"]}><StoreRequests /></ProtectedRoute>} />
             <Route path="/atividades" element={<ProtectedRoute><PendingActivities /></ProtectedRoute>} />
