@@ -166,6 +166,11 @@ export function useDbStrategies() {
       }
     }
 
+    const updateData: Record<string, unknown> = { ...params };
+    if (params.categories) {
+      updateData.categories = params.categories as unknown as Json;
+    }
+
     // Auto-fill started_at: when categories have any in_progress/completed item for the first time
     const oldStrategy = strategies.find((s) => s.id === id);
     if (params.categories && oldStrategy && !oldStrategy.started_at) {
