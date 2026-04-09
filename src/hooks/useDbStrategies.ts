@@ -207,6 +207,7 @@ export function useDbStrategies() {
       deadline: original.deadline,
       categories: JSON.parse(JSON.stringify(original.categories)),
       assigned_to: original.assigned_to,
+      platform: original.platform,
     });
   };
 
