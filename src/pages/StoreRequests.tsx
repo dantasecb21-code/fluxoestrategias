@@ -473,6 +473,22 @@ export default function StoreRequests() {
                     placeholder="Ex: Pizzaria do João"
                   />
                 </div>
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-1"><Globe className="h-3.5 w-3.5" /> Plataforma *</Label>
+                  <Select value={platformField} onValueChange={setPlatformField}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {PLATFORM_OPTIONS.map((key) => (
+                        <SelectItem key={key} value={key}>
+                          <span className={key === "ifood" ? "text-red-400" : "text-yellow-400"}>●</span>{" "}
+                          {PLATFORM_LABELS[key]}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
                 <div>
                   <Label>Nome do Cliente *</Label>
                   <Input
