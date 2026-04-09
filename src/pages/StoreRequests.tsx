@@ -13,8 +13,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Store, Plus, Clock, CheckCircle2, User, ArrowRight, Pencil, Trash2, Sparkles, Loader2, Hammer, Filter, ChevronDown, ChevronRight } from "lucide-react";
+import { Store, Plus, Clock, CheckCircle2, User, ArrowRight, Pencil, Trash2, Sparkles, Loader2, Hammer, Filter, ChevronDown, ChevronRight, Globe } from "lucide-react";
 import { toast } from "sonner";
+import { PlatformBadge, PLATFORM_LABELS, PLATFORM_OPTIONS, Platform } from "@/components/PlatformBadge";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -329,13 +330,17 @@ export default function StoreRequests() {
             params.set("store", req.store_name);
             params.set("manager", displayName || "");
             params.set("store_request_id", req.id);
+            params.set("platform", req.platform || "99food");
             navigate(`/nova?${params.toString()}`);
           }
         }}
       >
         <div className="flex items-start justify-between">
           <div>
-            <h3 className="font-semibold text-foreground text-lg">{req.store_name}</h3>
+            <h3 className="font-semibold text-foreground text-lg flex items-center gap-2">
+              {req.store_name}
+              <PlatformBadge platform={req.platform || "99food"} />
+            </h3>
             <p className="text-sm text-muted-foreground flex items-center gap-1">
               <User className="h-3.5 w-3.5" />
               Cliente: {req.client_name}
