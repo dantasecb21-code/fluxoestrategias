@@ -30,6 +30,8 @@ export interface DbStrategy {
   created_at: string;
   updated_at: string;
   deleted_at: string | null;
+  started_at: string | null;
+  completed_at: string | null;
 }
 
 function jsonToCategories(json: Json): StrategyCategory[] {
@@ -139,6 +141,8 @@ export function useDbStrategies() {
     store_access_confirmed?: boolean;
     returned?: boolean;
     platform?: string;
+    started_at?: string;
+    completed_at?: string;
   }) => {
     // Track status change in history
     if (params.status && user) {
