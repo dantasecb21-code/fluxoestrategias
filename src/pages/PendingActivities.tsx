@@ -156,58 +156,8 @@ export default function PendingActivities() {
     }
   };
 
-  const handlePaste = (e: React.ClipboardEvent) => {
-    const items = e.clipboardData?.items;
-    if (!items) return;
-    for (let i = 0; i < items.length; i++) {
-      if (items[i].type.startsWith("image/")) {
-        e.preventDefault();
-        const file = items[i].getAsFile();
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = (ev) => {
-          setPastedImage(ev.target?.result as string);
-        };
-        reader.readAsDataURL(file);
-        return;
-      }
-    }
-  };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      setPastedImage(ev.target?.result as string);
-    };
-    reader.readAsDataURL(file);
-  };
 
-  const handleParseText = async () => {
-    if (!freeText.trim() && !pastedImage) {
-      toast.error("Cole texto ou uma imagem com as informações.");
-      return;
-    }
-    setParsing(true);
-    try {
-      const body: any = {};
-      if (freeText.trim()) body.text = freeText.trim();
-      if (pastedImage) body.image = pastedImage;
-
-      const { data, error } = await supabase.functions.invoke("parse-activity", { body });
-      if (error) throw error;
-      if (data.client_name) setClientName(data.client_name);
-      if (data.store_name) setStoreName(data.store_name);
-      if (data.description) setDescription(data.description);
-      if (data.deadline) setDeadline(data.deadline);
-      if (data.priority) setPriority(data.priority);
-      toast.success("Dados extraídos! Revise e complete os campos.");
-    } catch {
-      toast.error("Erro ao processar. Preencha manualmente.");
-    }
-    setParsing(false);
-  };
 
   const handleSubmit = async () => {
     if (!description.trim() || assignedTo.length === 0) {
