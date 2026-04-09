@@ -277,35 +277,58 @@ export default function StrategyBuilderPage() {
   };
 
   // Free-text AI: organize into categories
+  const invokeOrganize = async (body: any) => {
+    const { data, error } = await supabase.functions.invoke("organize-strategy", { body });
+    if (error) {
+      // Parse edge function error for specific status
+      const msg = typeof error === "object" && error.message ? error.message : String(error);
+      if (msg.includes("429") || msg.includes("Limite")) throw { status: 429, message: "Limite de requisições excedido. Aguarde um momento." };
+      if (msg.includes("402") || msg.includes("Créditos")) throw { status: 402, message: "Créditos insuficientes." };
+      if (msg.includes("504") || msg.includes("demorou")) throw { status: 504, message: "A IA demorou demais. Tente novamente." };
+      throw error;
+    }
+    return data;
+  };
+
   const handleOrganizeWithAI = async () => {
     if (!freeText.trim() && !uploadedImage) {
       toast.error("Escreva algo ou envie uma imagem primeiro!");
       return;
     }
     setOrganizingAI(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("organize-strategy", {
-        body: { freeText: freeText.trim(), storeName: meta.storeName, imageBase64: uploadedImage || undefined },
-      });
-      if (error) throw error;
+    const body = { freeText: freeText.trim(), storeName: meta.storeName, imageBase64: uploadedImage || undefined };
+    
+    let lastError: any = null;
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        if (attempt > 0) {
+          toast.info("Tentando novamente...");
+          await new Promise(r => setTimeout(r, 2000));
+        }
+        const data = await invokeOrganize(body);
 
-      // Check if AI needs follow-up input
-      if (data?.needsInput && data?.detection) {
-        setAiDetection(data.detection);
-        setShowFollowUp(true);
+        if (data?.needsInput && data?.detection) {
+          setAiDetection(data.detection);
+          setShowFollowUp(true);
+          setOrganizingAI(false);
+          return;
+        }
+
+        if (data?.categories && Array.isArray(data.categories)) {
+          addAICategories(data.categories);
+        }
         setOrganizingAI(false);
         return;
+      } catch (err: any) {
+        lastError = err;
+        console.error(`Attempt ${attempt + 1} failed:`, err);
+        if (err.status === 402) break; // no retry on payment required
       }
-
-      if (data?.categories && Array.isArray(data.categories)) {
-        addAICategories(data.categories);
-      }
-    } catch (err: any) {
-      console.error(err);
-      toast.error("Erro ao organizar com IA. Tente novamente.");
-    } finally {
-      setOrganizingAI(false);
     }
+
+    const errorMsg = lastError?.message || "Erro ao organizar com IA. Tente novamente.";
+    toast.error(errorMsg);
+    setOrganizingAI(false);
   };
 
   const handleFollowUpSubmit = async (answers: Record<string, string>) => {

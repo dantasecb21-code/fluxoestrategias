@@ -100,31 +100,48 @@ serve(async (req) => {
 });
 
 async function callAI(apiKey: string, model: string, systemPrompt: string, userMessage: any) {
-  const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model,
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: userMessage },
-      ],
-    }),
-  });
+  console.log(`[callAI] Calling model=${model}, prompt length=${systemPrompt.length}`);
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 30000);
 
-  if (!response.ok) {
-    if (response.status === 429) throw { status: 429, message: "Limite de requisicoes excedido. Aguarde um momento." };
-    if (response.status === 402) throw { status: 402, message: "Creditos insuficientes." };
-    const t = await response.text();
-    console.error("AI gateway error:", response.status, t);
-    throw new Error("AI gateway error");
+  try {
+    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model,
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userMessage },
+        ],
+      }),
+      signal: controller.signal,
+    });
+
+    if (!response.ok) {
+      const t = await response.text();
+      console.error(`[callAI] Error ${response.status}:`, t.substring(0, 300));
+      if (response.status === 429) throw { status: 429, message: "Limite de requisições excedido. Aguarde um momento e tente novamente." };
+      if (response.status === 402) throw { status: 402, message: "Créditos insuficientes." };
+      throw { status: response.status, message: `Erro no gateway de IA (${response.status}). Tente novamente.` };
+    }
+
+    const data = await response.json();
+    const content = data.choices?.[0]?.message?.content?.trim() || "";
+    console.log(`[callAI] Success, response length=${content.length}`);
+    return content;
+  } catch (e: any) {
+    if (e.name === "AbortError") {
+      console.error("[callAI] Request timed out after 30s");
+      throw { status: 504, message: "A IA demorou demais para responder. Tente novamente." };
+    }
+    throw e;
+  } finally {
+    clearTimeout(timeout);
   }
-
-  const data = await response.json();
-  return data.choices?.[0]?.message?.content?.trim() || "";
 }
 
 async function getContextBlocks(serviceClient: any) {
@@ -132,7 +149,7 @@ async function getContextBlocks(serviceClient: any) {
     .from("ai_context_entries")
     .select("content, structured_summary, category")
     .order("created_at", { ascending: false })
-    .limit(20);
+    .limit(10);
 
   let contextBlock = "";
   if (contextEntries && contextEntries.length > 0) {
@@ -149,7 +166,7 @@ async function getContextBlocks(serviceClient: any) {
   let trainingBlock = "";
   if (trainingCourses && trainingCourses.length > 0) {
     trainingBlock = "\n\nBASE DE TREINAMENTOS:\n" +
-      trainingCourses.map((c: any, i: number) => `${i + 1}. ${c.title}: ${c.content}`).join("\n");
+      trainingCourses.map((c: any, i: number) => `${i + 1}. ${c.title}: ${c.content.substring(0, 500)}`).join("\n");
   }
 
   return { contextBlock, trainingBlock };
