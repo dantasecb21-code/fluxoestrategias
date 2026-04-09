@@ -184,6 +184,7 @@ export default function PendingStrategies() {
                   setFilterManager("all");
                   setFilterStatus("all");
                   setFilterDate(undefined);
+                  setFilterPlatform("all");
                 }}
               >
                 Limpar filtros
