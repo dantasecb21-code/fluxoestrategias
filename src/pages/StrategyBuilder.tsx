@@ -530,6 +530,9 @@ export default function StrategyBuilderPage() {
 
 
 
+          {/* Caixa de texto livre */}
+          <FreeTextDistributor categories={categories} onAddItem={editor.addItem} />
+
           <div className="space-y-4">
             {categories.map((cat) => (
               <CategoryCard
