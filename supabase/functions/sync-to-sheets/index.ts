@@ -45,11 +45,30 @@ Deno.serve(async (req) => {
     }
 
     // Forward to Google Apps Script Web App
-    const response = await fetch(SHEETS_WEBHOOK_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
+    // Apps Script returns a 302 redirect; we must follow it manually with POST
+    const jsonBody = JSON.stringify(payload);
+    let targetUrl = SHEETS_WEBHOOK_URL;
+    let response: Response;
+    let attempts = 0;
+
+    while (attempts < 5) {
+      attempts++;
+      response = await fetch(targetUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: jsonBody,
+        redirect: "manual",
+      });
+
+      if (response.status >= 300 && response.status < 400) {
+        const location = response.headers.get("location");
+        if (location) {
+          targetUrl = location;
+          continue;
+        }
+      }
+      break;
+    }
 
     const result = await response.text();
     console.log(`Sync to sheets for strategy ${payload.id}: ${response.status} - ${result}`);
