@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { StrategyCategory, StrategyItem } from "@/types/strategy";
 import { generateStrategicText } from "@/lib/strategicTextGenerator";
-import { supabase } from "@/integrations/supabase/client";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
-import { Pencil, Trash2, Plus, Check, X, ChevronDown, ChevronRight, Sparkles, Loader2, ArrowUp, ArrowDown, MoveRight } from "lucide-react";
+import { Pencil, Trash2, Plus, Check, X, ChevronDown, ChevronRight, ArrowUp, ArrowDown, MoveRight } from "lucide-react";
 import { toast } from "sonner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
@@ -21,18 +21,6 @@ interface CategoryCardProps {
   onMoveItem?: (catId: string, itemId: string, direction: "up" | "down") => void;
   onMoveItemToCategory?: (fromCatId: string, itemId: string, toCatId: string) => void;
   
-}
-
-async function fetchAIText(itemName: string): Promise<string | null> {
-  try {
-    const { data, error } = await supabase.functions.invoke("generate-strategic-text", {
-      body: { itemName },
-    });
-    if (error) throw error;
-    return data?.text || null;
-  } catch {
-    return null;
-  }
 }
 
 export function CategoryCard({
@@ -55,8 +43,6 @@ export function CategoryCard({
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
   const [editItemName, setEditItemName] = useState("");
   const [editItemText, setEditItemText] = useState("");
-  const [generatingAI, setGeneratingAI] = useState(false);
-  const [editGeneratingAI, setEditGeneratingAI] = useState(false);
 
   const handleSaveCatName = () => {
     if (catName.trim()) {
@@ -89,25 +75,8 @@ export function CategoryCard({
     setEditingItemId(null);
   };
 
-  const handleGenerateAI = async (name: string, isEdit: boolean) => {
-    if (!name.trim()) return;
-    if (isEdit) setEditGeneratingAI(true);
-    else setGeneratingAI(true);
 
-    const aiText = await fetchAIText(name);
-    if (aiText) {
-      if (isEdit) setEditItemText(aiText);
-      else setNewItemText(aiText);
-    } else {
-      const fallback = generateStrategicText(name);
-      if (isEdit) setEditItemText(fallback);
-      else setNewItemText(fallback);
-      toast.info("IA indisponível, texto gerado localmente.");
-    }
 
-    if (isEdit) setEditGeneratingAI(false);
-    else setGeneratingAI(false);
-  };
 
   return (
     <Card className="border-border bg-card overflow-hidden">
@@ -187,15 +156,6 @@ export function CategoryCard({
                 <div className="flex gap-2">
                   <Button size="sm" onClick={handleSaveEdit}>
                     <Check className="h-3 w-3 mr-1" /> Salvar
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => handleGenerateAI(editItemName, true)}
-                    disabled={editGeneratingAI || !editItemName.trim()}
-                  >
-                    {editGeneratingAI ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Sparkles className="h-3 w-3 mr-1" />}
-                    Gerar com IA
                   </Button>
                   <Button size="sm" variant="ghost" onClick={() => setEditingItemId(null)}>
                     Cancelar
@@ -280,15 +240,6 @@ export function CategoryCard({
               <div className="flex gap-2">
                 <Button size="sm" onClick={handleAddItem} disabled={!newItemName.trim()}>
                   <Plus className="h-3 w-3 mr-1" /> Adicionar
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => handleGenerateAI(newItemName, false)}
-                  disabled={generatingAI || !newItemName.trim()}
-                >
-                  {generatingAI ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Sparkles className="h-3 w-3 mr-1" />}
-                  Gerar com IA
                 </Button>
                 <Button size="sm" variant="ghost" onClick={() => { setAddingItem(false); setNewItemName(""); setNewItemText(""); }}>
                   Cancelar

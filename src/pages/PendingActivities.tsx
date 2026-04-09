@@ -156,58 +156,8 @@ export default function PendingActivities() {
     }
   };
 
-  const handlePaste = (e: React.ClipboardEvent) => {
-    const items = e.clipboardData?.items;
-    if (!items) return;
-    for (let i = 0; i < items.length; i++) {
-      if (items[i].type.startsWith("image/")) {
-        e.preventDefault();
-        const file = items[i].getAsFile();
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = (ev) => {
-          setPastedImage(ev.target?.result as string);
-        };
-        reader.readAsDataURL(file);
-        return;
-      }
-    }
-  };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      setPastedImage(ev.target?.result as string);
-    };
-    reader.readAsDataURL(file);
-  };
 
-  const handleParseText = async () => {
-    if (!freeText.trim() && !pastedImage) {
-      toast.error("Cole texto ou uma imagem com as informações.");
-      return;
-    }
-    setParsing(true);
-    try {
-      const body: any = {};
-      if (freeText.trim()) body.text = freeText.trim();
-      if (pastedImage) body.image = pastedImage;
-
-      const { data, error } = await supabase.functions.invoke("parse-activity", { body });
-      if (error) throw error;
-      if (data.client_name) setClientName(data.client_name);
-      if (data.store_name) setStoreName(data.store_name);
-      if (data.description) setDescription(data.description);
-      if (data.deadline) setDeadline(data.deadline);
-      if (data.priority) setPriority(data.priority);
-      toast.success("Dados extraídos! Revise e complete os campos.");
-    } catch {
-      toast.error("Erro ao processar. Preencha manualmente.");
-    }
-    setParsing(false);
-  };
 
   const handleSubmit = async () => {
     if (!description.trim() || assignedTo.length === 0) {
@@ -313,60 +263,8 @@ export default function PendingActivities() {
                 <DialogTitle>{editingId ? "Editar Atividade" : "Nova Atividade"}</DialogTitle>
               </DialogHeader>
               <div className="space-y-4 mt-2">
-                {/* AI parser */}
-                {!editingId && (
-                  <div className="rounded-lg border border-primary/20 overflow-hidden">
-                    <div className="flex items-center gap-2 px-3 py-2 bg-primary/10">
-                      <Sparkles className="h-3.5 w-3.5 text-primary" />
-                      <span className="text-xs font-medium text-primary">Preenchimento inteligente</span>
-                    </div>
-                    <div className="p-3 space-y-2">
-                      <Textarea
-                        value={freeText}
-                        onChange={(e) => setFreeText(e.target.value)}
-                        onPaste={handlePaste}
-                        placeholder="Cole texto ou imagem (print) do cliente aqui..."
-                        rows={2}
-                        className="resize-none text-sm"
-                      />
-                      {pastedImage && (
-                        <div className="relative inline-block">
-                          <img src={pastedImage} alt="Print colado" className="max-h-32 rounded border border-border" />
-                          <button
-                            type="button"
-                            onClick={() => setPastedImage(null)}
-                            className="absolute -top-2 -right-2 h-5 w-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center"
-                          >
-                            <X className="h-3 w-3" />
-                          </button>
-                        </div>
-                      )}
-                      <div className="flex gap-2">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          className="flex-1 h-8 text-xs border-primary/20 text-primary hover:bg-primary/10"
-                          onClick={handleParseText}
-                          disabled={parsing}
-                        >
-                          {parsing ? (
-                            <><Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> Extraindo...</>
-                          ) : (
-                            <><Sparkles className="h-3.5 w-3.5 mr-1.5" /> Extrair dados com IA</>
-                          )}
-                        </Button>
-                        <label className="cursor-pointer">
-                          <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
-                          <div className="h-8 px-3 rounded-md border border-primary/20 text-primary hover:bg-primary/10 flex items-center gap-1.5 text-xs">
-                            <Image className="h-3.5 w-3.5" />
-                            Imagem
-                          </div>
-                        </label>
-                      </div>
-                    </div>
-                  </div>
-                )}
+
+
 
                 <div>
                   <Label>Nome do Cliente</Label>

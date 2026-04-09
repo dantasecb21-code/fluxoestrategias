@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { useDbStrategies, StrategyType, STRATEGY_TYPE_LABELS } from "@/hooks/useDbStrategies";
 import { DEFAULT_CATEGORIES, StrategyCategory } from "@/types/strategy";
@@ -13,9 +13,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
 import { Card } from "@/components/ui/card";
-import { FileText, Plus, Save, Check, X, UserCheck, Sparkles, Loader2, ImagePlus, Mail, ChevronDown, ChevronRight, CheckCircle2, ShieldCheck, History } from "lucide-react";
+import { FileText, Plus, Save, Check, X, UserCheck, Loader2, Mail, ChevronDown, ChevronRight, CheckCircle2, ShieldCheck, History } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { AIFollowUpDialog } from "@/components/AIFollowUpDialog";
 import { toast } from "sonner";
 import { StrategyMeta } from "@/types/strategy";
 import { supabase } from "@/integrations/supabase/client";
@@ -116,20 +115,8 @@ export default function StrategyBuilderPage() {
   const [savedId, setSavedId] = useState<string | null>(id || null);
   const [managers, setManagers] = useState<Manager[]>([]);
 
-  // Free-text AI
-  const [freeText, setFreeText] = useState(draft?.freeText || "");
-  const [organizingAI, setOrganizingAI] = useState(false);
-
-  // Image upload
-  const [uploadedImage, setUploadedImage] = useState<string | null>(null);
-  const [uploadingImage, setUploadingImage] = useState(false);
   const [storeAccess, setStoreAccess] = useState(existing?.store_access_confirmed || false);
-  const imageInputRef = useRef<HTMLInputElement>(null);
 
-  // AI follow-up dialog state
-  const [aiDetection, setAiDetection] = useState<any>(null);
-  const [showFollowUp, setShowFollowUp] = useState(false);
-  const [generatingFromFollowUp, setGeneratingFromFollowUp] = useState(false);
 
   // History
   const [history, setHistory] = useState<{ id: string; user_name: string; action: string; field_changed: string; old_value: string; new_value: string; created_at: string }[]>([]);
@@ -151,9 +138,9 @@ export default function StrategyBuilderPage() {
   // Save draft to localStorage for new strategies
   useEffect(() => {
     if (!id) {
-      saveDraft({ meta, categories, assignedTo, freeText });
+      saveDraft({ meta, categories, assignedTo, freeText: "" });
     }
-  }, [meta, categories, assignedTo, freeText, id]);
+  }, [meta, categories, assignedTo, id]);
 
   useEffect(() => {
     if (existing) {
@@ -258,144 +245,7 @@ export default function StrategyBuilderPage() {
     }
   };
 
-  // Image upload handler
-  const handleImageUpload = async (file: File) => {
-    setUploadingImage(true);
-    try {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64 = (reader.result as string).split(",")[1];
-        setUploadedImage(base64);
-        setUploadingImage(false);
-        toast.success("Imagem carregada! Clique em 'Organizar com IA' para analisar.");
-      };
-      reader.readAsDataURL(file);
-    } catch {
-      toast.error("Erro ao carregar imagem.");
-      setUploadingImage(false);
-    }
-  };
 
-  // Free-text AI: organize into categories
-  const invokeOrganize = async (body: any) => {
-    const { data, error } = await supabase.functions.invoke("organize-strategy", { body });
-    if (error) {
-      // Parse edge function error for specific status
-      const msg = typeof error === "object" && error.message ? error.message : String(error);
-      if (msg.includes("429") || msg.includes("Limite")) throw { status: 429, message: "Limite de requisições excedido. Aguarde um momento." };
-      if (msg.includes("402") || msg.includes("Créditos")) throw { status: 402, message: "Créditos insuficientes." };
-      if (msg.includes("504") || msg.includes("demorou")) throw { status: 504, message: "A IA demorou demais. Tente novamente." };
-      throw error;
-    }
-    return data;
-  };
-
-  const handleOrganizeWithAI = async () => {
-    if (!freeText.trim() && !uploadedImage) {
-      toast.error("Escreva algo ou envie uma imagem primeiro!");
-      return;
-    }
-    setOrganizingAI(true);
-    const body = { freeText: freeText.trim(), storeName: meta.storeName, imageBase64: uploadedImage || undefined };
-    
-    let lastError: any = null;
-    for (let attempt = 0; attempt < 2; attempt++) {
-      try {
-        if (attempt > 0) {
-          toast.info("Tentando novamente...");
-          await new Promise(r => setTimeout(r, 2000));
-        }
-        const data = await invokeOrganize(body);
-
-        if (data?.needsInput && data?.detection) {
-          setAiDetection(data.detection);
-          setShowFollowUp(true);
-          setOrganizingAI(false);
-          return;
-        }
-
-        if (data?.categories && Array.isArray(data.categories)) {
-          addAICategories(data.categories);
-        }
-        setOrganizingAI(false);
-        return;
-      } catch (err: any) {
-        lastError = err;
-        console.error(`Attempt ${attempt + 1} failed:`, err);
-        if (err.status === 402) break; // no retry on payment required
-      }
-    }
-
-    const errorMsg = lastError?.message || "Erro ao organizar com IA. Tente novamente.";
-    toast.error(errorMsg);
-    setOrganizingAI(false);
-  };
-
-  const handleFollowUpSubmit = async (answers: Record<string, string>) => {
-    setGeneratingFromFollowUp(true);
-    const body = {
-      mode: "generate",
-      storeName: meta.storeName,
-      followUpAnswers: { detection: aiDetection, answers },
-    };
-
-    let lastError: any = null;
-    for (let attempt = 0; attempt < 2; attempt++) {
-      try {
-        if (attempt > 0) {
-          toast.info("Tentando novamente...");
-          await new Promise(r => setTimeout(r, 2000));
-        }
-        const data = await invokeOrganize(body);
-        if (data?.categories && Array.isArray(data.categories)) {
-          addAICategories(data.categories);
-          setShowFollowUp(false);
-          setAiDetection(null);
-        }
-        setGeneratingFromFollowUp(false);
-        return;
-      } catch (err: any) {
-        lastError = err;
-        console.error(`Follow-up attempt ${attempt + 1} failed:`, err);
-        if (err.status === 402) break;
-      }
-    }
-
-    toast.error(lastError?.message || "Erro ao gerar estratégia. Tente novamente.");
-    setGeneratingFromFollowUp(false);
-  };
-
-  const addAICategories = async (aiCategories: any[]) => {
-    const newCats: StrategyCategory[] = aiCategories.map((cat: any) => ({
-      id: generateId(),
-      name: cat.name,
-      items: (cat.items || []).map((item: any) => ({
-        id: generateId(),
-        name: item.name || "",
-        text: item.text || "",
-        checked: false,
-        status: "pending" as const,
-      })),
-    }));
-    setCategories((prev) => [...prev, ...newCats]);
-
-    // Save context for AI learning
-    if (freeText.trim()) {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        await supabase.from("ai_context_entries" as any).insert({
-          user_id: user.id,
-          content: freeText.trim(),
-          structured_summary: JSON.stringify(aiCategories.map((c: any) => c.name)),
-          category: meta.storeName || "geral",
-        });
-      }
-    }
-
-    setFreeText("");
-    setUploadedImage(null);
-    toast.success(`${newCats.length} categorias adicionadas pela IA!`);
-  };
 
   const selectedManager = managers.find((m) => m.user_id === assignedTo);
   const totalItems = categories.reduce((acc, c) => acc + c.items.length, 0);
@@ -678,80 +528,7 @@ export default function StrategyBuilderPage() {
             />
           </Card>
 
-          <Card className="p-4 border-border bg-card space-y-3">
-            <div className="flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-primary" />
-              <Label className="text-foreground font-heading font-semibold text-sm">Escreva livremente</Label>
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Escreva o que precisa ser feito na loja ou envie um print. A IA vai organizar tudo em categorias com passo a passo detalhado.
-            </p>
-            <Textarea
-              value={freeText}
-              onChange={(e) => setFreeText(e.target.value)}
-              onPaste={(e) => {
-                const items = e.clipboardData?.items;
-                if (!items) return;
-                for (const item of Array.from(items)) {
-                  if (item.type.startsWith("image/")) {
-                    e.preventDefault();
-                    const file = item.getAsFile();
-                    if (file) handleImageUpload(file);
-                    return;
-                  }
-                }
-              }}
-              placeholder="Ex: a loja precisa trocar a foto de capa, criar um cupom novo... (ou cole um print com Ctrl+V)"
-              rows={4}
-              className="bg-background"
-            />
-            {uploadedImage && (
-              <div className="relative inline-block">
-                <img src={`data:image/png;base64,${uploadedImage}`} alt="Preview" className="h-20 rounded-lg border border-border" />
-                <button
-                  onClick={() => setUploadedImage(null)}
-                  className="absolute -top-2 -right-2 h-5 w-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center text-xs"
-                >
-                  ✕
-                </button>
-              </div>
-            )}
-            <div className="flex gap-2 items-center">
-              <Button
-                size="sm"
-                onClick={handleOrganizeWithAI}
-                disabled={organizingAI || (!freeText.trim() && !uploadedImage)}
-                className="bg-primary text-primary-foreground hover:bg-primary/90"
-              >
-                {organizingAI ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Sparkles className="h-4 w-4 mr-1" />}
-                {organizingAI ? "Organizando..." : "Organizar com IA"}
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => imageInputRef.current?.click()}
-                disabled={uploadingImage}
-              >
-                {uploadingImage ? (
-                  <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-                ) : (
-                  <ImagePlus className="h-4 w-4 mr-1" />
-                )}
-                Enviar Print
-              </Button>
-              <input
-                ref={imageInputRef}
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={(e) => {
-                  const f = e.target.files?.[0];
-                  if (f) handleImageUpload(f);
-                  e.target.value = "";
-                }}
-              />
-            </div>
-          </Card>
+
 
           <div className="space-y-4">
             {categories.map((cat) => (
@@ -837,13 +614,8 @@ export default function StrategyBuilderPage() {
           </CollapsibleContent>
         </Collapsible>
       )}
-      <AIFollowUpDialog
-        open={showFollowUp}
-        onClose={() => { setShowFollowUp(false); setAiDetection(null); }}
-        detection={aiDetection}
-        onSubmit={handleFollowUpSubmit}
-        loading={generatingFromFollowUp}
-      />
+
+
     </div>
   );
 }

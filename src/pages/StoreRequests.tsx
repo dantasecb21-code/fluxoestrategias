@@ -187,27 +187,8 @@ export default function StoreRequests() {
     setFreeText("");
   };
 
-  const handleParseText = async () => {
-    if (!freeText.trim()) {
-      toast.error("Cole ou digite o texto com as informações da loja.");
-      return;
-    }
-    setParsing(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("parse-store-request", {
-        body: { text: freeText.trim() },
-      });
-      if (error) throw error;
-      if (data.store_name) setStoreName(data.store_name);
-      if (data.client_name) setClientName(data.client_name);
-      if (data.meeting_date) setMeetingDate(data.meeting_date);
-      if (data.observation) setObservation(data.observation);
-      toast.success("Dados extraídos com sucesso! Revise e complete os campos.");
-    } catch {
-      toast.error("Erro ao processar texto. Preencha manualmente.");
-    }
-    setParsing(false);
-  };
+
+
 
   const openEdit = (req: StoreRequest) => {
     setStoreName(req.store_name);
@@ -471,38 +452,8 @@ export default function StoreRequests() {
                 <DialogTitle>{editingId ? "Editar Solicitação" : "Nova Solicitação de Loja"}</DialogTitle>
               </DialogHeader>
               <div className="space-y-4 mt-2">
-                {/* AI Free Text Parser */}
-                {!editingId && (
-                  <div className="rounded-lg border border-primary/20 overflow-hidden">
-                    <div className="flex items-center gap-2 px-3 py-2 bg-primary/10">
-                      <Sparkles className="h-3.5 w-3.5 text-primary" />
-                      <span className="text-xs font-medium text-primary">Preenchimento inteligente</span>
-                    </div>
-                    <div className="p-3 space-y-2">
-                      <Textarea
-                        value={freeText}
-                        onChange={(e) => setFreeText(e.target.value)}
-                        placeholder="Cole aqui qualquer texto com as informações da loja e a IA preenche os campos automaticamente..."
-                        rows={2}
-                        className="resize-none text-sm"
-                      />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        className="w-full h-8 text-xs border-primary/20 text-primary hover:bg-primary/10"
-                        onClick={handleParseText}
-                        disabled={parsing}
-                      >
-                        {parsing ? (
-                          <><Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> Extraindo...</>
-                        ) : (
-                          <><Sparkles className="h-3.5 w-3.5 mr-1.5" /> Extrair dados com IA</>
-                        )}
-                      </Button>
-                    </div>
-                  </div>
-                )}
+
+
                 <div>
                   <Label>Nome da Loja *</Label>
                   <Input
