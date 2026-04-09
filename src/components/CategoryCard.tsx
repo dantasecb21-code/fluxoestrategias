@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 interface CategoryCardProps {
   category: StrategyCategory;
   allCategories?: StrategyCategory[];
+  isFixed?: boolean;
   onEditCategory: (id: string, name: string) => void;
   onRemoveCategory: (id: string) => void;
   onAddItem: (catId: string, item: Omit<StrategyItem, "id" | "checked">) => void;
@@ -26,6 +27,7 @@ interface CategoryCardProps {
 export function CategoryCard({
   category,
   allCategories,
+  isFixed = false,
   onEditCategory,
   onRemoveCategory,
   onAddItem,
@@ -121,14 +123,16 @@ export function CategoryCard({
               >
                 <Pencil className="h-4 w-4" />
               </Button>
-              <Button
-                size="icon"
-                variant="ghost"
-                onClick={() => onRemoveCategory(category.id)}
-                className="h-8 w-8 text-muted-foreground hover:text-destructive"
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
+              {!isFixed && (
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  onClick={() => onRemoveCategory(category.id)}
+                  className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              )}
             </>
           )}
         </div>
