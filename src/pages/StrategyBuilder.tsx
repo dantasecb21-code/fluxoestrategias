@@ -212,7 +212,7 @@ export default function StrategyBuilderPage() {
         store_access_confirmed: storeAccess,
         strategy_type: strategyType,
         observation,
-      });
+        platform,
       clearDraft();
       toast.success("Estratégia atualizada!");
     } else {
@@ -225,6 +225,7 @@ export default function StrategyBuilderPage() {
         assigned_to: assignedTo || null,
         strategy_type: strategyType,
         observation,
+        platform,
         store_request_id: storeRequestId || undefined,
       });
       if (created) {
