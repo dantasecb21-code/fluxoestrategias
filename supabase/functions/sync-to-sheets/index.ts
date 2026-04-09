@@ -44,19 +44,36 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Google Apps Script Web Apps: POST to /exec returns a 302 redirect.
-    // The standard fetch follows redirect but changes method to GET (per HTTP spec).
-    // The redirect target at script.googleusercontent.com only accepts GET.
-    // So we let fetch follow the redirect automatically (default behavior).
-    const response = await fetch(SHEETS_WEBHOOK_URL, {
+    // Google Apps Script Web Apps flow:
+    // 1. POST to /exec returns a 302 redirect to script.googleusercontent.com
+    // 2. The redirect URL only accepts GET (returns 405 for POST)
+    // 3. So we POST without following redirects, get the Location header, then GET it
+    const postResponse = await fetch(SHEETS_WEBHOOK_URL, {
       method: "POST",
       headers: { "Content-Type": "text/plain;charset=utf-8" },
       body: JSON.stringify(payload),
+      redirect: "manual",
+    });
+
+    // Consume post response body
+    await postResponse.text();
+
+    const redirectUrl = postResponse.headers.get("location");
+    if (!redirectUrl) {
+      return new Response(
+        JSON.stringify({ error: "No redirect from Apps Script", status: postResponse.status }),
+        { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Follow the redirect with GET
+    const getResponse = await fetch(redirectUrl, {
+      method: "GET",
       redirect: "follow",
     });
 
-    const result = await response.text();
-    console.log(`Sync to sheets for strategy ${payload.id}: ${response.status} - ${result.substring(0, 300)}`);
+    const result = await getResponse.text();
+    console.log(`Sync to sheets for strategy ${payload.id}: ${getResponse.status} - ${result.substring(0, 300)}`);
 
     return new Response(
       JSON.stringify({ success: true, sheetsResponse: result }),
