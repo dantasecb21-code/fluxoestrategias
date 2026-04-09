@@ -180,6 +180,7 @@ export function useDbStrategies() {
     if (error || !data) return null;
     const mapped = mapRow(data);
     setStrategies((prev) => [mapped, ...prev]);
+    syncToSheets(mapped);
     return mapped;
   };
 
@@ -244,6 +245,12 @@ export function useDbStrategies() {
     const { error } = await supabase.from("strategies").update(updateData as any).eq("id", id);
     if (error) {
       console.error("Update strategy error:", error);
+    }
+    // Sync to sheets after update
+    const updatedStrategy = strategies.find((s) => s.id === id);
+    if (updatedStrategy) {
+      const merged = { ...updatedStrategy, ...updateData, categories: params.categories || updatedStrategy.categories } as DbStrategy;
+      syncToSheets(merged);
     }
     fetchStrategies();
   };
