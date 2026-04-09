@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { format, isSameDay, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import OverdueAlert from "@/components/OverdueAlert";
+import { PlatformBadge } from "@/components/PlatformBadge";
 
 function calcProgress(categories: any[]) {
   const allItems = categories.flatMap((c: any) => c.items);
@@ -34,6 +35,7 @@ export default function PendingStrategies() {
   const [filterManager, setFilterManager] = useState("all");
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterDate, setFilterDate] = useState<Date | undefined>(undefined);
+  const [filterPlatform, setFilterPlatform] = useState("all");
 
   const allPending = useMemo(() =>
     strategies
@@ -69,6 +71,7 @@ export default function PendingStrategies() {
     return allPending.filter((s) => {
       if (searchTerm && !s.store_name.toLowerCase().includes(searchTerm.toLowerCase())) return false;
       if (filterManager !== "all" && s.operational_manager !== filterManager) return false;
+      if (filterPlatform !== "all" && s.platform !== filterPlatform) return false;
       if (filterStatus !== "all") {
         const ds = deriveStrategyDisplayStatus(s);
         if (filterStatus !== ds) return false;
@@ -81,9 +84,9 @@ export default function PendingStrategies() {
       }
       return true;
     });
-  }, [allPending, searchTerm, filterManager, filterStatus, filterDate]);
+  }, [allPending, searchTerm, filterManager, filterStatus, filterDate, filterPlatform]);
 
-  const hasActiveFilters = searchTerm || filterManager !== "all" || filterStatus !== "all" || !!filterDate;
+  const hasActiveFilters = searchTerm || filterManager !== "all" || filterStatus !== "all" || !!filterDate || filterPlatform !== "all";
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -127,6 +130,16 @@ export default function PendingStrategies() {
             </Select>
           </div>
           <div className="flex flex-col sm:flex-row gap-3">
+            <Select value={filterPlatform} onValueChange={setFilterPlatform}>
+              <SelectTrigger className="w-full sm:w-[160px]">
+                <SelectValue placeholder="Plataforma" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas plataformas</SelectItem>
+                <SelectItem value="99food">99Food</SelectItem>
+                <SelectItem value="ifood">iFood</SelectItem>
+              </SelectContent>
+            </Select>
             <Select value={filterStatus} onValueChange={setFilterStatus}>
               <SelectTrigger className="w-full sm:w-[200px]">
                 <SelectValue placeholder="Status" />
@@ -171,6 +184,7 @@ export default function PendingStrategies() {
                   setFilterManager("all");
                   setFilterStatus("all");
                   setFilterDate(undefined);
+                  setFilterPlatform("all");
                 }}
               >
                 Limpar filtros
@@ -213,6 +227,7 @@ export default function PendingStrategies() {
                     <div className="min-w-0 flex-1">
                       <h3 className="font-heading font-semibold text-foreground text-lg truncate flex items-center gap-2">
                         {s.store_name || "Sem nome"}
+                        <PlatformBadge platform={s.platform} />
                         {isOverdue && (
                           <span className="h-2 w-2 rounded-full bg-destructive shrink-0" title="Atrasada" />
                         )}

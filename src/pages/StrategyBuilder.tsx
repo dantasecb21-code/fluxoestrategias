@@ -105,6 +105,7 @@ export default function StrategyBuilderPage() {
   );
   const [assignedTo, setAssignedTo] = useState<string>(existing?.assigned_to || draft?.assignedTo || "");
   const [strategyType, setStrategyType] = useState<StrategyType>((existing?.strategy_type as StrategyType) || "initial");
+  const [platform, setPlatform] = useState<string>(existing?.platform || "99food");
   const [observation, setObservation] = useState<string>(existing?.observation || "");
   const [showReport, setShowReport] = useState(false);
   const [showDetailedProgress, setShowDetailedProgress] = useState(false);
@@ -154,6 +155,7 @@ export default function StrategyBuilderPage() {
       setCategories(existing.categories);
       setAssignedTo(existing.assigned_to || "");
       setStrategyType((existing.strategy_type as StrategyType) || "initial");
+      setPlatform(existing.platform || "99food");
       setObservation(existing.observation || "");
       setSavedId(existing.id);
     }
@@ -210,6 +212,7 @@ export default function StrategyBuilderPage() {
         store_access_confirmed: storeAccess,
         strategy_type: strategyType,
         observation,
+        platform,
       });
       clearDraft();
       toast.success("Estratégia atualizada!");
@@ -223,6 +226,7 @@ export default function StrategyBuilderPage() {
         assigned_to: assignedTo || null,
         strategy_type: strategyType,
         observation,
+        platform,
         store_request_id: storeRequestId || undefined,
       });
       if (created) {
@@ -455,7 +459,7 @@ export default function StrategyBuilderPage() {
         />
       ) : (
         <>
-          <StrategyMetaForm meta={meta} onChange={setMeta} strategyType={strategyType} onTypeChange={setStrategyType} />
+          <StrategyMetaForm meta={meta} onChange={setMeta} strategyType={strategyType} onTypeChange={setStrategyType} platform={platform as any} onPlatformChange={setPlatform as any} />
 
           {/* Assign to operational manager */}
           <Card className="p-4 border-border bg-card space-y-2">

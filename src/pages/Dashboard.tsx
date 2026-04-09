@@ -12,6 +12,7 @@ import { formatDateBR, shortName } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { deriveStrategyDisplayStatus, getStatusLabel, getStatusBadgeProps } from "@/lib/strategyStatus";
 import { toast } from "sonner";
+import { PlatformBadge } from "@/components/PlatformBadge";
 
 function calcProgress(categories: any[]) {
   const allItems = categories.flatMap((c: any) => c.items);
@@ -33,6 +34,7 @@ export default function Dashboard() {
   const [showCompleted, setShowCompleted] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterManager, setFilterManager] = useState("all");
+  const [filterPlatform, setFilterPlatform] = useState("all");
 
   const operationalManagers = useMemo(() => {
     const names = [...new Set(strategies.map((s) => s.operational_manager).filter(Boolean))];
@@ -43,7 +45,8 @@ export default function Dashboard() {
     return list.filter((s) => {
       const matchSearch = !searchTerm || s.store_name.toLowerCase().includes(searchTerm.toLowerCase());
       const matchManager = filterManager === "all" || s.operational_manager === filterManager;
-      return matchSearch && matchManager;
+      const matchPlatform = filterPlatform === "all" || s.platform === filterPlatform;
+      return matchSearch && matchManager && matchPlatform;
     });
   };
 
@@ -100,6 +103,7 @@ export default function Dashboard() {
             <h3 className="font-heading font-semibold text-foreground text-lg flex items-center gap-2 min-w-0">
               <span className="truncate">{s.store_name || "Sem nome"}</span>
               <Badge variant={badgeProps.variant} className={`text-[10px] py-0 px-1.5 h-4 leading-none shrink-0 ${badgeProps.className}`}>{statusLabel}</Badge>
+              <PlatformBadge platform={s.platform} />
               {s.observation && (
                 <span className="shrink-0 text-[10px] py-0 px-1.5 h-4 leading-none rounded-full bg-warning/20 text-warning border border-warning/30 flex items-center" title={s.observation}>📌 Obs</span>
               )}
@@ -195,6 +199,16 @@ export default function Dashboard() {
               {operationalManagers.map((name) => (
                 <SelectItem key={name} value={name}>{shortName(name)}</SelectItem>
               ))}
+            </SelectContent>
+          </Select>
+          <Select value={filterPlatform} onValueChange={setFilterPlatform}>
+            <SelectTrigger className="w-full sm:w-[160px]">
+              <SelectValue placeholder="Plataforma" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas plataformas</SelectItem>
+              <SelectItem value="99food">99Food</SelectItem>
+              <SelectItem value="ifood">iFood</SelectItem>
             </SelectContent>
           </Select>
         </div>

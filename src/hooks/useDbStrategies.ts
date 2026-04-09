@@ -26,6 +26,7 @@ export interface DbStrategy {
   observation: string;
   store_access_confirmed: boolean;
   returned: boolean;
+  platform: string;
   created_at: string;
   updated_at: string;
   deleted_at: string | null;
@@ -95,6 +96,7 @@ export function useDbStrategies() {
     strategy_type?: string;
     observation?: string;
     store_request_id?: string;
+    platform?: string;
   }): Promise<DbStrategy | null> => {
     if (!user) return null;
     const insertData: any = {
@@ -107,6 +109,7 @@ export function useDbStrategies() {
       assigned_to: params.assigned_to || null,
       strategy_type: params.strategy_type || "initial",
       observation: params.observation || "",
+      platform: params.platform || "99food",
     };
     if (params.store_request_id) {
       insertData.store_request_id = params.store_request_id;
@@ -135,6 +138,7 @@ export function useDbStrategies() {
     observation?: string;
     store_access_confirmed?: boolean;
     returned?: boolean;
+    platform?: string;
   }) => {
     // Track status change in history
     if (params.status && user) {
@@ -203,6 +207,7 @@ export function useDbStrategies() {
       deadline: original.deadline,
       categories: JSON.parse(JSON.stringify(original.categories)),
       assigned_to: original.assigned_to,
+      platform: original.platform,
     });
   };
 
