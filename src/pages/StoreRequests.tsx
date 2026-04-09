@@ -31,6 +31,7 @@ interface StoreRequest {
   created_by: string;
   created_at: string;
   updated_at: string;
+  platform: string;
 }
 
 interface StrategicUser {
@@ -88,6 +89,7 @@ export default function StoreRequests() {
   const [parsing, setParsing] = useState(false);
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [filterCreation, setFilterCreation] = useState<string>("all");
+  const [platformField, setPlatformField] = useState<string>("99food");
   const [showCompleted, setShowCompleted] = useState(false);
 
   const fetchRequests = useCallback(async () => {
@@ -185,6 +187,7 @@ export default function StoreRequests() {
     setEditStatus("pending");
     setEditingId(null);
     setFreeText("");
+    setPlatformField("99food");
   };
 
 
@@ -200,6 +203,7 @@ export default function StoreRequests() {
     setAssignedTo(req.assigned_to || "");
     setEditStatus(req.status);
     setEditingId(req.id);
+    setPlatformField(req.platform || "99food");
     setDialogOpen(true);
   };
 
