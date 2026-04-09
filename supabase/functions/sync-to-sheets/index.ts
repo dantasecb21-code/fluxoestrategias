@@ -44,32 +44,19 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Google Apps Script redirects POST to a different URL.
-    // We follow redirects manually, re-sending the body as POST each time.
-    const jsonBody = JSON.stringify(payload);
-    let targetUrl: string = SHEETS_WEBHOOK_URL;
-    let lastResponse: Response | null = null;
+    // Google Apps Script Web Apps: POST to /exec returns a 302 redirect.
+    // The standard fetch follows redirect but changes method to GET (per HTTP spec).
+    // The redirect target at script.googleusercontent.com only accepts GET.
+    // So we let fetch follow the redirect automatically (default behavior).
+    const response = await fetch(SHEETS_WEBHOOK_URL, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify(payload),
+      redirect: "follow",
+    });
 
-    for (let i = 0; i < 5; i++) {
-      lastResponse = await fetch(targetUrl, {
-        method: "POST",
-        headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: jsonBody,
-        redirect: "manual",
-      });
-
-      const location = lastResponse.headers.get("location");
-      if (lastResponse.status >= 300 && lastResponse.status < 400 && location) {
-        // Consume body to avoid resource leak
-        await lastResponse.text();
-        targetUrl = location;
-        continue;
-      }
-      break;
-    }
-
-    const result = await lastResponse!.text();
-    console.log(`Sync to sheets for strategy ${payload.id}: ${lastResponse!.status} - ${result.substring(0, 200)}`);
+    const result = await response.text();
+    console.log(`Sync to sheets for strategy ${payload.id}: ${response.status} - ${result.substring(0, 300)}`);
 
     return new Response(
       JSON.stringify({ success: true, sheetsResponse: result }),
