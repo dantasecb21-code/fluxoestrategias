@@ -164,11 +164,12 @@ export default function StrategyCalendar() {
                       className={`p-3 hover:border-primary/30 transition-colors cursor-pointer ${isOverdue ? "border-destructive/30" : ""}`}
                       onClick={() => handleNavigate(s.id)}
                     >
-                      <div className="flex items-center justify-between">
+                        <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2 min-w-0">
                           <span className="font-medium text-foreground text-sm truncate">
                             {s.store_name || "Sem nome"}
                           </span>
+                          <PlatformBadge platform={s.platform} />
                           <Badge
                             variant={badgeProps.variant}
                             className={`text-[10px] py-0 px-1.5 h-4 shrink-0 ${badgeProps.className}`}
