@@ -49,6 +49,55 @@ function mapRow(s: any): DbStrategy {
   return { ...s, categories: jsonToCategories(s.categories) };
 }
 
+const STRATEGY_TYPE_DISPLAY: Record<string, string> = {
+  initial: "Estratégia Inicial",
+  alignment: "Estratégia de Alinhamento",
+  retention: "Estratégia de Retenção",
+};
+
+const PLATFORM_DISPLAY: Record<string, string> = {
+  "99food": "99Food",
+  ifood: "iFood",
+};
+
+/** Fire-and-forget sync to Google Sheets via Edge Function */
+async function syncToSheets(strategy: DbStrategy) {
+  try {
+    const statusPrazo = deriveStatusPrazo(strategy);
+    const statusOp = deriveStatusOperacional(strategy);
+
+    // Calculate execution time in days
+    let executionTime = "";
+    if (strategy.started_at && strategy.completed_at) {
+      const start = new Date(strategy.started_at);
+      const end = new Date(strategy.completed_at);
+      const days = Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+      executionTime = `${days} dias`;
+    }
+
+    await supabase.functions.invoke("sync-to-sheets", {
+      body: {
+        id: strategy.id,
+        created_at: new Date(strategy.created_at).toLocaleDateString("pt-BR"),
+        store_name: strategy.store_name,
+        platform: PLATFORM_DISPLAY[strategy.platform] || strategy.platform,
+        strategy_type: STRATEGY_TYPE_DISPLAY[strategy.strategy_type] || strategy.strategy_type,
+        manager_name: strategy.manager_name,
+        operational_manager: strategy.operational_manager,
+        status_operacional: STATUS_OPERACIONAL_LABELS[statusOp],
+        status_prazo: STATUS_PRAZO_LABELS[statusPrazo],
+        started_at: strategy.started_at ? new Date(strategy.started_at).toLocaleDateString("pt-BR") : "",
+        deadline: strategy.deadline ? new Date(strategy.deadline).toLocaleDateString("pt-BR") : "",
+        completed_at: strategy.completed_at ? new Date(strategy.completed_at).toLocaleDateString("pt-BR") : "",
+        execution_time: executionTime,
+        observation: strategy.observation,
+      },
+    });
+  } catch (err) {
+    console.warn("Sync to sheets failed (non-blocking):", err);
+  }
+}
+
 export function useDbStrategies() {
   const { user, role } = useAuth();
   const [strategies, setStrategies] = useState<DbStrategy[]>([]);
