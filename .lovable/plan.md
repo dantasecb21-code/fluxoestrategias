@@ -1,32 +1,93 @@
 
 
-## Diagnóstico
+## Plano Completo — Evolução do Sistema (Etapa por Etapa)
 
-O sistema já usa o **Lovable AI** (gratuito, sem custo adicional), que está configurado corretamente com a `LOVABLE_API_KEY`. Os logs mostram que a edge function `organize-strategy` está ativa, mas não há logs de requisições recentes — o que indica que o erro pode ser:
+Este é um projeto grande com 4 etapas principais. Vamos implementar uma por vez, com sua aprovação a cada passo.
 
-1. **Rate limit (429)** — muitas requisições em pouco tempo
-2. **Timeout** — a função demora demais (prompts muito grandes com contexto + treinamentos)
-3. **Erro silencioso** — o frontend captura o erro mas não mostra detalhes úteis
+---
 
-**Não é necessário integrar ChatGPT.** O Lovable AI já é gratuito e funciona. O problema é técnico e pode ser resolvido com melhorias na robustez da edge function.
+### Etapa 1 — Campo "Plataforma" (99Food / iFood)
 
-## Plano de Correção
+**Banco de dados:**
+- Adicionar coluna `platform` (text, default `'99food'`) na tabela `strategies`
+- Atualizar estratégias existentes para `'99food'` (já são todas dessa plataforma)
 
-### 1. Melhorar tratamento de erros na edge function
-- Adicionar logs mais detalhados em cada etapa (`console.log` antes e depois de `callAI`)
-- Capturar e logar o body da resposta quando o gateway retorna erro
-- Adicionar timeout de 25s no `fetch` para evitar travamento
+**Interface:**
+- Adicionar seletor de plataforma no `StrategyMetaForm` (obrigatório na criação)
+- Badge visual: 99Food (amarelo) / iFood (vermelho) em todas as listagens
+- Filtro por plataforma no Dashboard, Ranking, Pendentes e Calendário
 
-### 2. Melhorar feedback no frontend
-- Mostrar mensagens de erro mais específicas ao usuário (rate limit, timeout, etc.)
-- Adicionar retry automático (1 tentativa extra) quando o erro for temporário (429/500)
+**Código afetado:**
+- `supabase/migrations/` — nova migration
+- `src/components/StrategyMetaForm.tsx` — campo plataforma
+- `src/hooks/useDbStrategies.ts` — incluir `platform` no tipo e nas operações
+- `src/pages/Dashboard.tsx`, `OperationalRanking.tsx`, `PendingStrategies.tsx`, `StrategyCalendar.tsx` — filtros + badges
 
-### 3. Reduzir tamanho do prompt
-- Limitar o bloco de contexto (`ai_context_entries`) a 10 entradas ao invés de 20
-- Limitar o conteúdo de treinamentos a 500 caracteres por curso
-- Isso reduz chances de timeout e erros de parsing
+---
 
-### Arquivos alterados
-- `supabase/functions/organize-strategy/index.ts` — melhor error handling, logs, redução de contexto
-- `src/pages/StrategyBuilder.tsx` — mensagens de erro mais claras + retry automático
+### Etapa 2 — Campos de Data + Status Derivados
+
+**Banco de dados:**
+- Adicionar colunas: `started_at` (timestamp), `completed_at` (timestamp)
+- `created_at` já existe, `deadline` já existe
+
+**Lógica (calculada no frontend, sem colunas extras):**
+- `status_prazo`: No Prazo / Atrasada / Vencendo em breve / Finalizada no prazo / Finalizada atrasada
+- `status_operacional`: Pendente / Em otimização / Concluída
+
+**Automação:**
+- `started_at` = preenchido automaticamente quando o primeiro item mudar para "in_progress"
+- `completed_at` = preenchido quando status vira "approved"
+
+**Código afetado:**
+- `supabase/migrations/` — nova migration
+- `src/lib/strategyStatus.ts` — novas funções de status derivado
+- `src/hooks/useDbStrategies.ts` — salvar `started_at`/`completed_at` automaticamente
+- `src/pages/OperationalStrategyView.tsx` — trigger de `started_at`
+
+---
+
+### Etapa 3 — Integração Google Sheets
+
+**Pré-requisito:** Você vai precisar criar uma Service Account no Google Cloud Console. Vou te guiar passo a passo quando chegarmos nessa etapa.
+
+**Implementação:**
+- Edge Function `sync-to-sheets` que recebe dados da estratégia e envia/atualiza no Google Sheets
+- Trigger via database webhook (INSERT/UPDATE na tabela strategies)
+- Usa ID da estratégia como chave para não duplicar linhas
+
+**Estrutura da planilha (15 colunas):**
+ID | Data Criação | Loja | Plataforma | Tipo | Gestor Strategic | Gestor Operacional | Status Operacional | Status Prazo | Data Início | Data Prevista | Data Conclusão | Tempo Execução | Observações
+
+**Secrets necessários:**
+- `GOOGLE_SERVICE_ACCOUNT_JSON` — credenciais da service account
+- `GOOGLE_SHEET_ID` — ID da planilha
+
+---
+
+### Etapa 4 — Métricas e Dashboard na Planilha
+
+Com os dados na planilha, ela já vai permitir calcular:
+- Ranking de gestores (concluídas, no prazo, atrasadas)
+- Operação atual (em otimização, pendentes)
+- Prazos (atrasadas, vencendo em breve)
+- Produção diária por gestor
+- Rastreabilidade de lojas por gestor
+
+Esses cálculos serão feitos via fórmulas do Google Sheets ou um dashboard externo (Google Looker Studio).
+
+---
+
+### Resumo técnico
+
+| Etapa | Arquivos alterados | Migration |
+|-------|--------------------|-----------|
+| 1 | 6-7 arquivos | Sim (add `platform`) |
+| 2 | 4-5 arquivos | Sim (add `started_at`, `completed_at`) |
+| 3 | 1 edge function nova + trigger | Sim (webhook) |
+| 4 | Fórmulas na planilha | Não |
+
+---
+
+**Posso começar pela Etapa 1 (campo plataforma + badges + filtros)?**
 
