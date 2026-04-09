@@ -27,7 +27,6 @@ Deno.serve(async (req) => {
 
   try {
     const SHEETS_WEBHOOK_URL = Deno.env.get("GOOGLE_SHEETS_WEBHOOK_URL");
-    console.log("WEBHOOK URL length:", SHEETS_WEBHOOK_URL?.length, "starts with https:", SHEETS_WEBHOOK_URL?.startsWith("https"));
     if (!SHEETS_WEBHOOK_URL) {
       console.error("GOOGLE_SHEETS_WEBHOOK_URL not configured");
       return new Response(
@@ -45,34 +44,32 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Forward to Google Apps Script Web App
-    // Apps Script returns a 302 redirect; we must follow it manually with POST
+    // Google Apps Script redirects POST to a different URL.
+    // We follow redirects manually, re-sending the body as POST each time.
     const jsonBody = JSON.stringify(payload);
-    let targetUrl = SHEETS_WEBHOOK_URL;
-    let response: Response;
-    let attempts = 0;
+    let targetUrl: string = SHEETS_WEBHOOK_URL;
+    let lastResponse: Response | null = null;
 
-    while (attempts < 5) {
-      attempts++;
-      response = await fetch(targetUrl, {
+    for (let i = 0; i < 5; i++) {
+      lastResponse = await fetch(targetUrl, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
         body: jsonBody,
         redirect: "manual",
       });
 
-      if (response.status >= 300 && response.status < 400) {
-        const location = response.headers.get("location");
-        if (location) {
-          targetUrl = location;
-          continue;
-        }
+      const location = lastResponse.headers.get("location");
+      if (lastResponse.status >= 300 && lastResponse.status < 400 && location) {
+        // Consume body to avoid resource leak
+        await lastResponse.text();
+        targetUrl = location;
+        continue;
       }
       break;
     }
 
-    const result = await response!.text();
-    console.log(`Sync to sheets for strategy ${payload.id}: ${response.status} - ${result}`);
+    const result = await lastResponse!.text();
+    console.log(`Sync to sheets for strategy ${payload.id}: ${lastResponse!.status} - ${result.substring(0, 200)}`);
 
     return new Response(
       JSON.stringify({ success: true, sheetsResponse: result }),
