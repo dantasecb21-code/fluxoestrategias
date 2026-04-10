@@ -20,7 +20,7 @@ interface SyncPayload {
   observation: string;
 }
 
-const statusLabels: Record<string, string> = {
+const STATUS_OPERACIONAL_LABELS: Record<string, string> = {
   in_progress: "Em andamento",
   completed: "Concluída",
   pending_approval: "Aguardando aprovação",
@@ -28,19 +28,36 @@ const statusLabels: Record<string, string> = {
   returned: "Devolvida",
 };
 
-function computeStatusPrazo(deadline: string, status: string): string {
-  if (status === "completed") return "No prazo";
+const PLATFORM_DISPLAY: Record<string, string> = {
+  "99food": "99Food",
+  ifood: "iFood",
+};
+
+const STRATEGY_TYPE_DISPLAY: Record<string, string> = {
+  initial: "Estratégia Inicial",
+  alignment: "Estratégia de Alinhamento",
+  retention: "Estratégia de Retenção",
+};
+
+function formatDatePtBR(dateStr: string | null): string {
+  if (!dateStr) return "";
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return "";
+  return d.toLocaleDateString("pt-BR");
+}
+
+function computeStatusPrazo(deadline: string | null, status: string, completedAt: string | null): string {
+  if (status === "approved") return "No prazo";
   if (!deadline) return "Sem prazo";
-  const today = new Date().toISOString().split("T")[0];
-  return today > deadline ? "Atrasada" : "No prazo";
+  const ref = completedAt ? completedAt.split("T")[0] : new Date().toISOString().split("T")[0];
+  return ref > deadline ? "Atrasada" : "No prazo";
 }
 
 function computeExecTime(startedAt: string | null, completedAt: string | null): string {
   if (!startedAt || !completedAt) return "";
   const diff = new Date(completedAt).getTime() - new Date(startedAt).getTime();
-  const hours = Math.floor(diff / 3600000);
-  const mins = Math.floor((diff % 3600000) / 60000);
-  return `${hours}h ${mins}m`;
+  const days = Math.round(diff / (1000 * 60 * 60 * 24));
+  return `${days} dias`;
 }
 
 function sanitizeText(text: string): string {
@@ -49,7 +66,6 @@ function sanitizeText(text: string): string {
 }
 
 async function sendToSheets(sheetsUrl: string, payload: SyncPayload): Promise<{ success: boolean; result: string }> {
-  // Sanitize all string fields to prevent newlines from creating extra rows
   const sanitized: SyncPayload = {
     ...payload,
     store_name: sanitizeText(payload.store_name),
@@ -63,6 +79,25 @@ async function sendToSheets(sheetsUrl: string, payload: SyncPayload): Promise<{ 
   const result = await response.text();
   const success = result.includes('"success":true');
   return { success, result: result.substring(0, 300) };
+}
+
+function buildPayloadFromRow(s: any): SyncPayload {
+  return {
+    id: s.id,
+    created_at: formatDatePtBR(s.created_at),
+    store_name: s.store_name || "",
+    platform: PLATFORM_DISPLAY[s.platform] || s.platform,
+    strategy_type: STRATEGY_TYPE_DISPLAY[s.strategy_type] || s.strategy_type,
+    manager_name: s.manager_name || "",
+    operational_manager: s.operational_manager || "",
+    status_operacional: STATUS_OPERACIONAL_LABELS[s.status] || s.status,
+    status_prazo: computeStatusPrazo(s.deadline, s.status, s.completed_at),
+    started_at: formatDatePtBR(s.started_at),
+    deadline: formatDatePtBR(s.deadline),
+    completed_at: formatDatePtBR(s.completed_at),
+    execution_time: computeExecTime(s.started_at, s.completed_at),
+    observation: s.observation || "",
+  };
 }
 
 Deno.serve(async (req) => {
@@ -114,25 +149,8 @@ Deno.serve(async (req) => {
       let fail = 0;
 
       for (const s of strategies) {
-        const payload: SyncPayload = {
-          id: s.id,
-          created_at: s.created_at,
-          store_name: s.store_name,
-          platform: s.platform,
-          strategy_type: s.strategy_type === "initial" ? "Inicial" : "Reestratégia",
-          manager_name: s.manager_name,
-          operational_manager: s.operational_manager,
-          status_operacional: statusLabels[s.status] || s.status,
-          status_prazo: computeStatusPrazo(s.deadline, s.status),
-          started_at: s.started_at || "",
-          deadline: s.deadline || "",
-          completed_at: s.completed_at || "",
-          execution_time: computeExecTime(s.started_at, s.completed_at),
-          observation: s.observation || "",
-        };
-
         try {
-          const r = await sendToSheets(SHEETS_WEBHOOK_URL, payload);
+          const r = await sendToSheets(SHEETS_WEBHOOK_URL, buildPayloadFromRow(s));
           if (r.success) success++;
           else fail++;
         } catch {
