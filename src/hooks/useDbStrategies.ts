@@ -227,9 +227,15 @@ export function useDbStrategies() {
       updateData.categories = params.categories as unknown as Json;
     }
 
-    // Auto-fill started_at: when categories have any in_progress/completed item for the first time
-    const oldStrategy = strategies.find((s) => s.id === id);
-    if (params.categories && oldStrategy && !oldStrategy.started_at) {
+    // Fetch fresh state from DB to avoid stale closure issues
+    const { data: freshStrategy } = await supabase
+      .from("strategies")
+      .select("started_at, completed_at, status")
+      .eq("id", id)
+      .single();
+
+    // Auto-fill started_at: when any category item changes to in_progress/completed for the first time
+    if (params.categories && freshStrategy && !freshStrategy.started_at) {
       const allItems = params.categories.flatMap((c) => c.items || []);
       const hasActivity = allItems.some((i) => i.status === "in_progress" || i.status === "completed");
       if (hasActivity) {
@@ -237,8 +243,9 @@ export function useDbStrategies() {
       }
     }
 
-    // Auto-fill completed_at: when status changes to approved
-    if (params.status === "approved" && oldStrategy && oldStrategy.status !== "approved") {
+    // Auto-fill completed_at: when operacional sends for approval (pending_approval)
+    // Also updates if re-sent after being returned
+    if (params.status === "pending_approval" && freshStrategy) {
       updateData.completed_at = new Date().toISOString();
     }
 
@@ -247,9 +254,9 @@ export function useDbStrategies() {
       console.error("Update strategy error:", error);
     }
     // Sync to sheets after update
-    const updatedStrategy = strategies.find((s) => s.id === id);
-    if (updatedStrategy) {
-      const merged = { ...updatedStrategy, ...updateData, categories: params.categories || updatedStrategy.categories } as DbStrategy;
+    const localStrategy = strategies.find((s) => s.id === id);
+    if (localStrategy) {
+      const merged = { ...localStrategy, ...updateData, categories: params.categories || localStrategy.categories } as DbStrategy;
       syncToSheets(merged);
     }
     fetchStrategies();
