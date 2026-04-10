@@ -43,8 +43,21 @@ function computeExecTime(startedAt: string | null, completedAt: string | null): 
   return `${hours}h ${mins}m`;
 }
 
+function sanitizeText(text: string): string {
+  if (!text) return "";
+  return text.replace(/[\r\n]+/g, " ").replace(/\s+/g, " ").trim();
+}
+
 async function sendToSheets(sheetsUrl: string, payload: SyncPayload): Promise<{ success: boolean; result: string }> {
-  const encodedPayload = encodeURIComponent(JSON.stringify(payload));
+  // Sanitize all string fields to prevent newlines from creating extra rows
+  const sanitized: SyncPayload = {
+    ...payload,
+    store_name: sanitizeText(payload.store_name),
+    manager_name: sanitizeText(payload.manager_name),
+    operational_manager: sanitizeText(payload.operational_manager),
+    observation: sanitizeText(payload.observation),
+  };
+  const encodedPayload = encodeURIComponent(JSON.stringify(sanitized));
   const getUrl = `${sheetsUrl}?payload=${encodedPayload}`;
   const response = await fetch(getUrl, { method: "GET", redirect: "follow" });
   const result = await response.text();
