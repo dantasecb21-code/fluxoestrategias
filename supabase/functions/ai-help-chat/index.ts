@@ -64,14 +64,14 @@ serve(async (req) => {
     );
 
     if (!response.ok) {
+      const t = await response.text();
+      console.error("Gemini API error:", response.status, t);
       if (response.status === 429) {
         return new Response(JSON.stringify({ error: "Muitas requisições. Aguarde um momento e tente novamente." }), {
           status: 429,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      const t = await response.text();
-      console.error("Gemini API error:", response.status, t);
       return new Response(JSON.stringify({ error: "Erro ao conectar com a IA" }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
