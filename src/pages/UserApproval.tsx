@@ -20,6 +20,12 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
+const AVAILABLE_PLATFORMS = [
+  { value: "99food", label: "99Food" },
+  { value: "ifood", label: "iFood" },
+  { value: "keeta", label: "Keeta" },
+];
+
 interface PendingUser {
   user_id: string;
   display_name: string;
@@ -27,6 +33,7 @@ interface PendingUser {
   role: string;
   email: string;
   whatsapp: string;
+  platforms: string[];
 }
 
 export default function UserApproval() {
@@ -38,7 +45,7 @@ export default function UserApproval() {
     setLoading(true);
     const { data: profiles } = await supabase
       .from("profiles")
-      .select("user_id, display_name, approved, whatsapp");
+      .select("user_id, display_name, approved, whatsapp, platforms");
 
     if (!profiles) { setLoading(false); return; }
 
@@ -62,6 +69,7 @@ export default function UserApproval() {
       role: roleMap.get(p.user_id) || "unknown",
       email: "",
       whatsapp: p.whatsapp || "",
+      platforms: (p as any).platforms || [],
     }));
 
     mapped.sort((a, b) => {
@@ -124,6 +132,23 @@ export default function UserApproval() {
     setUsers((prev) => prev.map((u) => u.user_id === userId ? { ...u, role: newRole } : u));
   };
 
+  const handlePlatformToggle = async (userId: string, platform: string) => {
+    const user = users.find((u) => u.user_id === userId);
+    if (!user) return;
+    const newPlatforms = user.platforms.includes(platform)
+      ? user.platforms.filter((p) => p !== platform)
+      : [...user.platforms, platform];
+
+    const { error } = await supabase
+      .from("profiles")
+      .update({ platforms: newPlatforms } as any)
+      .eq("user_id", userId);
+
+    if (error) { toast.error("Erro ao alterar plataformas"); return; }
+    setUsers((prev) => prev.map((u) => u.user_id === userId ? { ...u, platforms: newPlatforms } : u));
+    toast.success("Plataformas atualizadas");
+  };
+
   const roleLabel = (role: string) => {
     if (role === "admin") return "Administrador";
     if (role === "strategic") return "Gestor Estratégico";
@@ -158,7 +183,7 @@ export default function UserApproval() {
         </Button>
       </div>
 
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
         <div className="flex items-center gap-2">
           <span className="text-xs text-muted-foreground">Tipo:</span>
           <Select value={u.role} onValueChange={(val) => handleRoleChange(u.user_id, val)}>
@@ -172,6 +197,32 @@ export default function UserApproval() {
             </SelectContent>
           </Select>
         </div>
+
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-muted-foreground">Plataformas:</span>
+          <div className="flex gap-1.5">
+            {AVAILABLE_PLATFORMS.map((p) => {
+              const active = u.platforms.includes(p.value);
+              return (
+                <button
+                  key={p.value}
+                  type="button"
+                  onClick={() => handlePlatformToggle(u.user_id, p.value)}
+                  className={`px-2.5 py-1 rounded-md text-xs font-medium border transition-colors ${
+                    active
+                      ? "border-primary bg-primary/10 text-primary"
+                      : "border-border bg-background text-muted-foreground hover:border-muted-foreground"
+                  }`}
+                >
+                  {p.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      <div className="flex justify-end mt-3">
 
         <div className="flex gap-2">
           {isPending ? (
