@@ -3,11 +3,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Search, Rocket, DollarSign, Monitor, Settings, Star, UtensilsCrossed,
-  Tag, Truck, ClipboardList, HelpCircle, ExternalLink, BookOpen, Zap
+  Tag, Truck, ClipboardList, HelpCircle, ExternalLink, BookOpen, Zap, Bot
 } from "lucide-react";
-
+import AiHelpChat from "@/components/AiHelpChat";
 interface Guide {
   title: string;
   url: string;
@@ -210,117 +211,135 @@ export default function HelpCenter() {
         </div>
         <h1 className="font-heading font-bold text-2xl text-foreground">Central de Ajuda</h1>
         <p className="text-muted-foreground text-sm max-w-lg mx-auto">
-          Guias completos com passo a passo e prints para ajudar na gestão das lojas na plataforma.
-          {" "}<Badge variant="secondary" className="text-[10px]">{totalGuides} guias</Badge>
+          Guias completos e assistente com IA para ajudar na gestão das lojas na plataforma.
         </p>
       </div>
 
-      {/* Search */}
-      <div className="relative max-w-md mx-auto">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Buscar guias... (ex: cardápio, entrega, promoção)"
-          className="pl-10 bg-background"
-        />
-      </div>
+      <Tabs defaultValue="guides" className="w-full">
+        <TabsList className="grid w-full grid-cols-2 max-w-xs mx-auto">
+          <TabsTrigger value="guides" className="flex items-center gap-1.5">
+            <BookOpen className="h-3.5 w-3.5" /> Guias
+          </TabsTrigger>
+          <TabsTrigger value="ai" className="flex items-center gap-1.5">
+            <Bot className="h-3.5 w-3.5" /> Assistente IA
+          </TabsTrigger>
+        </TabsList>
 
-      {/* Categories */}
-      {filteredCategories.length === 0 ? (
-        <Card className="p-8 text-center">
-          <p className="text-muted-foreground">Nenhum guia encontrado para "{search}"</p>
-        </Card>
-      ) : (
-        <div className="space-y-4">
-          {filteredCategories.map((cat) => {
-            const Icon = cat.icon;
-            return (
-              <Card key={cat.label} className="overflow-hidden">
-                <CardHeader className="pb-3">
-                  <CardTitle className="flex items-center gap-2 text-lg">
-                    <Icon className={`h-5 w-5 ${cat.color}`} />
-                    {cat.label}
-                    <Badge variant="outline" className="text-[10px] ml-auto">{cat.guides.length}</Badge>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <div className="divide-y divide-border/50">
-                    {cat.guides.map((guide, i) => {
-                      const isInternal = !guide.url;
-                      const internalContent = INTERNAL_ARTICLES[guide.title];
-                      const isExpanded = expandedInternal === `${cat.label}-${i}`;
+        <TabsContent value="guides" className="space-y-4 mt-4">
+          {/* Search */}
+          <div className="relative max-w-md mx-auto">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Buscar guias... (ex: cardápio, entrega, promoção)"
+              className="pl-10 bg-background"
+            />
+          </div>
 
-                      return (
-                        <div key={i} className="py-2.5">
-                          {isInternal ? (
-                            <div>
-                              <button
-                                onClick={() => setExpandedInternal(isExpanded ? null : `${cat.label}-${i}`)}
-                                className="w-full flex items-center justify-between gap-2 text-left group"
-                              >
-                                <span className="text-sm text-foreground group-hover:text-primary transition-colors font-medium">
-                                  {guide.title}
-                                </span>
-                                <Badge variant="secondary" className="text-[9px] shrink-0">
-                                  interno
-                                </Badge>
-                              </button>
-                              {isExpanded && internalContent && (
-                                <p className="text-sm text-muted-foreground mt-2 pl-0 leading-relaxed border-l-2 border-primary/30 pl-3">
-                                  {internalContent}
-                                </p>
+          {/* Categories */}
+          {filteredCategories.length === 0 ? (
+            <Card className="p-8 text-center">
+              <p className="text-muted-foreground">Nenhum guia encontrado para "{search}"</p>
+            </Card>
+          ) : (
+            <div className="space-y-4">
+              {filteredCategories.map((cat) => {
+                const Icon = cat.icon;
+                return (
+                  <Card key={cat.label} className="overflow-hidden">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="flex items-center gap-2 text-lg">
+                        <Icon className={`h-5 w-5 ${cat.color}`} />
+                        {cat.label}
+                        <Badge variant="outline" className="text-[10px] ml-auto">{cat.guides.length}</Badge>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="pt-0">
+                      <div className="divide-y divide-border/50">
+                        {cat.guides.map((guide, i) => {
+                          const isInternal = !guide.url;
+                          const internalContent = INTERNAL_ARTICLES[guide.title];
+                          const isExpanded = expandedInternal === `${cat.label}-${i}`;
+
+                          return (
+                            <div key={i} className="py-2.5">
+                              {isInternal ? (
+                                <div>
+                                  <button
+                                    onClick={() => setExpandedInternal(isExpanded ? null : `${cat.label}-${i}`)}
+                                    className="w-full flex items-center justify-between gap-2 text-left group"
+                                  >
+                                    <span className="text-sm text-foreground group-hover:text-primary transition-colors font-medium">
+                                      {guide.title}
+                                    </span>
+                                    <Badge variant="secondary" className="text-[9px] shrink-0">
+                                      interno
+                                    </Badge>
+                                  </button>
+                                  {isExpanded && internalContent && (
+                                    <p className="text-sm text-muted-foreground mt-2 leading-relaxed border-l-2 border-primary/30 pl-3">
+                                      {internalContent}
+                                    </p>
+                                  )}
+                                </div>
+                              ) : (
+                                <a
+                                  href={guide.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="flex items-center justify-between gap-2 group"
+                                >
+                                  <span className="text-sm text-foreground group-hover:text-primary transition-colors font-medium">
+                                    {guide.title}
+                                  </span>
+                                  <ExternalLink className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary transition-colors shrink-0" />
+                                </a>
                               )}
+                              <div className="flex gap-1.5 mt-1.5 flex-wrap">
+                                {guide.tags.map((tag) => (
+                                  <Badge
+                                    key={tag}
+                                    variant="secondary"
+                                    className="text-[9px] py-0 px-1.5 cursor-pointer hover:bg-primary/10"
+                                    onClick={(e) => { e.preventDefault(); setSearch(tag); }}
+                                  >
+                                    {tag}
+                                  </Badge>
+                                ))}
+                              </div>
                             </div>
-                          ) : (
-                            <a
-                              href={guide.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="flex items-center justify-between gap-2 group"
-                            >
-                              <span className="text-sm text-foreground group-hover:text-primary transition-colors font-medium">
-                                {guide.title}
-                              </span>
-                              <ExternalLink className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary transition-colors shrink-0" />
-                            </a>
-                          )}
-                          <div className="flex gap-1.5 mt-1.5 flex-wrap">
-                            {guide.tags.map((tag) => (
-                              <Badge
-                                key={tag}
-                                variant="secondary"
-                                className="text-[9px] py-0 px-1.5 cursor-pointer hover:bg-primary/10"
-                                onClick={(e) => { e.preventDefault(); setSearch(tag); }}
-                              >
-                                {tag}
-                              </Badge>
-                            ))}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-      )}
+                          );
+                        })}
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
 
-      {/* Footer */}
-      <Card className="p-6 text-center space-y-3 border-primary/20 bg-primary/5">
-        <p className="text-sm text-foreground font-medium">Não encontrou o que procurava?</p>
-        <p className="text-xs text-muted-foreground">
-          Acesse a página completa de guias para ver todos os tutoriais disponíveis com prints e passo a passo.
-        </p>
-        <Button asChild variant="outline" size="sm">
-          <a href="https://99app.com/99food/restaurantes/guias/" target="_blank" rel="noopener noreferrer">
-            <ExternalLink className="h-3.5 w-3.5 mr-1.5" />
-            Ver todos os guias
-          </a>
-        </Button>
-      </Card>
+          {/* Footer */}
+          <Card className="p-6 text-center space-y-3 border-primary/20 bg-primary/5">
+            <p className="text-sm text-foreground font-medium">Não encontrou o que procurava?</p>
+            <p className="text-xs text-muted-foreground">
+              Acesse a página completa de guias para ver todos os tutoriais disponíveis com prints e passo a passo.
+            </p>
+            <Button asChild variant="outline" size="sm">
+              <a href="https://99app.com/99food/restaurantes/guias/" target="_blank" rel="noopener noreferrer">
+                <ExternalLink className="h-3.5 w-3.5 mr-1.5" />
+                Ver todos os guias
+              </a>
+            </Button>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="ai" className="mt-4">
+          <Card className="overflow-hidden">
+            <AiHelpChat />
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
