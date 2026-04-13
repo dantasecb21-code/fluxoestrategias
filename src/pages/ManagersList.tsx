@@ -32,6 +32,7 @@ interface OperationalManager {
   avatar_url: string;
   store_limit: number;
   store_count: number;
+  platforms: string[];
 }
 
 type StatusFilter = "completed" | "pending_approval" | "in_progress" | "pending";
