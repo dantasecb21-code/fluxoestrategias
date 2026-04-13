@@ -111,6 +111,38 @@ async function fetchStrategiesFromDb(
   return await res.json();
 }
 
+async function fetchDeletedStrategyIds(
+  supabaseUrl: string,
+  serviceRoleKey: string,
+): Promise<string[]> {
+  const res = await fetch(
+    `${supabaseUrl}/rest/v1/strategies?deleted_at=not.is.null&select=id`,
+    { headers: buildRestHeaders(serviceRoleKey) },
+  );
+  if (!res.ok) return [];
+  const rows = await res.json();
+  return rows.map((r: { id: string }) => r.id);
+}
+
+function buildEmptyPayload(id: string): SyncPayload {
+  return {
+    id,
+    created_at: "",
+    store_name: "",
+    platform: "",
+    strategy_type: "",
+    manager_name: "",
+    operational_manager: "",
+    status_operacional: "",
+    status_prazo: "",
+    started_at: "",
+    deadline: "",
+    completed_at: "",
+    execution_time: "",
+    observation: "",
+  };
+}
+
 async function fetchOperationalManagerMap(
   supabaseUrl: string,
   serviceRoleKey: string,
