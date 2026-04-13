@@ -216,6 +216,7 @@ export default function PendingStrategies() {
                 onClick={() => {
                   setSearchTerm("");
                   setFilterManager("all");
+                  setFilterStrategist("all");
                   setFilterStatus("all");
                   setFilterDate(undefined);
                   setFilterPlatform("all");
