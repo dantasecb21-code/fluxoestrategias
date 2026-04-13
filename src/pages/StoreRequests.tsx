@@ -65,7 +65,7 @@ const CREATION_STATUS_LABELS: Record<string, string> = {
 };
 
 export default function StoreRequests() {
-  const { user, role, displayName } = useAuth();
+  const { user, role, displayName, platforms } = useAuth();
   const navigate = useNavigate();
   const isAdmin = role === "admin";
   const isStrategicUser = role === "strategic";
@@ -94,10 +94,16 @@ export default function StoreRequests() {
   const [showCompleted, setShowCompleted] = useState(false);
 
   const fetchRequests = useCallback(async () => {
-    const { data } = await supabase
+    let query = supabase
       .from("store_requests")
-      .select("*")
-      .order("created_at", { ascending: false });
+      .select("*");
+
+    // Filter by user's platforms for non-admin users
+    if (role !== "admin" && platforms.length > 0) {
+      query = query.in("platform", platforms);
+    }
+
+    const { data } = await query.order("created_at", { ascending: false });
 
     const requestRows = (data as unknown as StoreRequest[]) ?? [];
     setRequests(requestRows);
@@ -123,7 +129,7 @@ export default function StoreRequests() {
       Object.fromEntries((assignees ?? []).map((profile) => [profile.user_id, profile.display_name])),
     );
     setLoading(false);
-  }, []);
+  }, [role, platforms]);
 
   const fetchStrategicUsers = useCallback(async () => {
     const { data: roles } = await supabase
