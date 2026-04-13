@@ -247,13 +247,14 @@ Deno.serve(async (req) => {
       try {
         const deletedIds = await fetchDeletedStrategyIds(supabaseUrl, serviceRoleKey);
         console.log(`Found ${deletedIds.length} deleted strategies to clean from sheet`);
-        for (const id of deletedIds) {
-          try {
+        const results = await Promise.allSettled(
+          deletedIds.map(async (id) => {
             const emptyPayload = buildEmptyPayload(id);
             const response = await sendToSheets(SHEETS_WEBHOOK_URL, emptyPayload);
-            if (response.success) cleaned++;
-          } catch { /* skip */ }
-        }
+            return response.success;
+          })
+        );
+        cleaned = results.filter(r => r.status === "fulfilled" && r.value).length;
       } catch (e) {
         console.error("Error cleaning deleted strategies:", e);
       }
