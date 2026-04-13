@@ -307,6 +307,9 @@ export function AppSidebar() {
             <LogOut className="h-4 w-4" />
             {!collapsed && <span className="ml-2">Sair</span>}
           </Button>
+          <div className="flex justify-center mt-2">
+            <ThemeToggle />
+          </div>
         </div>
       </SidebarContent>
     </Sidebar>
