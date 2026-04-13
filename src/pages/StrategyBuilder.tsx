@@ -162,6 +162,8 @@ export default function StrategyBuilderPage() {
     }
   }, [existing?.id]);
 
+  const [allOperationalManagers, setAllOperationalManagers] = useState<(Manager & { platforms?: string[] })[]>([]);
+
   useEffect(() => {
     async function fetchManagers() {
       const { data: roles } = await supabase
@@ -171,14 +173,28 @@ export default function StrategyBuilderPage() {
       if (roles && roles.length > 0) {
         const { data: profiles } = await supabase
           .from("profiles")
-          .select("user_id, display_name, whatsapp, avatar_url, email")
+          .select("user_id, display_name, whatsapp, avatar_url, email, platforms")
           .in("user_id", roles.map((r) => r.user_id))
           .eq("approved", true);
-        if (profiles) setManagers(profiles as Manager[]);
+        if (profiles) setAllOperationalManagers(profiles as any[]);
       }
     }
     fetchManagers();
   }, []);
+
+  // Filter managers by selected platform
+  useEffect(() => {
+    const filtered = allOperationalManagers.filter((m) => {
+      if (!m.platforms || m.platforms.length === 0) return true; // show if no platform set
+      return m.platforms.includes(platform);
+    });
+    setManagers(filtered);
+    // Clear selection if current assignee doesn't match
+    if (assignedTo && !filtered.some((m) => m.user_id === assignedTo)) {
+      setAssignedTo("");
+      setMeta((prev) => ({ ...prev, operationalManager: "" }));
+    }
+  }, [platform, allOperationalManagers]);
 
   const handleManagerSelect = (userId: string) => {
     setAssignedTo(userId);
