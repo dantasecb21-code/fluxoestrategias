@@ -59,6 +59,25 @@ export default function PendingStrategies() {
     return names.sort();
   }, [allPending]);
 
+  const strategistIds = useMemo(() => {
+    return [...new Set(allPending.map((s) => s.user_id).filter(Boolean))];
+  }, [allPending]);
+
+  useEffect(() => {
+    if (strategistIds.length === 0) return;
+    supabase
+      .from("profiles")
+      .select("user_id, display_name")
+      .in("user_id", strategistIds)
+      .then(({ data }) => {
+        if (data) {
+          const map: Record<string, string> = {};
+          data.forEach((p) => { map[p.user_id] = p.display_name; });
+          setStrategistNames(map);
+        }
+      });
+  }, [strategistIds]);
+
   // Collect deadline dates filtered by selected manager
   const deadlineDates = useMemo(() => {
     const dates: Date[] = [];
