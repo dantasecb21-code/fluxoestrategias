@@ -140,6 +140,35 @@ export default function Auth() {
                   </button>
                 </div>
               </div>
+              <div className="space-y-1.5">
+                <Label className="text-muted-foreground text-xs">Plataformas que gerencia</Label>
+                <div className="grid grid-cols-3 gap-2">
+                  {AVAILABLE_PLATFORMS.map((p) => {
+                    const isSelected = selectedPlatforms.includes(p.value);
+                    return (
+                      <button
+                        key={p.value}
+                        type="button"
+                        onClick={() =>
+                          setSelectedPlatforms((prev) =>
+                            isSelected ? prev.filter((v) => v !== p.value) : [...prev, p.value]
+                          )
+                        }
+                        className={`p-3 rounded-lg border text-sm font-medium transition-colors ${
+                          isSelected
+                            ? "border-primary bg-primary/10 text-primary"
+                            : "border-border bg-background text-muted-foreground hover:border-muted-foreground"
+                        }`}
+                      >
+                        {p.label}
+                      </button>
+                    );
+                  })}
+                </div>
+                {selectedPlatforms.length === 0 && (
+                  <p className="text-[10px] text-warning">Selecione pelo menos uma plataforma</p>
+                )}
+              </div>
             </>
           )}
           <div className="space-y-1.5">
