@@ -284,6 +284,9 @@ export function useDbStrategies() {
     if (role === "operational") {
       query = query.eq("assigned_to", user.id);
     }
+    if (role !== "admin" && platforms.length > 0) {
+      query = query.in("platform", platforms);
+    }
     const { data } = await query.order("deleted_at", { ascending: false });
     return data ? data.map(mapRow) : [];
   };
