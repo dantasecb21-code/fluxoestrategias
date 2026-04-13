@@ -34,9 +34,11 @@ export default function PendingStrategies() {
   const { strategies, loading } = useDbStrategies();
   const [searchTerm, setSearchTerm] = useState("");
   const [filterManager, setFilterManager] = useState("all");
+  const [filterStrategist, setFilterStrategist] = useState("all");
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterDate, setFilterDate] = useState<Date | undefined>(undefined);
   const [filterPlatform, setFilterPlatform] = useState("all");
+  const [strategistNames, setStrategistNames] = useState<Record<string, string>>({});
 
   const allPending = useMemo(() =>
     strategies
