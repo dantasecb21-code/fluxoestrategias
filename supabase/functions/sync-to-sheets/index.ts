@@ -242,10 +242,26 @@ Deno.serve(async (req) => {
         }
       }
 
-      console.log(`Bulk sync complete: ${success} ok, ${fail} failed out of ${strategies.length}`);
+      // Clean up deleted strategies from the sheet
+      let cleaned = 0;
+      try {
+        const deletedIds = await fetchDeletedStrategyIds(supabaseUrl, serviceRoleKey);
+        console.log(`Found ${deletedIds.length} deleted strategies to clean from sheet`);
+        for (const id of deletedIds) {
+          try {
+            const emptyPayload = buildEmptyPayload(id);
+            const response = await sendToSheets(SHEETS_WEBHOOK_URL, emptyPayload);
+            if (response.success) cleaned++;
+          } catch { /* skip */ }
+        }
+      } catch (e) {
+        console.error("Error cleaning deleted strategies:", e);
+      }
+
+      console.log(`Bulk sync complete: ${success} ok, ${fail} failed out of ${strategies.length}. Cleaned ${cleaned} deleted rows.`);
 
       return new Response(
-        JSON.stringify({ success: true, total: strategies.length, synced: success, failed: fail }),
+        JSON.stringify({ success: true, total: strategies.length, synced: success, failed: fail, cleaned }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
