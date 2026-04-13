@@ -10,6 +10,11 @@ import { toast } from "sonner";
 
 type UserType = "strategic" | "operational";
 type AuthMode = "login" | "signup" | "forgot";
+const AVAILABLE_PLATFORMS = [
+  { value: "99food", label: "99Food" },
+  { value: "ifood", label: "iFood" },
+  { value: "keeta", label: "Keeta" },
+];
 
 export default function Auth() {
   const [mode, setMode] = useState<AuthMode>("login");
@@ -21,6 +26,7 @@ export default function Auth() {
   const [name, setName] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
   const [userType, setUserType] = useState<UserType>("strategic");
+  const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -54,7 +60,7 @@ export default function Auth() {
           email,
           password,
           options: {
-            data: { display_name: name, role: userType, whatsapp: whatsapp.trim() },
+            data: { display_name: name, role: userType, whatsapp: whatsapp.trim(), platforms: selectedPlatforms },
             emailRedirectTo: window.location.origin,
           },
         });
@@ -133,6 +139,35 @@ export default function Auth() {
                     Gestor Operacional
                   </button>
                 </div>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-muted-foreground text-xs">Plataformas que gerencia</Label>
+                <div className="grid grid-cols-3 gap-2">
+                  {AVAILABLE_PLATFORMS.map((p) => {
+                    const isSelected = selectedPlatforms.includes(p.value);
+                    return (
+                      <button
+                        key={p.value}
+                        type="button"
+                        onClick={() =>
+                          setSelectedPlatforms((prev) =>
+                            isSelected ? prev.filter((v) => v !== p.value) : [...prev, p.value]
+                          )
+                        }
+                        className={`p-3 rounded-lg border text-sm font-medium transition-colors ${
+                          isSelected
+                            ? "border-primary bg-primary/10 text-primary"
+                            : "border-border bg-background text-muted-foreground hover:border-muted-foreground"
+                        }`}
+                      >
+                        {p.label}
+                      </button>
+                    );
+                  })}
+                </div>
+                {selectedPlatforms.length === 0 && (
+                  <p className="text-[10px] text-warning">Selecione pelo menos uma plataforma</p>
+                )}
               </div>
             </>
           )}

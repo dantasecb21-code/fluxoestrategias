@@ -58,6 +58,7 @@ const STRATEGY_TYPE_DISPLAY: Record<string, string> = {
 const PLATFORM_DISPLAY: Record<string, string> = {
   "99food": "99Food",
   ifood: "iFood",
+  keeta: "Keeta",
 };
 
 /** Fire-and-forget sync to Google Sheets via Edge Function */
@@ -99,7 +100,7 @@ async function syncToSheets(strategy: DbStrategy) {
 }
 
 export function useDbStrategies() {
-  const { user, role } = useAuth();
+  const { user, role, platforms } = useAuth();
   const [strategies, setStrategies] = useState<DbStrategy[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -112,10 +113,15 @@ export function useDbStrategies() {
       query = query.eq("assigned_to", user.id);
     }
 
+    // Filter by user's platforms (admin sees all)
+    if (role !== "admin" && platforms.length > 0) {
+      query = query.in("platform", platforms);
+    }
+
     const { data } = await query.order("updated_at", { ascending: false });
     if (data) setStrategies(data.map(mapRow));
     setLoading(false);
-  }, [user, role]);
+  }, [user, role, platforms]);
 
   useEffect(() => { fetchStrategies(); }, [fetchStrategies]);
 
@@ -277,6 +283,9 @@ export function useDbStrategies() {
     let query = supabase.from("strategies").select("*").not("deleted_at", "is", null);
     if (role === "operational") {
       query = query.eq("assigned_to", user.id);
+    }
+    if (role !== "admin" && platforms.length > 0) {
+      query = query.in("platform", platforms);
     }
     const { data } = await query.order("deleted_at", { ascending: false });
     return data ? data.map(mapRow) : [];

@@ -92,6 +92,7 @@ export type Database = {
           display_name: string
           email: string
           id: string
+          platforms: string[]
           status_text: string
           store_count: number
           store_limit: number
@@ -107,6 +108,7 @@ export type Database = {
           display_name?: string
           email?: string
           id?: string
+          platforms?: string[]
           status_text?: string
           store_count?: number
           store_limit?: number
@@ -122,6 +124,7 @@ export type Database = {
           display_name?: string
           email?: string
           id?: string
+          platforms?: string[]
           status_text?: string
           store_count?: number
           store_limit?: number
