@@ -41,13 +41,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (session?.user) {
         setTimeout(async () => {
           const [profileRes, roleRes] = await Promise.all([
-            supabase.from("profiles").select("display_name, approved, avatar_url").eq("user_id", session.user.id).single(),
+            supabase.from("profiles").select("display_name, approved, avatar_url, platforms").eq("user_id", session.user.id).single(),
             supabase.from("user_roles").select("role").eq("user_id", session.user.id),
           ]);
           if (profileRes.data) {
             setDisplayName(profileRes.data.display_name);
             setApproved(profileRes.data.approved ?? false);
             setAvatarUrl(profileRes.data.avatar_url || "");
+            setPlatforms((profileRes.data as any).platforms || []);
           }
           if (roleRes.data && roleRes.data.length > 0) {
             const roles = roleRes.data.map(r => r.role);
@@ -62,6 +63,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setAvatarUrl("");
         setRole(null);
         setApproved(false);
+        setPlatforms([]);
         setLoading(false);
       }
     });
@@ -81,7 +83,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, displayName, avatarUrl, role, approved, signOut }}>
+    <AuthContext.Provider value={{ user, loading, displayName, avatarUrl, role, approved, platforms, signOut }}>
       {children}
     </AuthContext.Provider>
   );
