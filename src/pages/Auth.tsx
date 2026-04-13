@@ -10,6 +10,11 @@ import { toast } from "sonner";
 
 type UserType = "strategic" | "operational";
 type AuthMode = "login" | "signup" | "forgot";
+const AVAILABLE_PLATFORMS = [
+  { value: "99food", label: "99Food" },
+  { value: "ifood", label: "iFood" },
+  { value: "keeta", label: "Keeta" },
+];
 
 export default function Auth() {
   const [mode, setMode] = useState<AuthMode>("login");
@@ -21,6 +26,7 @@ export default function Auth() {
   const [name, setName] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
   const [userType, setUserType] = useState<UserType>("strategic");
+  const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -54,7 +60,7 @@ export default function Auth() {
           email,
           password,
           options: {
-            data: { display_name: name, role: userType, whatsapp: whatsapp.trim() },
+            data: { display_name: name, role: userType, whatsapp: whatsapp.trim(), platforms: selectedPlatforms },
             emailRedirectTo: window.location.origin,
           },
         });
