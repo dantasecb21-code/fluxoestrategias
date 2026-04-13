@@ -1,36 +1,48 @@
 
 
-# Corrigir rastreamento de datas de início e conclusão das estratégias
+# Plano: Limpar linhas órfãs da planilha
 
-## Problema identificado
+## Problema
+O `sync-to-sheets` envia apenas estratégias ativas (`deleted_at IS NULL`), mas o Google Apps Script nunca remove linhas de estratégias que foram excluídas. Resultado: linhas com apenas ID e dados vazios/desatualizados.
 
-O código atual em `useDbStrategies.ts` tem a lógica de auto-preenchimento de `started_at` e `completed_at`, mas **não está funcionando** — todas as 31 estratégias estão com esses campos `null`. Dois bugs:
+## Causa raiz
+A Edge Function não envia um sinal de "exclusão" para a planilha quando uma estratégia é soft-deleted. As linhas permanecem na planilha indefinidamente.
 
-1. **`started_at`**: A lógica depende de `params.categories` ser passado com itens já em "in_progress", mas o estado `strategies` pode estar desatualizado no momento da verificação (stale closure).
-2. **`completed_at`**: Está configurado para preencher quando status muda para `approved`, mas você quer que seja quando o operacional envia para aprovação (`pending_approval`).
+## Solução
 
-## O que será feito
+### 1. Adicionar ação "delete" na Edge Function `sync-to-sheets`
+Quando o bulk sync rodar, após sincronizar as 40 ativas, enviar uma lista de IDs que devem ser removidos da planilha (os soft-deleted).
 
-### 1. Corrigir lógica de `started_at`
-- Manter o trigger: quando o primeiro item de categoria muda de status (para `in_progress` ou `completed`)
-- Buscar o estado atual da estratégia direto do banco (não do state local) para evitar dados desatualizados
-- Garantir que só preenche uma vez (se `started_at` já existe, não sobrescreve)
+Alterar a Edge Function para:
+- Buscar os IDs de estratégias com `deleted_at IS NOT NULL`
+- Enviar cada ID com uma flag `action: "delete"` para o webhook do Google Sheets
+- O Google Apps Script precisa tratar essa ação removendo a linha correspondente
 
-### 2. Corrigir lógica de `completed_at`
-- Mudar o trigger de `approved` para `pending_approval` (quando o operacional envia para aprovação)
-- Se a estratégia for devolvida e reenviada, atualizar o `completed_at` com a nova data
+### 2. Adicionar payload de exclusão
+```typescript
+// Novo payload para deletar linhas
+{ id: "xxx", action: "delete" }
+```
 
-### 3. Preencher dados retroativos
-- Usar a tabela `strategy_history` para estimar datas das estratégias passadas:
-  - `started_at` → `created_at` da estratégia (já que não há registro do primeiro item alterado)
-  - `completed_at` → data do primeiro registro de mudança para `pending_approval` no histórico
-- Executar via SQL UPDATE direto no banco
+A função `sendToSheets` será estendida para suportar um payload mínimo com `action: "delete"`.
 
-### 4. Forçar re-sync na planilha
-- Após preencher os dados retroativos, disparar um sync completo para atualizar a planilha com as datas corretas
+### 3. Integração no bulk sync
+No fluxo `sync_all`:
+1. Sincronizar as 40 estratégias ativas (como já faz)
+2. Buscar estratégias com `deleted_at IS NOT NULL`
+3. Para cada uma, enviar `{ id, action: "delete" }` ao webhook
+
+### Limitação
+O Google Apps Script precisa estar preparado para receber a ação `"delete"` e remover a linha. Se o script não suportar isso, as linhas continuarão lá. Nesse caso, a alternativa é enviar as linhas deletadas com todos os campos vazios exceto o ID, para "limpar" visualmente.
+
+### Alternativa mais simples (sem depender do Apps Script)
+Enviar as estratégias deletadas com campos vazios (store_name vazio, status vazio, etc.) para que o Apps Script sobrescreva a linha com dados em branco, efetivamente "limpando" a linha.
+
+## Risco
+- Nenhum dado será perdido no banco de dados
+- Apenas afeta a planilha do Google Sheets
+- As estratégias deletadas continuam no banco com `deleted_at` preenchido
 
 ## Arquivos alterados
-- `src/hooks/useDbStrategies.ts` — corrigir lógica de auto-preenchimento
-- Migration SQL — preencher dados retroativos
-- Trigger de sync para atualizar planilha
+- `supabase/functions/sync-to-sheets/index.ts` — adicionar lógica de limpeza de linhas deletadas no bulk sync
 
