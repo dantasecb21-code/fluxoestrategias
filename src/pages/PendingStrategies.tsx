@@ -142,12 +142,23 @@ export default function PendingStrategies() {
             </div>
             <Select value={filterManager} onValueChange={setFilterManager}>
               <SelectTrigger className="w-full sm:w-[200px]">
-                <SelectValue placeholder="Gestor" />
+                <SelectValue placeholder="Gestor Operacional" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos os gestores</SelectItem>
                 {operationalManagers.map((name) => (
                   <SelectItem key={name} value={name}>{shortName(name)}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={filterStrategist} onValueChange={setFilterStrategist}>
+              <SelectTrigger className="w-full sm:w-[200px]">
+                <SelectValue placeholder="Estrategista" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos estrategistas</SelectItem>
+                {strategistIds.map((id) => (
+                  <SelectItem key={id} value={id}>{shortName(strategistNames[id] || id)}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
