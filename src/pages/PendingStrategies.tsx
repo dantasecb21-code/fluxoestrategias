@@ -172,6 +172,7 @@ export default function PendingStrategies() {
                 <SelectItem value="all">Todas plataformas</SelectItem>
                 <SelectItem value="99food">99Food</SelectItem>
                 <SelectItem value="ifood">iFood</SelectItem>
+                <SelectItem value="keeta">Keeta</SelectItem>
               </SelectContent>
             </Select>
             <Select value={filterStatus} onValueChange={setFilterStatus}>
