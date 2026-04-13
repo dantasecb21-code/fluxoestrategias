@@ -183,7 +183,7 @@ export default function UserApproval() {
         </Button>
       </div>
 
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
         <div className="flex items-center gap-2">
           <span className="text-xs text-muted-foreground">Tipo:</span>
           <Select value={u.role} onValueChange={(val) => handleRoleChange(u.user_id, val)}>
@@ -197,6 +197,32 @@ export default function UserApproval() {
             </SelectContent>
           </Select>
         </div>
+
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-muted-foreground">Plataformas:</span>
+          <div className="flex gap-1.5">
+            {AVAILABLE_PLATFORMS.map((p) => {
+              const active = u.platforms.includes(p.value);
+              return (
+                <button
+                  key={p.value}
+                  type="button"
+                  onClick={() => handlePlatformToggle(u.user_id, p.value)}
+                  className={`px-2.5 py-1 rounded-md text-xs font-medium border transition-colors ${
+                    active
+                      ? "border-primary bg-primary/10 text-primary"
+                      : "border-border bg-background text-muted-foreground hover:border-muted-foreground"
+                  }`}
+                >
+                  {p.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      <div className="flex justify-end mt-3">
 
         <div className="flex gap-2">
           {isPending ? (
