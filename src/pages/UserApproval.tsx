@@ -132,6 +132,23 @@ export default function UserApproval() {
     setUsers((prev) => prev.map((u) => u.user_id === userId ? { ...u, role: newRole } : u));
   };
 
+  const handlePlatformToggle = async (userId: string, platform: string) => {
+    const user = users.find((u) => u.user_id === userId);
+    if (!user) return;
+    const newPlatforms = user.platforms.includes(platform)
+      ? user.platforms.filter((p) => p !== platform)
+      : [...user.platforms, platform];
+
+    const { error } = await supabase
+      .from("profiles")
+      .update({ platforms: newPlatforms } as any)
+      .eq("user_id", userId);
+
+    if (error) { toast.error("Erro ao alterar plataformas"); return; }
+    setUsers((prev) => prev.map((u) => u.user_id === userId ? { ...u, platforms: newPlatforms } : u));
+    toast.success("Plataformas atualizadas");
+  };
+
   const roleLabel = (role: string) => {
     if (role === "admin") return "Administrador";
     if (role === "strategic") return "Gestor Estratégico";
