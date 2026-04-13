@@ -81,7 +81,62 @@ async function sendToSheets(sheetsUrl: string, payload: SyncPayload): Promise<{ 
   return { success, result: result.substring(0, 300) };
 }
 
-function buildPayloadFromRow(s: any): SyncPayload {
+function buildRestHeaders(serviceRoleKey: string) {
+  return {
+    apikey: serviceRoleKey,
+    Authorization: `Bearer ${serviceRoleKey}`,
+  };
+}
+
+async function fetchStrategiesFromDb(
+  supabaseUrl: string,
+  serviceRoleKey: string,
+  strategyId?: string,
+): Promise<any[]> {
+  const selectFields = "id,created_at,store_name,platform,strategy_type,manager_name,operational_manager,assigned_to,status,deadline,observation,started_at,completed_at";
+  const filters = strategyId
+    ? `deleted_at=is.null&id=eq.${strategyId}`
+    : "deleted_at=is.null&order=created_at";
+
+  const res = await fetch(
+    `${supabaseUrl}/rest/v1/strategies?${filters}&select=${selectFields}`,
+    { headers: buildRestHeaders(serviceRoleKey) },
+  );
+
+  if (!res.ok) {
+    const errText = await res.text();
+    throw new Error(`Failed to fetch strategies: ${errText}`);
+  }
+
+  return await res.json();
+}
+
+async function fetchOperationalManagerMap(
+  supabaseUrl: string,
+  serviceRoleKey: string,
+  userIds: Array<string | null | undefined>,
+): Promise<Record<string, string>> {
+  const uniqueIds = [...new Set(userIds.filter((id): id is string => Boolean(id)))];
+  if (uniqueIds.length === 0) return {};
+
+  const res = await fetch(
+    `${supabaseUrl}/rest/v1/profiles?select=user_id,display_name&user_id=in.(${uniqueIds.join(",")})`,
+    { headers: buildRestHeaders(serviceRoleKey) },
+  );
+
+  if (!res.ok) {
+    const errText = await res.text();
+    console.error("Failed to fetch profiles:", errText);
+    return {};
+  }
+
+  const profiles = await res.json();
+  return Object.fromEntries(
+    profiles.map((profile: { user_id: string; display_name: string }) => [profile.user_id, profile.display_name || ""]),
+  );
+}
+
+function buildPayloadFromRow(s: any, resolvedOperationalManager?: string): SyncPayload {
   return {
     id: s.id,
     created_at: formatDatePtBR(s.created_at),
@@ -89,7 +144,7 @@ function buildPayloadFromRow(s: any): SyncPayload {
     platform: PLATFORM_DISPLAY[s.platform] || s.platform,
     strategy_type: STRATEGY_TYPE_DISPLAY[s.strategy_type] || s.strategy_type,
     manager_name: s.manager_name || "",
-    operational_manager: s.operational_manager || "",
+    operational_manager: resolvedOperationalManager || s.operational_manager || "",
     status_operacional: STATUS_OPERACIONAL_LABELS[s.status] || s.status,
     status_prazo: computeStatusPrazo(s.deadline, s.status, s.completed_at),
     started_at: formatDatePtBR(s.started_at),
@@ -107,6 +162,9 @@ Deno.serve(async (req) => {
 
   try {
     const SHEETS_WEBHOOK_URL = Deno.env.get("GOOGLE_SHEETS_WEBHOOK_URL");
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+
     if (!SHEETS_WEBHOOK_URL) {
       return new Response(
         JSON.stringify({ error: "Sheets webhook URL not configured" }),
@@ -114,44 +172,38 @@ Deno.serve(async (req) => {
       );
     }
 
+    if (!supabaseUrl || !serviceRoleKey) {
+      return new Response(
+        JSON.stringify({ error: "Database credentials not configured" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const body = await req.json();
 
-    // BULK SYNC MODE
     if (body.action === "sync_all") {
       console.log("Starting bulk sync...");
-      
-      const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-      const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-      const res = await fetch(
-        `${supabaseUrl}/rest/v1/strategies?deleted_at=is.null&order=created_at&select=id,store_name,platform,strategy_type,manager_name,operational_manager,status,deadline,observation,created_at,started_at,completed_at`,
-        {
-          headers: {
-            apikey: serviceRoleKey,
-            Authorization: `Bearer ${serviceRoleKey}`,
-          },
-        }
+      const strategies = await fetchStrategiesFromDb(supabaseUrl, serviceRoleKey);
+      const operationalManagerMap = await fetchOperationalManagerMap(
+        supabaseUrl,
+        serviceRoleKey,
+        strategies.map((strategy) => strategy.assigned_to),
       );
 
-      if (!res.ok) {
-        const errText = await res.text();
-        console.error("Failed to fetch strategies:", errText);
-        return new Response(
-          JSON.stringify({ error: "Failed to fetch strategies" }),
-          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-
-      const strategies = await res.json();
       console.log(`Found ${strategies.length} strategies to sync`);
 
       let success = 0;
       let fail = 0;
 
-      for (const s of strategies) {
+      for (const strategy of strategies) {
         try {
-          const r = await sendToSheets(SHEETS_WEBHOOK_URL, buildPayloadFromRow(s));
-          if (r.success) success++;
+          const payload = buildPayloadFromRow(
+            strategy,
+            operationalManagerMap[strategy.assigned_to] || strategy.operational_manager,
+          );
+          const response = await sendToSheets(SHEETS_WEBHOOK_URL, payload);
+          if (response.success) success++;
           else fail++;
         } catch {
           fail++;
@@ -166,8 +218,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    // SINGLE SYNC MODE
-    const payload: SyncPayload = body;
+    const payload = body as Partial<SyncPayload>;
     if (!payload.id) {
       return new Response(
         JSON.stringify({ error: "Missing strategy ID" }),
@@ -175,7 +226,26 @@ Deno.serve(async (req) => {
       );
     }
 
-    const { result } = await sendToSheets(SHEETS_WEBHOOK_URL, payload);
+    const [strategy] = await fetchStrategiesFromDb(supabaseUrl, serviceRoleKey, payload.id);
+    if (!strategy) {
+      return new Response(
+        JSON.stringify({ error: "Strategy not found" }),
+        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const operationalManagerMap = await fetchOperationalManagerMap(
+      supabaseUrl,
+      serviceRoleKey,
+      [strategy.assigned_to],
+    );
+
+    const sheetsPayload = buildPayloadFromRow(
+      strategy,
+      operationalManagerMap[strategy.assigned_to] || strategy.operational_manager,
+    );
+
+    const { result } = await sendToSheets(SHEETS_WEBHOOK_URL, sheetsPayload);
     console.log(`Sync to sheets for strategy ${payload.id}: ${result}`);
 
     return new Response(
