@@ -93,6 +93,7 @@ export default function PendingStrategies() {
     return allPending.filter((s) => {
       if (searchTerm && !s.store_name.toLowerCase().includes(searchTerm.toLowerCase())) return false;
       if (filterManager !== "all" && s.operational_manager !== filterManager) return false;
+      if (filterStrategist !== "all" && s.user_id !== filterStrategist) return false;
       if (filterPlatform !== "all" && s.platform !== filterPlatform) return false;
       if (filterStatus !== "all") {
         const ds = deriveStrategyDisplayStatus(s);
@@ -106,9 +107,9 @@ export default function PendingStrategies() {
       }
       return true;
     });
-  }, [allPending, searchTerm, filterManager, filterStatus, filterDate, filterPlatform]);
+  }, [allPending, searchTerm, filterManager, filterStrategist, filterStatus, filterDate, filterPlatform]);
 
-  const hasActiveFilters = searchTerm || filterManager !== "all" || filterStatus !== "all" || !!filterDate || filterPlatform !== "all";
+  const hasActiveFilters = searchTerm || filterManager !== "all" || filterStrategist !== "all" || filterStatus !== "all" || !!filterDate || filterPlatform !== "all";
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
