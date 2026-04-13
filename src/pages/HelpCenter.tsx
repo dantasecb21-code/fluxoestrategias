@@ -3,11 +3,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Search, Rocket, DollarSign, Monitor, Settings, Star, UtensilsCrossed,
-  Tag, Truck, ClipboardList, HelpCircle, ExternalLink, BookOpen, Zap
+  Tag, Truck, ClipboardList, HelpCircle, ExternalLink, BookOpen, Zap, Bot
 } from "lucide-react";
-
+import AiHelpChat from "@/components/AiHelpChat";
 interface Guide {
   title: string;
   url: string;
