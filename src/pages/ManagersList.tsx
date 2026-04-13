@@ -52,6 +52,7 @@ export default function ManagersList() {
   const [editValue, setEditValue] = useState("");
   const [storesDialog, setStoresDialog] = useState<{ managerId: string; managerName: string; status: StatusFilter } | null>(null);
   const { strategies } = useDbStrategies();
+  const { role, platforms: userPlatforms } = useAuth();
   const navigate = useNavigate();
 
   const fetchManagers = async () => {
@@ -64,19 +65,29 @@ export default function ManagersList() {
       const userIds = roles.map((r) => r.user_id);
       const { data: profiles } = await supabase
         .from("profiles")
-        .select("user_id, display_name, whatsapp, avatar_url, store_limit, store_count, approved")
+        .select("user_id, display_name, whatsapp, avatar_url, store_limit, store_count, approved, platforms")
         .in("user_id", userIds)
         .eq("approved", true);
 
       if (profiles) {
-        setManagers(profiles.map((p) => ({
+        let filtered = profiles.map((p) => ({
           user_id: p.user_id,
           display_name: p.display_name,
           whatsapp: p.whatsapp || "",
           avatar_url: p.avatar_url || "",
           store_limit: (p as any).store_limit ?? 10,
           store_count: (p as any).store_count ?? 0,
-        })));
+          platforms: (p as any).platforms || [],
+        }));
+
+        // Non-admin users only see managers that share at least one platform
+        if (role !== "admin" && userPlatforms.length > 0) {
+          filtered = filtered.filter((m) =>
+            m.platforms.length === 0 || m.platforms.some((p: string) => userPlatforms.includes(p))
+          );
+        }
+
+        setManagers(filtered);
       }
     } else {
       setManagers([]);
@@ -84,7 +95,7 @@ export default function ManagersList() {
     setLoading(false);
   };
 
-  useEffect(() => { fetchManagers(); }, []);
+  useEffect(() => { fetchManagers(); }, [role, userPlatforms]);
 
   const handleDeleteManager = async (managerId: string) => {
     const { error } = await supabase
