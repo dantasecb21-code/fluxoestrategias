@@ -11,6 +11,7 @@ interface AuthContextType {
   avatarUrl: string;
   role: AppRole | null;
   approved: boolean;
+  platforms: string[];
   signOut: () => Promise<void>;
 }
 
@@ -21,6 +22,7 @@ const AuthContext = createContext<AuthContextType>({
   avatarUrl: "",
   role: null,
   approved: false,
+  platforms: [],
   signOut: async () => {},
 });
 
