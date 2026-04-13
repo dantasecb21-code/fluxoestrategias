@@ -129,7 +129,7 @@ export default function StoreRequests() {
       Object.fromEntries((assignees ?? []).map((profile) => [profile.user_id, profile.display_name])),
     );
     setLoading(false);
-  }, []);
+  }, [role, platforms]);
 
   const fetchStrategicUsers = useCallback(async () => {
     const { data: roles } = await supabase
