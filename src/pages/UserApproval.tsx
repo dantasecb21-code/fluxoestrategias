@@ -69,6 +69,7 @@ export default function UserApproval() {
       role: roleMap.get(p.user_id) || "unknown",
       email: "",
       whatsapp: p.whatsapp || "",
+      platforms: (p as any).platforms || [],
     }));
 
     mapped.sort((a, b) => {
