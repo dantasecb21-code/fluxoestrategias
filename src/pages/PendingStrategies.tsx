@@ -1,6 +1,7 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDbStrategies } from "@/hooks/useDbStrategies";
+import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { deriveStrategyDisplayStatus, getStatusLabel, getStatusBadgeProps } from "@/lib/strategyStatus";
 import { Card } from "@/components/ui/card";
@@ -33,9 +34,11 @@ export default function PendingStrategies() {
   const { strategies, loading } = useDbStrategies();
   const [searchTerm, setSearchTerm] = useState("");
   const [filterManager, setFilterManager] = useState("all");
+  const [filterStrategist, setFilterStrategist] = useState("all");
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterDate, setFilterDate] = useState<Date | undefined>(undefined);
   const [filterPlatform, setFilterPlatform] = useState("all");
+  const [strategistNames, setStrategistNames] = useState<Record<string, string>>({});
 
   const allPending = useMemo(() =>
     strategies
@@ -56,6 +59,25 @@ export default function PendingStrategies() {
     return names.sort();
   }, [allPending]);
 
+  const strategistIds = useMemo(() => {
+    return [...new Set(allPending.map((s) => s.user_id).filter(Boolean))];
+  }, [allPending]);
+
+  useEffect(() => {
+    if (strategistIds.length === 0) return;
+    supabase
+      .from("profiles")
+      .select("user_id, display_name")
+      .in("user_id", strategistIds)
+      .then(({ data }) => {
+        if (data) {
+          const map: Record<string, string> = {};
+          data.forEach((p) => { map[p.user_id] = p.display_name; });
+          setStrategistNames(map);
+        }
+      });
+  }, [strategistIds]);
+
   // Collect deadline dates filtered by selected manager
   const deadlineDates = useMemo(() => {
     const dates: Date[] = [];
@@ -71,6 +93,7 @@ export default function PendingStrategies() {
     return allPending.filter((s) => {
       if (searchTerm && !s.store_name.toLowerCase().includes(searchTerm.toLowerCase())) return false;
       if (filterManager !== "all" && s.operational_manager !== filterManager) return false;
+      if (filterStrategist !== "all" && s.user_id !== filterStrategist) return false;
       if (filterPlatform !== "all" && s.platform !== filterPlatform) return false;
       if (filterStatus !== "all") {
         const ds = deriveStrategyDisplayStatus(s);
@@ -84,9 +107,9 @@ export default function PendingStrategies() {
       }
       return true;
     });
-  }, [allPending, searchTerm, filterManager, filterStatus, filterDate, filterPlatform]);
+  }, [allPending, searchTerm, filterManager, filterStrategist, filterStatus, filterDate, filterPlatform]);
 
-  const hasActiveFilters = searchTerm || filterManager !== "all" || filterStatus !== "all" || !!filterDate || filterPlatform !== "all";
+  const hasActiveFilters = searchTerm || filterManager !== "all" || filterStrategist !== "all" || filterStatus !== "all" || !!filterDate || filterPlatform !== "all";
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -119,12 +142,23 @@ export default function PendingStrategies() {
             </div>
             <Select value={filterManager} onValueChange={setFilterManager}>
               <SelectTrigger className="w-full sm:w-[200px]">
-                <SelectValue placeholder="Gestor" />
+                <SelectValue placeholder="Gestor Operacional" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos os gestores</SelectItem>
                 {operationalManagers.map((name) => (
                   <SelectItem key={name} value={name}>{shortName(name)}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={filterStrategist} onValueChange={setFilterStrategist}>
+              <SelectTrigger className="w-full sm:w-[200px]">
+                <SelectValue placeholder="Estrategista" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos estrategistas</SelectItem>
+                {strategistIds.map((id) => (
+                  <SelectItem key={id} value={id}>{shortName(strategistNames[id] || id)}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -138,6 +172,7 @@ export default function PendingStrategies() {
                 <SelectItem value="all">Todas plataformas</SelectItem>
                 <SelectItem value="99food">99Food</SelectItem>
                 <SelectItem value="ifood">iFood</SelectItem>
+                <SelectItem value="keeta">Keeta</SelectItem>
               </SelectContent>
             </Select>
             <Select value={filterStatus} onValueChange={setFilterStatus}>
@@ -182,6 +217,7 @@ export default function PendingStrategies() {
                 onClick={() => {
                   setSearchTerm("");
                   setFilterManager("all");
+                  setFilterStrategist("all");
                   setFilterStatus("all");
                   setFilterDate(undefined);
                   setFilterPlatform("all");

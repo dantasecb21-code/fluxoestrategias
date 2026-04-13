@@ -16,6 +16,7 @@ import { NavLink } from "@/components/NavLink";
 import { Home, Plus, LogOut, Zap, ClipboardList, Users, AlertTriangle, ShieldCheck, MessageCircleQuestion, BookOpen, Store, Trophy, ListChecks, Calculator, FileText, CalendarDays } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 export function AppSidebar() {
   const { state, setOpenMobile } = useSidebar();
@@ -306,6 +307,9 @@ export function AppSidebar() {
             <LogOut className="h-4 w-4" />
             {!collapsed && <span className="ml-2">Sair</span>}
           </Button>
+          <div className="flex justify-center mt-2">
+            <ThemeToggle />
+          </div>
         </div>
       </SidebarContent>
     </Sidebar>
