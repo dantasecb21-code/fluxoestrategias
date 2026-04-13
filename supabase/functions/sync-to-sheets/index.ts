@@ -111,6 +111,38 @@ async function fetchStrategiesFromDb(
   return await res.json();
 }
 
+async function fetchDeletedStrategyIds(
+  supabaseUrl: string,
+  serviceRoleKey: string,
+): Promise<string[]> {
+  const res = await fetch(
+    `${supabaseUrl}/rest/v1/strategies?deleted_at=not.is.null&select=id`,
+    { headers: buildRestHeaders(serviceRoleKey) },
+  );
+  if (!res.ok) return [];
+  const rows = await res.json();
+  return rows.map((r: { id: string }) => r.id);
+}
+
+function buildEmptyPayload(id: string): SyncPayload {
+  return {
+    id,
+    created_at: "",
+    store_name: "",
+    platform: "",
+    strategy_type: "",
+    manager_name: "",
+    operational_manager: "",
+    status_operacional: "",
+    status_prazo: "",
+    started_at: "",
+    deadline: "",
+    completed_at: "",
+    execution_time: "",
+    observation: "",
+  };
+}
+
 async function fetchOperationalManagerMap(
   supabaseUrl: string,
   serviceRoleKey: string,
@@ -210,10 +242,27 @@ Deno.serve(async (req) => {
         }
       }
 
-      console.log(`Bulk sync complete: ${success} ok, ${fail} failed out of ${strategies.length}`);
+      // Clean up deleted strategies from the sheet
+      let cleaned = 0;
+      try {
+        const deletedIds = await fetchDeletedStrategyIds(supabaseUrl, serviceRoleKey);
+        console.log(`Found ${deletedIds.length} deleted strategies to clean from sheet`);
+        const results = await Promise.allSettled(
+          deletedIds.map(async (id) => {
+            const emptyPayload = buildEmptyPayload(id);
+            const response = await sendToSheets(SHEETS_WEBHOOK_URL, emptyPayload);
+            return response.success;
+          })
+        );
+        cleaned = results.filter(r => r.status === "fulfilled" && r.value).length;
+      } catch (e) {
+        console.error("Error cleaning deleted strategies:", e);
+      }
+
+      console.log(`Bulk sync complete: ${success} ok, ${fail} failed out of ${strategies.length}. Cleaned ${cleaned} deleted rows.`);
 
       return new Response(
-        JSON.stringify({ success: true, total: strategies.length, synced: success, failed: fail }),
+        JSON.stringify({ success: true, total: strategies.length, synced: success, failed: fail, cleaned }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
