@@ -20,6 +20,12 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
+const AVAILABLE_PLATFORMS = [
+  { value: "99food", label: "99Food" },
+  { value: "ifood", label: "iFood" },
+  { value: "keeta", label: "Keeta" },
+];
+
 interface PendingUser {
   user_id: string;
   display_name: string;
@@ -27,6 +33,7 @@ interface PendingUser {
   role: string;
   email: string;
   whatsapp: string;
+  platforms: string[];
 }
 
 export default function UserApproval() {
