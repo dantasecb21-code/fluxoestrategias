@@ -192,10 +192,11 @@ async function fetchOperationalManagerMap(
   );
 }
 
-function buildPayloadFromRow(s: any, resolvedOperationalManager?: string): SyncPayload {
+function buildPayloadFromRow(s: any, resolvedOperationalManager?: string, storeCreatedAt?: string): SyncPayload {
   return {
     id: s.id,
     created_at: formatDatePtBR(s.created_at),
+    store_created_at: formatDatePtBR(storeCreatedAt || null),
     store_name: s.store_name || "",
     platform: PLATFORM_DISPLAY[s.platform] || s.platform,
     strategy_type: STRATEGY_TYPE_DISPLAY[s.strategy_type] || s.strategy_type,
