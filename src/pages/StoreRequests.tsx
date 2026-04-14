@@ -90,6 +90,7 @@ export default function StoreRequests() {
   const [parsing, setParsing] = useState(false);
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [filterCreation, setFilterCreation] = useState<string>("all");
+  const [filterPlatform, setFilterPlatform] = useState<string>("all");
   const [platformField, setPlatformField] = useState<string>("99food");
   const [showCompleted, setShowCompleted] = useState(false);
 
@@ -598,23 +599,6 @@ export default function StoreRequests() {
         )}
       </div>
 
-      {/* Summary stats */}
-      {requests.length > 0 && (
-        <div className="grid grid-cols-3 gap-3">
-          <Card className="p-3 text-center">
-            <p className="font-heading font-bold text-xl text-warning">{requests.filter(r => (r.store_creation_status || "pending") === "pending").length}</p>
-            <p className="text-xs text-muted-foreground">A criar</p>
-          </Card>
-          <Card className="p-3 text-center">
-            <p className="font-heading font-bold text-xl text-primary">{requests.filter(r => r.store_creation_status === "in_progress").length}</p>
-            <p className="text-xs text-muted-foreground">Em andamento</p>
-          </Card>
-          <Card className="p-3 text-center">
-            <p className="font-heading font-bold text-xl text-success">{requests.filter(r => r.store_creation_status === "created").length}</p>
-            <p className="text-xs text-muted-foreground">Criadas</p>
-          </Card>
-        </div>
-      )}
 
       {/* Filters */}
       {requests.length > 0 && (
@@ -642,8 +626,19 @@ export default function StoreRequests() {
               <SelectItem value="created">Loja criada</SelectItem>
             </SelectContent>
           </Select>
-          {(filterStatus !== "all" || filterCreation !== "all") && (
-            <Button variant="ghost" size="sm" className="text-xs h-8" onClick={() => { setFilterStatus("all"); setFilterCreation("all"); }}>
+          <Select value={filterPlatform} onValueChange={setFilterPlatform}>
+            <SelectTrigger className="w-[160px] h-9 text-xs">
+              <SelectValue placeholder="Serviço" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos os serviços</SelectItem>
+              {PLATFORM_OPTIONS.map((key) => (
+                <SelectItem key={key} value={key}>{PLATFORM_LABELS[key]}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {(filterStatus !== "all" || filterCreation !== "all" || filterPlatform !== "all") && (
+            <Button variant="ghost" size="sm" className="text-xs h-8" onClick={() => { setFilterStatus("all"); setFilterCreation("all"); setFilterPlatform("all"); }}>
               Limpar filtros
             </Button>
           )}
@@ -654,6 +649,7 @@ export default function StoreRequests() {
         const filtered = requests.filter(r => {
           if (filterStatus !== "all" && r.status !== filterStatus) return false;
           if (filterCreation !== "all" && (r.store_creation_status || "pending") !== filterCreation) return false;
+          if (filterPlatform !== "all" && (r.platform || "99food") !== filterPlatform) return false;
           return true;
         });
 
