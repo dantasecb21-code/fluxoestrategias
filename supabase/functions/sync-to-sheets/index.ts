@@ -32,6 +32,7 @@ const STATUS_OPERACIONAL_LABELS: Record<string, string> = {
 const PLATFORM_DISPLAY: Record<string, string> = {
   "99food": "99Food",
   ifood: "iFood",
+  keeta: "Keeta",
 };
 
 const STRATEGY_TYPE_DISPLAY: Record<string, string> = {
@@ -212,6 +213,54 @@ function buildPayloadFromRow(s: any, resolvedOperationalManager?: string, storeC
   };
 }
 
+/** Build a partial payload for a store_request (no strategy data yet) */
+function buildStoreRequestPayload(sr: any): SyncPayload {
+  return {
+    id: sr.id,
+    created_at: "",
+    store_created_at: formatDatePtBR(sr.store_created_at || sr.created_at),
+    store_name: sr.store_name || "",
+    platform: PLATFORM_DISPLAY[sr.platform] || sr.platform,
+    strategy_type: "",
+    manager_name: "",
+    operational_manager: "",
+    status_operacional: "Aguardando estratégia",
+    status_prazo: "",
+    started_at: "",
+    deadline: "",
+    completed_at: "",
+    execution_time: "",
+    observation: sanitizeText(sr.observation || ""),
+  };
+}
+
+/** Fetch store_requests that do NOT have a linked strategy yet */
+async function fetchOrphanStoreRequests(
+  supabaseUrl: string,
+  serviceRoleKey: string,
+): Promise<any[]> {
+  // Get all store_request IDs that already have a strategy
+  const stratRes = await fetch(
+    `${supabaseUrl}/rest/v1/strategies?select=store_request_id&store_request_id=not.is.null&deleted_at=is.null`,
+    { headers: buildRestHeaders(serviceRoleKey) },
+  );
+  const linkedIds: string[] = stratRes.ok
+    ? (await stratRes.json()).map((r: any) => r.store_request_id)
+    : [];
+
+  // Fetch all store_requests
+  const srRes = await fetch(
+    `${supabaseUrl}/rest/v1/store_requests?select=id,created_at,store_created_at,store_name,platform,observation&order=created_at`,
+    { headers: buildRestHeaders(serviceRoleKey) },
+  );
+  if (!srRes.ok) return [];
+  const allRequests = await srRes.json();
+
+  // Return only those without a linked strategy
+  const linkedSet = new Set(linkedIds);
+  return allRequests.filter((sr: any) => !linkedSet.has(sr.id));
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -238,28 +287,54 @@ Deno.serve(async (req) => {
 
     const body = await req.json();
 
+    // --- Sync a single store_request (when a new one is created) ---
+    if (body.action === "sync_store_request") {
+      const sr = body;
+      if (!sr.id) {
+        return new Response(
+          JSON.stringify({ error: "Missing store_request ID" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      const payload = buildStoreRequestPayload(sr);
+      const { result } = await sendToSheets(SHEETS_WEBHOOK_URL, payload);
+      console.log(`Sync store_request ${sr.id} to sheets: ${result}`);
+
+      return new Response(
+        JSON.stringify({ success: true, sheetsResponse: result }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // --- Bulk sync (strategies + orphan store_requests) ---
     if (body.action === "sync_all") {
       console.log("Starting bulk sync...");
 
-      const strategies = await fetchStrategiesFromDb(supabaseUrl, serviceRoleKey);
+      const [strategies, orphanRequests] = await Promise.all([
+        fetchStrategiesFromDb(supabaseUrl, serviceRoleKey),
+        fetchOrphanStoreRequests(supabaseUrl, serviceRoleKey),
+      ]);
+
       const [operationalManagerMap, storeCreatedAtMap] = await Promise.all([
         fetchOperationalManagerMap(
           supabaseUrl,
           serviceRoleKey,
-          strategies.map((strategy) => strategy.assigned_to),
+          strategies.map((strategy: any) => strategy.assigned_to),
         ),
         fetchStoreCreatedAtMap(
           supabaseUrl,
           serviceRoleKey,
-          strategies.map((strategy) => strategy.store_request_id),
+          strategies.map((strategy: any) => strategy.store_request_id),
         ),
       ]);
 
-      console.log(`Found ${strategies.length} strategies to sync`);
+      console.log(`Found ${strategies.length} strategies and ${orphanRequests.length} orphan store requests to sync`);
 
       let success = 0;
       let fail = 0;
 
+      // Sync strategies
       for (const strategy of strategies) {
         try {
           const payload = buildPayloadFromRow(
@@ -276,6 +351,22 @@ Deno.serve(async (req) => {
         } catch (e) {
           fail++;
           console.error(`Error syncing strategy ${strategy.id}:`, e);
+        }
+      }
+
+      // Sync orphan store_requests (no strategy linked yet)
+      for (const sr of orphanRequests) {
+        try {
+          const payload = buildStoreRequestPayload(sr);
+          const response = await sendToSheets(SHEETS_WEBHOOK_URL, payload);
+          if (response.success) success++;
+          else {
+            fail++;
+            console.error(`Failed to sync store_request ${sr.id}: ${response.result}`);
+          }
+        } catch (e) {
+          fail++;
+          console.error(`Error syncing store_request ${sr.id}:`, e);
         }
       }
 
@@ -296,14 +387,16 @@ Deno.serve(async (req) => {
         console.error("Error cleaning deleted strategies:", e);
       }
 
-      console.log(`Bulk sync complete: ${success} ok, ${fail} failed out of ${strategies.length}. Cleaned ${cleaned} deleted rows.`);
+      const total = strategies.length + orphanRequests.length;
+      console.log(`Bulk sync complete: ${success} ok, ${fail} failed out of ${total}. Cleaned ${cleaned} deleted rows.`);
 
       return new Response(
-        JSON.stringify({ success: true, total: strategies.length, synced: success, failed: fail, cleaned }),
+        JSON.stringify({ success: true, total, synced: success, failed: fail, cleaned, orphanRequests: orphanRequests.length }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
+    // --- Single strategy sync ---
     const payload = body as Partial<SyncPayload>;
     if (!payload.id) {
       return new Response(
