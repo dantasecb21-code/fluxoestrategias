@@ -240,6 +240,23 @@ export default function StoreRequests() {
       toast.error("Erro ao atualizar status da loja.");
     } else {
       toast.success(`Status atualizado para "${CREATION_STATUS_LABELS[newStatus]}"`);
+      // Re-sync to sheets when store is created
+      if (newStatus === "created") {
+        const req = requests.find(r => r.id === id);
+        if (req) {
+          supabase.functions.invoke("sync-to-sheets", {
+            body: {
+              action: "sync_store_request",
+              id: req.id,
+              store_name: req.store_name,
+              platform: req.platform,
+              store_created_at: updateData.store_created_at || "",
+              created_at: req.created_at,
+              observation: req.observation || "",
+            },
+          }).catch((err) => console.warn("Sync store_request to sheets failed:", err));
+        }
+      }
       fetchRequests();
     }
   };
@@ -305,7 +322,8 @@ export default function StoreRequests() {
               id: insertedData.id,
               store_name: insertedData.store_name,
               platform: insertedData.platform,
-              store_created_at: insertedData.store_created_at || insertedData.created_at,
+              store_created_at: insertedData.store_created_at || "",
+              created_at: insertedData.created_at,
               observation: insertedData.observation || "",
             },
           }).catch((err) => console.warn("Sync store_request to sheets failed:", err));
