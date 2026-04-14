@@ -227,9 +227,13 @@ export default function StoreRequests() {
   };
 
   const handleUpdateCreationStatus = async (id: string, newStatus: string) => {
+    const updateData: any = { store_creation_status: newStatus };
+    if (newStatus === "created") {
+      updateData.store_created_at = new Date().toISOString();
+    }
     const { error } = await supabase
       .from("store_requests")
-      .update({ store_creation_status: newStatus } as any)
+      .update(updateData)
       .eq("id", id);
 
     if (error) {
