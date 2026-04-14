@@ -281,7 +281,7 @@ export default function StoreRequests() {
         fetchRequests();
       }
     } else {
-      const { error } = await supabase.from("store_requests").insert({
+      const { data: insertedData, error } = await supabase.from("store_requests").insert({
         store_name: storeName.trim(),
         client_name: clientName.trim(),
         store_creation_status: storeCreationStatus,
@@ -291,12 +291,25 @@ export default function StoreRequests() {
         assigned_to: assignedTo,
         created_by: user.id,
         platform: platformField,
-      } as any);
+      } as any).select().single();
 
       if (error) {
         toast.error("Erro ao criar solicitação.");
       } else {
         toast.success("Solicitação enviada com sucesso!");
+        // Sync to Google Sheets (fire-and-forget)
+        if (insertedData) {
+          supabase.functions.invoke("sync-to-sheets", {
+            body: {
+              action: "sync_store_request",
+              id: insertedData.id,
+              store_name: insertedData.store_name,
+              platform: insertedData.platform,
+              store_created_at: insertedData.store_created_at || insertedData.created_at,
+              observation: insertedData.observation || "",
+            },
+          }).catch((err) => console.warn("Sync store_request to sheets failed:", err));
+        }
         resetForm();
         setDialogOpen(false);
         fetchRequests();
