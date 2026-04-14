@@ -374,6 +374,12 @@ export default function StoreRequests() {
             {getCreationStatusIcon(creationStatus)}
             {CREATION_STATUS_LABELS[creationStatus] || "Loja a criar"}
           </span>
+          {req.store_created_at && (
+            <span className="flex items-center gap-1">
+              <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
+              Loja criada em {format(new Date(req.store_created_at), "dd/MM/yyyy")}
+            </span>
+          )}
           <span className="flex items-center gap-1">
             {req.platform_access_confirmed ? (
               <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
