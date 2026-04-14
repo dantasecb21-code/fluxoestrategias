@@ -217,8 +217,8 @@ function buildPayloadFromRow(s: any, resolvedOperationalManager?: string, storeC
 function buildStoreRequestPayload(sr: any): SyncPayload {
   return {
     id: sr.id,
-    created_at: "",
-    store_created_at: formatDatePtBR(sr.store_created_at || sr.created_at),
+    created_at: formatDatePtBR(sr.created_at || null),
+    store_created_at: formatDatePtBR(sr.store_created_at || null),
     store_name: sr.store_name || "",
     platform: PLATFORM_DISPLAY[sr.platform] || sr.platform,
     strategy_type: "",
