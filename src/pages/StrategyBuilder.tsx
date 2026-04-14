@@ -251,10 +251,26 @@ export default function StrategyBuilderPage() {
         clearDraft();
         // Auto-complete store request if coming from store request flow
         if (storeRequestId) {
+          const storeRequestUpdate: Record<string, string> = {
+            status: "completed",
+            store_creation_status: "completed",
+          };
+
+          const { data: storeRequest, error: storeRequestFetchError } = await supabase
+            .from("store_requests")
+            .select("store_created_at")
+            .eq("id", storeRequestId)
+            .maybeSingle();
+
+          if (!storeRequestFetchError && !storeRequest?.store_created_at) {
+            storeRequestUpdate.store_created_at = new Date().toISOString();
+          }
+
           const { error: srError } = await supabase
             .from("store_requests")
-            .update({ status: "completed", store_creation_status: "completed" } as any)
+            .update(storeRequestUpdate as any)
             .eq("id", storeRequestId);
+
           if (srError) {
             console.error("Failed to update store request:", srError);
           }
