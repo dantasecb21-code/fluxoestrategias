@@ -1,0 +1,2 @@
+ALTER TABLE public.store_requests
+ADD COLUMN store_created_at TIMESTAMP WITH TIME ZONE DEFAULT NULL;
