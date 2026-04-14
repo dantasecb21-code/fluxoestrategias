@@ -242,11 +242,18 @@ Deno.serve(async (req) => {
       console.log("Starting bulk sync...");
 
       const strategies = await fetchStrategiesFromDb(supabaseUrl, serviceRoleKey);
-      const operationalManagerMap = await fetchOperationalManagerMap(
-        supabaseUrl,
-        serviceRoleKey,
-        strategies.map((strategy) => strategy.assigned_to),
-      );
+      const [operationalManagerMap, storeCreatedAtMap] = await Promise.all([
+        fetchOperationalManagerMap(
+          supabaseUrl,
+          serviceRoleKey,
+          strategies.map((strategy) => strategy.assigned_to),
+        ),
+        fetchStoreCreatedAtMap(
+          supabaseUrl,
+          serviceRoleKey,
+          strategies.map((strategy) => strategy.store_request_id),
+        ),
+      ]);
 
       console.log(`Found ${strategies.length} strategies to sync`);
 
@@ -258,6 +265,7 @@ Deno.serve(async (req) => {
           const payload = buildPayloadFromRow(
             strategy,
             operationalManagerMap[strategy.assigned_to] || strategy.operational_manager,
+            storeCreatedAtMap[strategy.store_request_id] || "",
           );
           const response = await sendToSheets(SHEETS_WEBHOOK_URL, payload);
           if (response.success) success++;
