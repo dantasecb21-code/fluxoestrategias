@@ -78,7 +78,7 @@ async function sendToSheets(sheetsUrl: string, payload: SyncPayload): Promise<{ 
   const getUrl = `${sheetsUrl}?payload=${encodedPayload}`;
   const response = await fetch(getUrl, { method: "GET", redirect: "follow" });
   const result = await response.text();
-  const success = result.includes('"success":true');
+  const success = response.ok && (result.includes('"success":true') || result.includes('"rows"') || result.includes('"syncedAt"'));
   return { success, result: result.substring(0, 300) };
 }
 
