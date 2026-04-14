@@ -94,7 +94,7 @@ async function fetchStrategiesFromDb(
   serviceRoleKey: string,
   strategyId?: string,
 ): Promise<any[]> {
-  const selectFields = "id,created_at,store_name,platform,strategy_type,manager_name,operational_manager,assigned_to,status,deadline,observation,started_at,completed_at";
+  const selectFields = "id,created_at,store_name,platform,strategy_type,manager_name,operational_manager,assigned_to,status,deadline,observation,started_at,completed_at,store_request_id";
   const filters = strategyId
     ? `deleted_at=is.null&id=eq.${strategyId}`
     : "deleted_at=is.null&order=created_at";
