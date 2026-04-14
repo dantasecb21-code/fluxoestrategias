@@ -33,6 +33,7 @@ interface StoreRequest {
   created_at: string;
   updated_at: string;
   platform: string;
+  store_created_at: string | null;
 }
 
 interface StrategicUser {
