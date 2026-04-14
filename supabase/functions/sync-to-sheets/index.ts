@@ -6,6 +6,7 @@ const corsHeaders = {
 interface SyncPayload {
   id: string;
   created_at: string;
+  store_created_at: string;
   store_name: string;
   platform: string;
   strategy_type: string;
@@ -93,7 +94,7 @@ async function fetchStrategiesFromDb(
   serviceRoleKey: string,
   strategyId?: string,
 ): Promise<any[]> {
-  const selectFields = "id,created_at,store_name,platform,strategy_type,manager_name,operational_manager,assigned_to,status,deadline,observation,started_at,completed_at";
+  const selectFields = "id,created_at,store_name,platform,strategy_type,manager_name,operational_manager,assigned_to,status,deadline,observation,started_at,completed_at,store_request_id";
   const filters = strategyId
     ? `deleted_at=is.null&id=eq.${strategyId}`
     : "deleted_at=is.null&order=created_at";
@@ -128,6 +129,7 @@ function buildEmptyPayload(id: string): SyncPayload {
   return {
     id,
     created_at: "",
+    store_created_at: "",
     store_name: "",
     platform: "",
     strategy_type: "",
@@ -141,6 +143,28 @@ function buildEmptyPayload(id: string): SyncPayload {
     execution_time: "",
     observation: "",
   };
+}
+
+async function fetchStoreCreatedAtMap(
+  supabaseUrl: string,
+  serviceRoleKey: string,
+  storeRequestIds: Array<string | null | undefined>,
+): Promise<Record<string, string>> {
+  const uniqueIds = [...new Set(storeRequestIds.filter((id): id is string => Boolean(id)))];
+  if (uniqueIds.length === 0) return {};
+
+  const res = await fetch(
+    `${supabaseUrl}/rest/v1/store_requests?select=id,store_created_at&id=in.(${uniqueIds.join(",")})`,
+    { headers: buildRestHeaders(serviceRoleKey) },
+  );
+
+  if (!res.ok) return {};
+  const rows = await res.json();
+  return Object.fromEntries(
+    rows
+      .filter((r: any) => r.store_created_at)
+      .map((r: any) => [r.id, r.store_created_at]),
+  );
 }
 
 async function fetchOperationalManagerMap(
@@ -168,10 +192,11 @@ async function fetchOperationalManagerMap(
   );
 }
 
-function buildPayloadFromRow(s: any, resolvedOperationalManager?: string): SyncPayload {
+function buildPayloadFromRow(s: any, resolvedOperationalManager?: string, storeCreatedAt?: string): SyncPayload {
   return {
     id: s.id,
     created_at: formatDatePtBR(s.created_at),
+    store_created_at: formatDatePtBR(storeCreatedAt || null),
     store_name: s.store_name || "",
     platform: PLATFORM_DISPLAY[s.platform] || s.platform,
     strategy_type: STRATEGY_TYPE_DISPLAY[s.strategy_type] || s.strategy_type,
@@ -217,11 +242,18 @@ Deno.serve(async (req) => {
       console.log("Starting bulk sync...");
 
       const strategies = await fetchStrategiesFromDb(supabaseUrl, serviceRoleKey);
-      const operationalManagerMap = await fetchOperationalManagerMap(
-        supabaseUrl,
-        serviceRoleKey,
-        strategies.map((strategy) => strategy.assigned_to),
-      );
+      const [operationalManagerMap, storeCreatedAtMap] = await Promise.all([
+        fetchOperationalManagerMap(
+          supabaseUrl,
+          serviceRoleKey,
+          strategies.map((strategy) => strategy.assigned_to),
+        ),
+        fetchStoreCreatedAtMap(
+          supabaseUrl,
+          serviceRoleKey,
+          strategies.map((strategy) => strategy.store_request_id),
+        ),
+      ]);
 
       console.log(`Found ${strategies.length} strategies to sync`);
 
@@ -233,6 +265,7 @@ Deno.serve(async (req) => {
           const payload = buildPayloadFromRow(
             strategy,
             operationalManagerMap[strategy.assigned_to] || strategy.operational_manager,
+            storeCreatedAtMap[strategy.store_request_id] || "",
           );
           const response = await sendToSheets(SHEETS_WEBHOOK_URL, payload);
           if (response.success) success++;
@@ -283,15 +316,15 @@ Deno.serve(async (req) => {
       );
     }
 
-    const operationalManagerMap = await fetchOperationalManagerMap(
-      supabaseUrl,
-      serviceRoleKey,
-      [strategy.assigned_to],
-    );
+    const [operationalManagerMap, storeCreatedAtMap] = await Promise.all([
+      fetchOperationalManagerMap(supabaseUrl, serviceRoleKey, [strategy.assigned_to]),
+      fetchStoreCreatedAtMap(supabaseUrl, serviceRoleKey, [strategy.store_request_id]),
+    ]);
 
     const sheetsPayload = buildPayloadFromRow(
       strategy,
       operationalManagerMap[strategy.assigned_to] || strategy.operational_manager,
+      storeCreatedAtMap[strategy.store_request_id] || "",
     );
 
     const { result } = await sendToSheets(SHEETS_WEBHOOK_URL, sheetsPayload);
