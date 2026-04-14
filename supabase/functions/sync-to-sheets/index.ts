@@ -6,6 +6,7 @@ const corsHeaders = {
 interface SyncPayload {
   id: string;
   created_at: string;
+  store_created_at: string;
   store_name: string;
   platform: string;
   strategy_type: string;
