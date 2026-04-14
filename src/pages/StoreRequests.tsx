@@ -254,7 +254,8 @@ export default function StoreRequests() {
     setSubmitting(true);
 
     if (editingId) {
-      const { error } = await supabase.from("store_requests").update({
+      const existingReq = requests.find(r => r.id === editingId);
+      const updateData: any = {
         store_name: storeName.trim(),
         client_name: clientName.trim(),
         store_creation_status: storeCreationStatus,
@@ -264,7 +265,12 @@ export default function StoreRequests() {
         assigned_to: assignedTo,
         status: editStatus,
         platform: platformField,
-      } as any).eq("id", editingId);
+      };
+      // Record store_created_at when status changes to "created"
+      if (storeCreationStatus === "created" && existingReq?.store_creation_status !== "created") {
+        updateData.store_created_at = new Date().toISOString();
+      }
+      const { error } = await supabase.from("store_requests").update(updateData).eq("id", editingId);
 
       if (error) {
         toast.error("Erro ao atualizar solicitação.");
