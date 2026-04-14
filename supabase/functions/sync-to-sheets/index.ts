@@ -129,6 +129,7 @@ function buildEmptyPayload(id: string): SyncPayload {
   return {
     id,
     created_at: "",
+    store_created_at: "",
     store_name: "",
     platform: "",
     strategy_type: "",
@@ -142,6 +143,28 @@ function buildEmptyPayload(id: string): SyncPayload {
     execution_time: "",
     observation: "",
   };
+}
+
+async function fetchStoreCreatedAtMap(
+  supabaseUrl: string,
+  serviceRoleKey: string,
+  storeRequestIds: Array<string | null | undefined>,
+): Promise<Record<string, string>> {
+  const uniqueIds = [...new Set(storeRequestIds.filter((id): id is string => Boolean(id)))];
+  if (uniqueIds.length === 0) return {};
+
+  const res = await fetch(
+    `${supabaseUrl}/rest/v1/store_requests?select=id,store_created_at&id=in.(${uniqueIds.join(",")})`,
+    { headers: buildRestHeaders(serviceRoleKey) },
+  );
+
+  if (!res.ok) return {};
+  const rows = await res.json();
+  return Object.fromEntries(
+    rows
+      .filter((r: any) => r.store_created_at)
+      .map((r: any) => [r.id, r.store_created_at]),
+  );
 }
 
 async function fetchOperationalManagerMap(
