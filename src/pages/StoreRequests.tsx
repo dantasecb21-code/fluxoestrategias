@@ -322,7 +322,7 @@ export default function StoreRequests() {
               id: insertedData.id,
               store_name: insertedData.store_name,
               platform: insertedData.platform,
-              store_created_at: insertedData.store_created_at || "",
+              store_created_at: insertedData.store_created_at || insertedData.created_at,
               created_at: insertedData.created_at,
               observation: insertedData.observation || "",
             },
