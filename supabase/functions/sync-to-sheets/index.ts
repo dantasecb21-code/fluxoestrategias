@@ -269,9 +269,13 @@ Deno.serve(async (req) => {
           );
           const response = await sendToSheets(SHEETS_WEBHOOK_URL, payload);
           if (response.success) success++;
-          else fail++;
-        } catch {
+          else {
+            fail++;
+            console.error(`Failed to sync strategy ${strategy.id}: ${response.result}`);
+          }
+        } catch (e) {
           fail++;
+          console.error(`Error syncing strategy ${strategy.id}:`, e);
         }
       }
 
