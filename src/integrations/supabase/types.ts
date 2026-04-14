@@ -146,6 +146,7 @@ export type Database = {
           platform: string
           platform_access_confirmed: boolean
           status: string
+          store_created_at: string | null
           store_creation_status: string
           store_name: string
           updated_at: string
@@ -161,6 +162,7 @@ export type Database = {
           platform?: string
           platform_access_confirmed?: boolean
           status?: string
+          store_created_at?: string | null
           store_creation_status?: string
           store_name?: string
           updated_at?: string
@@ -176,6 +178,7 @@ export type Database = {
           platform?: string
           platform_access_confirmed?: boolean
           status?: string
+          store_created_at?: string | null
           store_creation_status?: string
           store_name?: string
           updated_at?: string
