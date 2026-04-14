@@ -316,15 +316,15 @@ Deno.serve(async (req) => {
       );
     }
 
-    const operationalManagerMap = await fetchOperationalManagerMap(
-      supabaseUrl,
-      serviceRoleKey,
-      [strategy.assigned_to],
-    );
+    const [operationalManagerMap, storeCreatedAtMap] = await Promise.all([
+      fetchOperationalManagerMap(supabaseUrl, serviceRoleKey, [strategy.assigned_to]),
+      fetchStoreCreatedAtMap(supabaseUrl, serviceRoleKey, [strategy.store_request_id]),
+    ]);
 
     const sheetsPayload = buildPayloadFromRow(
       strategy,
       operationalManagerMap[strategy.assigned_to] || strategy.operational_manager,
+      storeCreatedAtMap[strategy.store_request_id] || "",
     );
 
     const { result } = await sendToSheets(SHEETS_WEBHOOK_URL, sheetsPayload);
