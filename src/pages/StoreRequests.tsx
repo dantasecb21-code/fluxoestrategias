@@ -12,6 +12,17 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Store, Plus, Clock, CheckCircle2, User, ArrowRight, Pencil, Trash2, Sparkles, Loader2, Hammer, Filter, ChevronDown, ChevronRight, Globe } from "lucide-react";
 import { toast } from "sonner";
@@ -507,23 +518,45 @@ export default function StoreRequests() {
 
         {isAdmin && (
           <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={async () => {
-                toast.info("Reconciliando planilha...");
-                const { data, error } = await supabase.functions.invoke("sync-to-sheets", {
-                  body: { action: "reconcile" },
-                });
-                if (error) {
-                  toast.error(error.message);
-                } else {
-                  toast.success(`Reconciliação concluída (${(data as any)?.validCount ?? 0} IDs válidos enviados).`);
-                }
-              }}
-            >
-              Reconciliar planilha
-            </Button>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="outline" size="sm" className="border-destructive/40 text-destructive hover:bg-destructive/10">
+                  <Trash2 className="h-4 w-4 mr-1" />
+                  Reconciliar planilha
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle className="text-destructive">⚠️ Atenção: ação destrutiva</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Reconciliar irá <strong>APAGAR da planilha</strong> todas as linhas cujos IDs não existem mais no sistema (estratégias deletadas e órfãs já resolvidas).
+                    <br /><br />
+                    Lojas válidas <strong>não serão tocadas</strong>, mas esta ação <strong>não pode ser desfeita</strong>.
+                    <br /><br />
+                    Tem certeza que deseja continuar?
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                  <AlertDialogAction
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    onClick={async () => {
+                      toast.info("Reconciliando planilha...");
+                      const { data, error } = await supabase.functions.invoke("sync-to-sheets", {
+                        body: { action: "reconcile" },
+                      });
+                      if (error) {
+                        toast.error(error.message);
+                      } else {
+                        toast.success(`Reconciliação concluída (${(data as any)?.validCount ?? 0} IDs válidos enviados).`);
+                      }
+                    }}
+                  >
+                    Sim, reconciliar
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
             <Button
               variant="outline"
               size="sm"

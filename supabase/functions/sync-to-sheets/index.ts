@@ -86,19 +86,46 @@ async function sendToSheets(sheetsUrl: string, payload: SyncPayload): Promise<{ 
   };
   const encodedPayload = encodeURIComponent(JSON.stringify(sanitized));
   const getUrl = `${sheetsUrl}?payload=${encodedPayload}`;
-  const response = await fetch(getUrl, { method: "GET", redirect: "follow" });
-  const result = await response.text();
-  const success = response.ok && (result.includes('"success":true') || result.includes('"rows"') || result.includes('"syncedAt"'));
-  return { success, result: result.substring(0, 300) };
+  return await fetchWithRetry(getUrl, (txt, ok) =>
+    ok && (txt.includes('"success":true') || txt.includes('"rows"') || txt.includes('"syncedAt"'))
+  );
 }
 
 async function sendRawToSheets(sheetsUrl: string, payload: Record<string, unknown>): Promise<{ success: boolean; result: string }> {
   const encodedPayload = encodeURIComponent(JSON.stringify(payload));
   const getUrl = `${sheetsUrl}?payload=${encodedPayload}`;
-  const response = await fetch(getUrl, { method: "GET", redirect: "follow" });
-  const result = await response.text();
-  const success = response.ok && (result.includes('"success":true') || result.includes('"deleted"') || result.includes('"kept"'));
-  return { success, result: result.substring(0, 500) };
+  return await fetchWithRetry(getUrl, (txt, ok) =>
+    ok && (txt.includes('"success":true') || txt.includes('"deleted"') || txt.includes('"kept"'))
+  );
+}
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+/** Tenta até 3x com backoff. Considera falha se retornar HTML do Google em vez de JSON. */
+async function fetchWithRetry(
+  url: string,
+  successCheck: (text: string, ok: boolean) => boolean,
+  maxAttempts = 3,
+): Promise<{ success: boolean; result: string }> {
+  let lastResult = "";
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      const response = await fetch(url, { method: "GET", redirect: "follow" });
+      const text = await response.text();
+      lastResult = text;
+      if (successCheck(text, response.ok)) {
+        return { success: true, result: text.substring(0, 300) };
+      }
+      // Falha: provavelmente HTML do Google (timeout / sobrecarga). Espera e tenta de novo.
+      if (attempt < maxAttempts) {
+        await sleep(800 * attempt); // backoff: 800ms, 1600ms
+      }
+    } catch (e) {
+      lastResult = String(e);
+      if (attempt < maxAttempts) await sleep(800 * attempt);
+    }
+  }
+  return { success: false, result: lastResult.substring(0, 300) };
 }
 
 function buildRestHeaders(serviceRoleKey: string) {
@@ -404,6 +431,7 @@ Deno.serve(async (req) => {
         } catch (e) {
           console.error(`Error clearing resolved store_request ${resolvedRequestId}:`, e);
         }
+        await sleep(500);
       }
 
       // Sync strategies
@@ -424,6 +452,7 @@ Deno.serve(async (req) => {
           fail++;
           console.error(`Error syncing strategy ${strategy.id}:`, e);
         }
+        await sleep(500);
       }
 
       // Sync orphan store_requests (no strategy linked yet)
@@ -440,6 +469,7 @@ Deno.serve(async (req) => {
           fail++;
           console.error(`Error syncing store_request ${sr.id}:`, e);
         }
+        await sleep(500);
       }
 
       // Clean up deleted strategies from the sheet
