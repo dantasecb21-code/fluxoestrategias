@@ -107,6 +107,7 @@ export default function AiHelpChat() {
       ]);
     } finally {
       setIsLoading(false);
+      window.dispatchEvent(new CustomEvent("ai-quota-changed"));
     }
   };
 
