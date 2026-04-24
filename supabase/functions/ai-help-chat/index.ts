@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -40,6 +41,26 @@ serve(async (req) => {
     const GEMINI_API_KEY = Deno.env.get("GOOGLE_GEMINI_API_KEY");
     if (!GEMINI_API_KEY) {
       throw new Error("GOOGLE_GEMINI_API_KEY is not configured");
+    }
+
+    // Check + increment monthly quota (atomic)
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const admin = createClient(supabaseUrl, serviceKey);
+
+    const { data: quota, error: quotaError } = await admin.rpc("check_and_increment_ai_usage");
+    if (quotaError) {
+      console.error("Quota check failed:", quotaError);
+    } else if (quota && (quota as any).blocked) {
+      const q = quota as any;
+      return new Response(
+        JSON.stringify({
+          error: `Limite mensal de IA atingido (${q.current}/${q.limit}). Recarregue a cota nas configurações para continuar.`,
+          code: "QUOTA_EXCEEDED",
+          quota: q,
+        }),
+        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     // Convert OpenAI-style messages to Gemini format
