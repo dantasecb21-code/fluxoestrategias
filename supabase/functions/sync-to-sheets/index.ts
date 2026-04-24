@@ -210,7 +210,7 @@ function buildStoreRequestResolution(storeRequests: any[], strategies: any[]) {
 
   return {
     orphanRequests,
-    resolvedRequestIds: [...resolvedRequestIds],
+    resolvedRequestIds: Array.from(resolvedRequestIds),
   };
 }
 
@@ -219,7 +219,7 @@ async function fetchStoreCreatedAtMap(
   serviceRoleKey: string,
   storeRequestIds: Array<string | null | undefined>,
 ): Promise<Record<string, string>> {
-  const uniqueIds = [...new Set(storeRequestIds.filter((id): id is string => Boolean(id)))];
+  const uniqueIds = Array.from(new Set(storeRequestIds.filter((id): id is string => Boolean(id))));
   if (uniqueIds.length === 0) return {};
 
   const res = await fetch(
@@ -241,7 +241,7 @@ async function fetchOperationalManagerMap(
   serviceRoleKey: string,
   userIds: Array<string | null | undefined>,
 ): Promise<Record<string, string>> {
-  const uniqueIds = [...new Set(userIds.filter((id): id is string => Boolean(id)))];
+  const uniqueIds = Array.from(new Set(userIds.filter((id): id is string => Boolean(id))));
   if (uniqueIds.length === 0) return {};
 
   const res = await fetch(
