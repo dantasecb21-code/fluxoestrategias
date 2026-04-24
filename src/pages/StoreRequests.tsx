@@ -680,6 +680,7 @@ export default function StoreRequests() {
               </div>
             </DialogContent>
           </Dialog>
+          </div>
         )}
       </div>
 
