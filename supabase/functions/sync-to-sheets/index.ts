@@ -67,6 +67,15 @@ function sanitizeText(text: string): string {
   return text.replace(/[\r\n]+/g, " ").replace(/\s+/g, " ").trim();
 }
 
+function normalizeStoreKey(storeName: string | null | undefined, platform: string | null | undefined): string {
+  const normalizedName = sanitizeText(storeName || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+  const normalizedPlatform = sanitizeText(platform || "").toLowerCase();
+  return `${normalizedName}::${normalizedPlatform}`;
+}
+
 async function sendToSheets(sheetsUrl: string, payload: SyncPayload): Promise<{ success: boolean; result: string }> {
   const sanitized: SyncPayload = {
     ...payload,
@@ -126,6 +135,28 @@ async function fetchDeletedStrategyIds(
   return rows.map((r: { id: string }) => r.id);
 }
 
+async function fetchStoreRequestsFromDb(
+  supabaseUrl: string,
+  serviceRoleKey: string,
+  storeRequestId?: string,
+): Promise<any[]> {
+  const filters = storeRequestId
+    ? `id=eq.${storeRequestId}`
+    : "order=created_at";
+
+  const res = await fetch(
+    `${supabaseUrl}/rest/v1/store_requests?${filters}&select=id,created_at,store_created_at,store_name,platform,observation`,
+    { headers: buildRestHeaders(serviceRoleKey) },
+  );
+
+  if (!res.ok) {
+    const errText = await res.text();
+    throw new Error(`Failed to fetch store requests: ${errText}`);
+  }
+
+  return await res.json();
+}
+
 function buildEmptyPayload(id: string): SyncPayload {
   return {
     id,
@@ -146,12 +177,49 @@ function buildEmptyPayload(id: string): SyncPayload {
   };
 }
 
+function buildStoreRequestResolution(storeRequests: any[], strategies: any[]) {
+  const strategiesThatResolveRequests = strategies.filter(
+    (strategy: any) => strategy.store_request_id || strategy.strategy_type === "initial",
+  );
+
+  const linkedRequestIds = new Set(
+    strategiesThatResolveRequests
+      .map((strategy: any) => strategy.store_request_id)
+      .filter((id: string | null | undefined): id is string => Boolean(id)),
+  );
+
+  const resolvedStoreKeys = new Set(
+    strategiesThatResolveRequests
+      .map((strategy: any) => normalizeStoreKey(strategy.store_name, strategy.platform))
+      .filter((key: string) => key !== "::"),
+  );
+
+  const orphanRequests: any[] = [];
+  const resolvedRequestIds = new Set<string>();
+
+  for (const storeRequest of storeRequests) {
+    const storeKey = normalizeStoreKey(storeRequest.store_name, storeRequest.platform);
+    const isResolved = linkedRequestIds.has(storeRequest.id) || (storeKey !== "::" && resolvedStoreKeys.has(storeKey));
+
+    if (isResolved) {
+      resolvedRequestIds.add(storeRequest.id);
+    } else {
+      orphanRequests.push(storeRequest);
+    }
+  }
+
+  return {
+    orphanRequests,
+    resolvedRequestIds: Array.from(resolvedRequestIds),
+  };
+}
+
 async function fetchStoreCreatedAtMap(
   supabaseUrl: string,
   serviceRoleKey: string,
   storeRequestIds: Array<string | null | undefined>,
 ): Promise<Record<string, string>> {
-  const uniqueIds = [...new Set(storeRequestIds.filter((id): id is string => Boolean(id)))];
+  const uniqueIds = Array.from(new Set(storeRequestIds.filter((id): id is string => Boolean(id))));
   if (uniqueIds.length === 0) return {};
 
   const res = await fetch(
@@ -173,7 +241,7 @@ async function fetchOperationalManagerMap(
   serviceRoleKey: string,
   userIds: Array<string | null | undefined>,
 ): Promise<Record<string, string>> {
-  const uniqueIds = [...new Set(userIds.filter((id): id is string => Boolean(id)))];
+  const uniqueIds = Array.from(new Set(userIds.filter((id): id is string => Boolean(id))));
   if (uniqueIds.length === 0) return {};
 
   const res = await fetch(
@@ -234,33 +302,6 @@ function buildStoreRequestPayload(sr: any): SyncPayload {
   };
 }
 
-/** Fetch store_requests that do NOT have a linked strategy yet */
-async function fetchOrphanStoreRequests(
-  supabaseUrl: string,
-  serviceRoleKey: string,
-): Promise<any[]> {
-  // Get all store_request IDs that already have a strategy
-  const stratRes = await fetch(
-    `${supabaseUrl}/rest/v1/strategies?select=store_request_id&store_request_id=not.is.null&deleted_at=is.null`,
-    { headers: buildRestHeaders(serviceRoleKey) },
-  );
-  const linkedIds: string[] = stratRes.ok
-    ? (await stratRes.json()).map((r: any) => r.store_request_id)
-    : [];
-
-  // Fetch all store_requests
-  const srRes = await fetch(
-    `${supabaseUrl}/rest/v1/store_requests?select=id,created_at,store_created_at,store_name,platform,observation&order=created_at`,
-    { headers: buildRestHeaders(serviceRoleKey) },
-  );
-  if (!srRes.ok) return [];
-  const allRequests = await srRes.json();
-
-  // Return only those without a linked strategy
-  const linkedSet = new Set(linkedIds);
-  return allRequests.filter((sr: any) => !linkedSet.has(sr.id));
-}
-
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -297,7 +338,18 @@ Deno.serve(async (req) => {
         );
       }
 
-      const payload = buildStoreRequestPayload(sr);
+      const [strategies, storeRequests] = await Promise.all([
+        fetchStrategiesFromDb(supabaseUrl, serviceRoleKey),
+        fetchStoreRequestsFromDb(supabaseUrl, serviceRoleKey, sr.id),
+      ]);
+
+      const { orphanRequests, resolvedRequestIds } = buildStoreRequestResolution(storeRequests, strategies);
+      const shouldClear = resolvedRequestIds.includes(sr.id);
+
+      const payload = shouldClear
+        ? buildEmptyPayload(sr.id)
+        : buildStoreRequestPayload(orphanRequests[0] || sr);
+
       const { result } = await sendToSheets(SHEETS_WEBHOOK_URL, payload);
       console.log(`Sync store_request ${sr.id} to sheets: ${result}`);
 
@@ -311,10 +363,12 @@ Deno.serve(async (req) => {
     if (body.action === "sync_all") {
       console.log("Starting bulk sync...");
 
-      const [strategies, orphanRequests] = await Promise.all([
+      const [strategies, storeRequests] = await Promise.all([
         fetchStrategiesFromDb(supabaseUrl, serviceRoleKey),
-        fetchOrphanStoreRequests(supabaseUrl, serviceRoleKey),
+        fetchStoreRequestsFromDb(supabaseUrl, serviceRoleKey),
       ]);
+
+      const { orphanRequests, resolvedRequestIds } = buildStoreRequestResolution(storeRequests, strategies);
 
       const [operationalManagerMap, storeCreatedAtMap] = await Promise.all([
         fetchOperationalManagerMap(
@@ -334,19 +388,18 @@ Deno.serve(async (req) => {
       let success = 0;
       let fail = 0;
 
-      // Track store_request IDs that already became strategies — clear those rows
-      const linkedStoreRequestIds = new Set<string>();
+      for (const resolvedRequestId of resolvedRequestIds) {
+        try {
+          const emptyPayload = buildEmptyPayload(resolvedRequestId);
+          await sendToSheets(SHEETS_WEBHOOK_URL, emptyPayload);
+        } catch (e) {
+          console.error(`Error clearing resolved store_request ${resolvedRequestId}:`, e);
+        }
+      }
 
       // Sync strategies
       for (const strategy of strategies) {
         try {
-          // If this strategy came from a store_request, clear that orphan row first
-          if (strategy.store_request_id) {
-            linkedStoreRequestIds.add(strategy.store_request_id);
-            const emptyPayload = buildEmptyPayload(strategy.store_request_id);
-            await sendToSheets(SHEETS_WEBHOOK_URL, emptyPayload);
-          }
-
           const payload = buildPayloadFromRow(
             strategy,
             operationalManagerMap[strategy.assigned_to] || strategy.operational_manager,
@@ -423,14 +476,16 @@ Deno.serve(async (req) => {
       );
     }
 
-    const [operationalManagerMap, storeCreatedAtMap] = await Promise.all([
+    const [operationalManagerMap, storeCreatedAtMap, storeRequests] = await Promise.all([
       fetchOperationalManagerMap(supabaseUrl, serviceRoleKey, [strategy.assigned_to]),
       fetchStoreCreatedAtMap(supabaseUrl, serviceRoleKey, [strategy.store_request_id]),
+      fetchStoreRequestsFromDb(supabaseUrl, serviceRoleKey),
     ]);
 
-    // Clear the orphan store_request row (if any) so it doesn't duplicate
-    if (strategy.store_request_id) {
-      const emptyPayload = buildEmptyPayload(strategy.store_request_id);
+    const { resolvedRequestIds } = buildStoreRequestResolution(storeRequests, [strategy]);
+
+    for (const resolvedRequestId of resolvedRequestIds) {
+      const emptyPayload = buildEmptyPayload(resolvedRequestId);
       await sendToSheets(SHEETS_WEBHOOK_URL, emptyPayload);
     }
 
