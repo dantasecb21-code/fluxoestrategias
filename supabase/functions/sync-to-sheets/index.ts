@@ -352,10 +352,12 @@ Deno.serve(async (req) => {
     if (body.action === "sync_all") {
       console.log("Starting bulk sync...");
 
-      const [strategies, orphanRequests] = await Promise.all([
+      const [strategies, storeRequests] = await Promise.all([
         fetchStrategiesFromDb(supabaseUrl, serviceRoleKey),
-        fetchOrphanStoreRequests(supabaseUrl, serviceRoleKey),
+        fetchStoreRequestsFromDb(supabaseUrl, serviceRoleKey),
       ]);
+
+      const { orphanRequests, resolvedRequestIds } = buildStoreRequestResolution(storeRequests, strategies);
 
       const [operationalManagerMap, storeCreatedAtMap] = await Promise.all([
         fetchOperationalManagerMap(
@@ -375,19 +377,18 @@ Deno.serve(async (req) => {
       let success = 0;
       let fail = 0;
 
-      // Track store_request IDs that already became strategies — clear those rows
-      const linkedStoreRequestIds = new Set<string>();
+      for (const resolvedRequestId of resolvedRequestIds) {
+        try {
+          const emptyPayload = buildEmptyPayload(resolvedRequestId);
+          await sendToSheets(SHEETS_WEBHOOK_URL, emptyPayload);
+        } catch (e) {
+          console.error(`Error clearing resolved store_request ${resolvedRequestId}:`, e);
+        }
+      }
 
       // Sync strategies
       for (const strategy of strategies) {
         try {
-          // If this strategy came from a store_request, clear that orphan row first
-          if (strategy.store_request_id) {
-            linkedStoreRequestIds.add(strategy.store_request_id);
-            const emptyPayload = buildEmptyPayload(strategy.store_request_id);
-            await sendToSheets(SHEETS_WEBHOOK_URL, emptyPayload);
-          }
-
           const payload = buildPayloadFromRow(
             strategy,
             operationalManagerMap[strategy.assigned_to] || strategy.operational_manager,
