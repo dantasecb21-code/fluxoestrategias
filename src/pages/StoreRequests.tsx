@@ -506,6 +506,42 @@ export default function StoreRequests() {
         </div>
 
         {isAdmin && (
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={async () => {
+                toast({ title: "Reconciliando planilha...", description: "Removendo lojas que não existem mais." });
+                const { data, error } = await supabase.functions.invoke("sync-to-sheets", {
+                  body: { action: "reconcile" },
+                });
+                if (error) {
+                  toast({ title: "Erro", description: error.message, variant: "destructive" });
+                } else {
+                  toast({ title: "Reconciliação concluída", description: `Planilha atualizada (${(data as any)?.validCount ?? 0} IDs válidos enviados).` });
+                }
+              }}
+            >
+              Reconciliar planilha
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={async () => {
+                toast({ title: "Sincronizando tudo...", description: "Reescrevendo a planilha." });
+                const { data, error } = await supabase.functions.invoke("sync-to-sheets", {
+                  body: { action: "sync_all" },
+                });
+                if (error) {
+                  toast({ title: "Erro", description: error.message, variant: "destructive" });
+                } else {
+                  const d = data as any;
+                  toast({ title: "Sync concluído", description: `${d?.synced ?? 0} ok, ${d?.failed ?? 0} falhas, ${d?.cleaned ?? 0} limpas.` });
+                }
+              }}
+            >
+              Sincronizar tudo
+            </Button>
           <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) resetForm(); }}>
             <DialogTrigger asChild>
               <Button onClick={() => resetForm()}>
