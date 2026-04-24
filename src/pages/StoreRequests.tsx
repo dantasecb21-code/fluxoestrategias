@@ -506,6 +506,42 @@ export default function StoreRequests() {
         </div>
 
         {isAdmin && (
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={async () => {
+                toast.info("Reconciliando planilha...");
+                const { data, error } = await supabase.functions.invoke("sync-to-sheets", {
+                  body: { action: "reconcile" },
+                });
+                if (error) {
+                  toast.error(error.message);
+                } else {
+                  toast.success(`Reconciliação concluída (${(data as any)?.validCount ?? 0} IDs válidos enviados).`);
+                }
+              }}
+            >
+              Reconciliar planilha
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={async () => {
+                toast.info("Sincronizando tudo...");
+                const { data, error } = await supabase.functions.invoke("sync-to-sheets", {
+                  body: { action: "sync_all" },
+                });
+                if (error) {
+                  toast.error(error.message);
+                } else {
+                  const d = data as any;
+                  toast.success(`Sync concluído: ${d?.synced ?? 0} ok, ${d?.failed ?? 0} falhas, ${d?.cleaned ?? 0} limpas.`);
+                }
+              }}
+            >
+              Sincronizar tudo
+            </Button>
           <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) resetForm(); }}>
             <DialogTrigger asChild>
               <Button onClick={() => resetForm()}>
@@ -644,6 +680,7 @@ export default function StoreRequests() {
               </div>
             </DialogContent>
           </Dialog>
+          </div>
         )}
       </div>
 

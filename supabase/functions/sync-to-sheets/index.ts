@@ -92,6 +92,15 @@ async function sendToSheets(sheetsUrl: string, payload: SyncPayload): Promise<{ 
   return { success, result: result.substring(0, 300) };
 }
 
+async function sendRawToSheets(sheetsUrl: string, payload: Record<string, unknown>): Promise<{ success: boolean; result: string }> {
+  const encodedPayload = encodeURIComponent(JSON.stringify(payload));
+  const getUrl = `${sheetsUrl}?payload=${encodedPayload}`;
+  const response = await fetch(getUrl, { method: "GET", redirect: "follow" });
+  const result = await response.text();
+  const success = response.ok && (result.includes('"success":true') || result.includes('"deleted"') || result.includes('"kept"'));
+  return { success, result: result.substring(0, 500) };
+}
+
 function buildRestHeaders(serviceRoleKey: string) {
   return {
     apikey: serviceRoleKey,
@@ -455,6 +464,35 @@ Deno.serve(async (req) => {
 
       return new Response(
         JSON.stringify({ success: true, total, synced: success, failed: fail, cleaned, orphanRequests: orphanRequests.length }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // --- Reconcile: remove from sheet any row whose ID is not in the app anymore ---
+    if (body.action === "reconcile") {
+      console.log("Starting reconcile...");
+
+      const [strategies, storeRequests] = await Promise.all([
+        fetchStrategiesFromDb(supabaseUrl, serviceRoleKey),
+        fetchStoreRequestsFromDb(supabaseUrl, serviceRoleKey),
+      ]);
+
+      const { orphanRequests } = buildStoreRequestResolution(storeRequests, strategies);
+
+      const validIds = [
+        ...strategies.map((s: any) => s.id),
+        ...orphanRequests.map((sr: any) => sr.id),
+      ];
+
+      const { success, result } = await sendRawToSheets(SHEETS_WEBHOOK_URL, {
+        action: "reconcile",
+        valid_ids: validIds,
+      });
+
+      console.log(`Reconcile sent ${validIds.length} valid IDs. Sheets response: ${result}`);
+
+      return new Response(
+        JSON.stringify({ success, validCount: validIds.length, sheetsResponse: result }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
