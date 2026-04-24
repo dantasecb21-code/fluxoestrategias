@@ -88,7 +88,10 @@ serve(async (req) => {
       const t = await response.text();
       console.error("Gemini API error:", response.status, t);
       if (response.status === 429) {
-        return new Response(JSON.stringify({ error: "Muitas requisições. Aguarde um momento e tente novamente." }), {
+        return new Response(JSON.stringify({
+          error: "Limite do Google Gemini atingido (15 req/min ou 1.500/dia no plano grátis). Aguarde 1 minuto e tente novamente.",
+          code: "GEMINI_RATE_LIMIT"
+        }), {
           status: 429,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
