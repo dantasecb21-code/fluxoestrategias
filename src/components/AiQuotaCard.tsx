@@ -27,7 +27,7 @@ export default function AiQuotaCard() {
 
   const load = async () => {
     setLoading(true);
-    const { data, error } = await supabase.rpc("get_ai_usage_status");
+    const { data, error } = await (supabase as any).rpc("get_ai_usage_status");
     if (!error && data) {
       const s = data as unknown as QuotaStatus;
       setStatus(s);
@@ -44,7 +44,7 @@ export default function AiQuotaCard() {
       toast.error("Limite deve ser pelo menos 100");
       return;
     }
-    const { data: existing } = await supabase
+    const { data: existing } = await (supabase as any)
       .from("ai_quota_settings")
       .select("id")
       .order("updated_at", { ascending: false })
@@ -52,7 +52,7 @@ export default function AiQuotaCard() {
       .maybeSingle();
 
     if (existing?.id) {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from("ai_quota_settings")
         .update({ monthly_limit: n, updated_at: new Date().toISOString() })
         .eq("id", existing.id);
