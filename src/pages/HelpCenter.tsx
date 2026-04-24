@@ -9,6 +9,7 @@ import {
   Tag, Truck, ClipboardList, HelpCircle, ExternalLink, BookOpen, Zap, Bot
 } from "lucide-react";
 import AiHelpChat from "@/components/AiHelpChat";
+import AiQuotaCard from "@/components/AiQuotaCard";
 interface Guide {
   title: string;
   url: string;
@@ -335,9 +336,12 @@ export default function HelpCenter() {
         </TabsContent>
 
         <TabsContent value="ai" className="mt-4">
-          <Card className="overflow-hidden">
-            <AiHelpChat />
-          </Card>
+          <div className="space-y-3">
+            <AiQuotaCard />
+            <Card className="overflow-hidden">
+              <AiHelpChat />
+            </Card>
+          </div>
         </TabsContent>
       </Tabs>
     </div>
