@@ -468,6 +468,35 @@ Deno.serve(async (req) => {
       );
     }
 
+    // --- Reconcile: remove from sheet any row whose ID is not in the app anymore ---
+    if (body.action === "reconcile") {
+      console.log("Starting reconcile...");
+
+      const [strategies, storeRequests] = await Promise.all([
+        fetchStrategiesFromDb(supabaseUrl, serviceRoleKey),
+        fetchStoreRequestsFromDb(supabaseUrl, serviceRoleKey),
+      ]);
+
+      const { orphanRequests } = buildStoreRequestResolution(storeRequests, strategies);
+
+      const validIds = [
+        ...strategies.map((s: any) => s.id),
+        ...orphanRequests.map((sr: any) => sr.id),
+      ];
+
+      const { success, result } = await sendRawToSheets(SHEETS_WEBHOOK_URL, {
+        action: "reconcile",
+        valid_ids: validIds,
+      });
+
+      console.log(`Reconcile sent ${validIds.length} valid IDs. Sheets response: ${result}`);
+
+      return new Response(
+        JSON.stringify({ success, validCount: validIds.length, sheetsResponse: result }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     // --- Single strategy sync ---
     const payload = body as Partial<SyncPayload>;
     if (!payload.id) {
