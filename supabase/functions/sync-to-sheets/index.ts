@@ -338,7 +338,18 @@ Deno.serve(async (req) => {
         );
       }
 
-      const payload = buildStoreRequestPayload(sr);
+      const [strategies, storeRequests] = await Promise.all([
+        fetchStrategiesFromDb(supabaseUrl, serviceRoleKey),
+        fetchStoreRequestsFromDb(supabaseUrl, serviceRoleKey, sr.id),
+      ]);
+
+      const { orphanRequests, resolvedRequestIds } = buildStoreRequestResolution(storeRequests, strategies);
+      const shouldClear = resolvedRequestIds.includes(sr.id);
+
+      const payload = shouldClear
+        ? buildEmptyPayload(sr.id)
+        : buildStoreRequestPayload(orphanRequests[0] || sr);
+
       const { result } = await sendToSheets(SHEETS_WEBHOOK_URL, payload);
       console.log(`Sync store_request ${sr.id} to sheets: ${result}`);
 
@@ -465,14 +476,16 @@ Deno.serve(async (req) => {
       );
     }
 
-    const [operationalManagerMap, storeCreatedAtMap] = await Promise.all([
+    const [operationalManagerMap, storeCreatedAtMap, storeRequests] = await Promise.all([
       fetchOperationalManagerMap(supabaseUrl, serviceRoleKey, [strategy.assigned_to]),
       fetchStoreCreatedAtMap(supabaseUrl, serviceRoleKey, [strategy.store_request_id]),
+      fetchStoreRequestsFromDb(supabaseUrl, serviceRoleKey),
     ]);
 
-    // Clear the orphan store_request row (if any) so it doesn't duplicate
-    if (strategy.store_request_id) {
-      const emptyPayload = buildEmptyPayload(strategy.store_request_id);
+    const { resolvedRequestIds } = buildStoreRequestResolution(storeRequests, [strategy]);
+
+    for (const resolvedRequestId of resolvedRequestIds) {
+      const emptyPayload = buildEmptyPayload(resolvedRequestId);
       await sendToSheets(SHEETS_WEBHOOK_URL, emptyPayload);
     }
 
