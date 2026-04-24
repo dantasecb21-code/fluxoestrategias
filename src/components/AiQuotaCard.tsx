@@ -36,7 +36,12 @@ export default function AiQuotaCard() {
     setLoading(false);
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+    const handler = () => load();
+    window.addEventListener("ai-quota-changed", handler);
+    return () => window.removeEventListener("ai-quota-changed", handler);
+  }, []);
 
   const saveLimit = async () => {
     const n = parseInt(newLimit, 10);
