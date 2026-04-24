@@ -92,6 +92,15 @@ async function sendToSheets(sheetsUrl: string, payload: SyncPayload): Promise<{ 
   return { success, result: result.substring(0, 300) };
 }
 
+async function sendRawToSheets(sheetsUrl: string, payload: Record<string, unknown>): Promise<{ success: boolean; result: string }> {
+  const encodedPayload = encodeURIComponent(JSON.stringify(payload));
+  const getUrl = `${sheetsUrl}?payload=${encodedPayload}`;
+  const response = await fetch(getUrl, { method: "GET", redirect: "follow" });
+  const result = await response.text();
+  const success = response.ok && (result.includes('"success":true') || result.includes('"deleted"') || result.includes('"kept"'));
+  return { success, result: result.substring(0, 500) };
+}
+
 function buildRestHeaders(serviceRoleKey: string) {
   return {
     apikey: serviceRoleKey,
