@@ -511,14 +511,14 @@ export default function StoreRequests() {
               variant="outline"
               size="sm"
               onClick={async () => {
-                toast({ title: "Reconciliando planilha...", description: "Removendo lojas que não existem mais." });
+                toast.info("Reconciliando planilha...");
                 const { data, error } = await supabase.functions.invoke("sync-to-sheets", {
                   body: { action: "reconcile" },
                 });
                 if (error) {
-                  toast({ title: "Erro", description: error.message, variant: "destructive" });
+                  toast.error(error.message);
                 } else {
-                  toast({ title: "Reconciliação concluída", description: `Planilha atualizada (${(data as any)?.validCount ?? 0} IDs válidos enviados).` });
+                  toast.success(`Reconciliação concluída (${(data as any)?.validCount ?? 0} IDs válidos enviados).`);
                 }
               }}
             >
@@ -528,15 +528,15 @@ export default function StoreRequests() {
               variant="outline"
               size="sm"
               onClick={async () => {
-                toast({ title: "Sincronizando tudo...", description: "Reescrevendo a planilha." });
+                toast.info("Sincronizando tudo...");
                 const { data, error } = await supabase.functions.invoke("sync-to-sheets", {
                   body: { action: "sync_all" },
                 });
                 if (error) {
-                  toast({ title: "Erro", description: error.message, variant: "destructive" });
+                  toast.error(error.message);
                 } else {
                   const d = data as any;
-                  toast({ title: "Sync concluído", description: `${d?.synced ?? 0} ok, ${d?.failed ?? 0} falhas, ${d?.cleaned ?? 0} limpas.` });
+                  toast.success(`Sync concluído: ${d?.synced ?? 0} ok, ${d?.failed ?? 0} falhas, ${d?.cleaned ?? 0} limpas.`);
                 }
               }}
             >
