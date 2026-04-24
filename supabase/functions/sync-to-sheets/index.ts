@@ -431,6 +431,7 @@ Deno.serve(async (req) => {
         } catch (e) {
           console.error(`Error clearing resolved store_request ${resolvedRequestId}:`, e);
         }
+        await sleep(500);
       }
 
       // Sync strategies
@@ -451,6 +452,7 @@ Deno.serve(async (req) => {
           fail++;
           console.error(`Error syncing strategy ${strategy.id}:`, e);
         }
+        await sleep(500);
       }
 
       // Sync orphan store_requests (no strategy linked yet)
@@ -467,6 +469,7 @@ Deno.serve(async (req) => {
           fail++;
           console.error(`Error syncing store_request ${sr.id}:`, e);
         }
+        await sleep(500);
       }
 
       // Clean up deleted strategies from the sheet
