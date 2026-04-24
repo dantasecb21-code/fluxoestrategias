@@ -50,6 +50,10 @@ export default function AiHelpChat() {
 
       if (!resp.ok) {
         const err = await resp.json().catch(() => ({ error: "Erro na requisição" }));
+        if (resp.status === 429 && err.code === "QUOTA_EXCEEDED") {
+          window.dispatchEvent(new CustomEvent("ai-quota-changed"));
+          throw new Error(err.error || "Limite mensal de IA atingido. Avise o administrador.");
+        }
         throw new Error(err.error || `Erro ${resp.status}`);
       }
 
@@ -103,6 +107,7 @@ export default function AiHelpChat() {
       ]);
     } finally {
       setIsLoading(false);
+      window.dispatchEvent(new CustomEvent("ai-quota-changed"));
     }
   };
 
