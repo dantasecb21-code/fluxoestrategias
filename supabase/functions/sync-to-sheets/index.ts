@@ -67,6 +67,15 @@ function sanitizeText(text: string): string {
   return text.replace(/[\r\n]+/g, " ").replace(/\s+/g, " ").trim();
 }
 
+function normalizeStoreKey(storeName: string | null | undefined, platform: string | null | undefined): string {
+  const normalizedName = sanitizeText(storeName || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+  const normalizedPlatform = sanitizeText(platform || "").toLowerCase();
+  return `${normalizedName}::${normalizedPlatform}`;
+}
+
 async function sendToSheets(sheetsUrl: string, payload: SyncPayload): Promise<{ success: boolean; result: string }> {
   const sanitized: SyncPayload = {
     ...payload,
@@ -126,6 +135,28 @@ async function fetchDeletedStrategyIds(
   return rows.map((r: { id: string }) => r.id);
 }
 
+async function fetchStoreRequestsFromDb(
+  supabaseUrl: string,
+  serviceRoleKey: string,
+  storeRequestId?: string,
+): Promise<any[]> {
+  const filters = storeRequestId
+    ? `id=eq.${storeRequestId}`
+    : "order=created_at";
+
+  const res = await fetch(
+    `${supabaseUrl}/rest/v1/store_requests?${filters}&select=id,created_at,store_created_at,store_name,platform,observation`,
+    { headers: buildRestHeaders(serviceRoleKey) },
+  );
+
+  if (!res.ok) {
+    const errText = await res.text();
+    throw new Error(`Failed to fetch store requests: ${errText}`);
+  }
+
+  return await res.json();
+}
+
 function buildEmptyPayload(id: string): SyncPayload {
   return {
     id,
@@ -143,6 +174,43 @@ function buildEmptyPayload(id: string): SyncPayload {
     completed_at: "",
     execution_time: "",
     observation: "",
+  };
+}
+
+function buildStoreRequestResolution(storeRequests: any[], strategies: any[]) {
+  const strategiesThatResolveRequests = strategies.filter(
+    (strategy: any) => strategy.store_request_id || strategy.strategy_type === "initial",
+  );
+
+  const linkedRequestIds = new Set(
+    strategiesThatResolveRequests
+      .map((strategy: any) => strategy.store_request_id)
+      .filter((id: string | null | undefined): id is string => Boolean(id)),
+  );
+
+  const resolvedStoreKeys = new Set(
+    strategiesThatResolveRequests
+      .map((strategy: any) => normalizeStoreKey(strategy.store_name, strategy.platform))
+      .filter((key: string) => key !== "::"),
+  );
+
+  const orphanRequests: any[] = [];
+  const resolvedRequestIds = new Set<string>();
+
+  for (const storeRequest of storeRequests) {
+    const storeKey = normalizeStoreKey(storeRequest.store_name, storeRequest.platform);
+    const isResolved = linkedRequestIds.has(storeRequest.id) || (storeKey !== "::" && resolvedStoreKeys.has(storeKey));
+
+    if (isResolved) {
+      resolvedRequestIds.add(storeRequest.id);
+    } else {
+      orphanRequests.push(storeRequest);
+    }
+  }
+
+  return {
+    orphanRequests,
+    resolvedRequestIds: [...resolvedRequestIds],
   };
 }
 
@@ -232,33 +300,6 @@ function buildStoreRequestPayload(sr: any): SyncPayload {
     execution_time: "",
     observation: sanitizeText(sr.observation || ""),
   };
-}
-
-/** Fetch store_requests that do NOT have a linked strategy yet */
-async function fetchOrphanStoreRequests(
-  supabaseUrl: string,
-  serviceRoleKey: string,
-): Promise<any[]> {
-  // Get all store_request IDs that already have a strategy
-  const stratRes = await fetch(
-    `${supabaseUrl}/rest/v1/strategies?select=store_request_id&store_request_id=not.is.null&deleted_at=is.null`,
-    { headers: buildRestHeaders(serviceRoleKey) },
-  );
-  const linkedIds: string[] = stratRes.ok
-    ? (await stratRes.json()).map((r: any) => r.store_request_id)
-    : [];
-
-  // Fetch all store_requests
-  const srRes = await fetch(
-    `${supabaseUrl}/rest/v1/store_requests?select=id,created_at,store_created_at,store_name,platform,observation&order=created_at`,
-    { headers: buildRestHeaders(serviceRoleKey) },
-  );
-  if (!srRes.ok) return [];
-  const allRequests = await srRes.json();
-
-  // Return only those without a linked strategy
-  const linkedSet = new Set(linkedIds);
-  return allRequests.filter((sr: any) => !linkedSet.has(sr.id));
 }
 
 Deno.serve(async (req) => {
