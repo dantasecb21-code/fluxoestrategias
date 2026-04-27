@@ -7,9 +7,6 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const FREE_MODE_MONTHLY_LIMIT = 1000;
-const FREE_MODE_BLOCK_PCT = 90;
-
 const SYSTEM_PROMPT = `Você é o Assistente MiBusca — um especialista em plataformas de delivery.
 
 Seu papel:
