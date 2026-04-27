@@ -133,6 +133,7 @@ export default function UserApproval() {
     const newRoles = hasRole ? user.roles.filter((role) => role !== targetRole) : [...user.roles, targetRole];
     toast.success("Cargos atualizados");
     setUsers((prev) => prev.map((u) => u.user_id === userId ? { ...u, roles: newRoles } : u));
+    window.dispatchEvent(new CustomEvent("roles-updated", { detail: { userId } }));
   };
 
   const handlePlatformToggle = async (userId: string, platform: string) => {
