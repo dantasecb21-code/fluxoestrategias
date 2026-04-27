@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { shortName, formatDateBR } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
@@ -91,6 +91,10 @@ export default function PendingActivities() {
   const [freeText, setFreeText] = useState("");
   const [parsing, setParsing] = useState(false);
   const [pastedImage, setPastedImage] = useState<string | null>(null);
+  const [searchFilter, setSearchFilter] = useState("");
+  const [teamFilter, setTeamFilter] = useState("active");
+  const [managerFilter, setManagerFilter] = useState("all");
+  const [priorityFilter, setPriorityFilter] = useState("all");
 
   const fetchActivities = async () => {
     const { data } = await supabase
@@ -227,6 +231,37 @@ export default function PendingActivities() {
     return found?.display_name ? shortName(found.display_name) : "Gestor";
   };
 
+  const filteredActivities = useMemo(() => {
+    const term = searchFilter.trim().toLowerCase();
+
+    return activities.filter((activity) => {
+      const managerName = getAssigneeName(activity.assigned_to).toLowerCase();
+      const matchesSearch = !term || [
+        activity.description,
+        activity.client_name,
+        activity.store_name,
+        managerName,
+      ].some((value) => value?.toLowerCase().includes(term));
+
+      const matchesTeam = teamFilter === "all"
+        || (teamFilter === "active" && activity.status !== "completed")
+        || activity.status === teamFilter;
+      const matchesManager = managerFilter === "all" || activity.assigned_to === managerFilter;
+      const matchesPriority = priorityFilter === "all" || activity.priority === priorityFilter;
+
+      return matchesSearch && matchesTeam && matchesManager && matchesPriority;
+    });
+  }, [activities, searchFilter, teamFilter, managerFilter, priorityFilter, operationalUsers]);
+
+  const hasFilters = searchFilter.trim() !== "" || teamFilter !== "active" || managerFilter !== "all" || priorityFilter !== "all";
+
+  const clearFilters = () => {
+    setSearchFilter("");
+    setTeamFilter("active");
+    setManagerFilter("all");
+    setPriorityFilter("all");
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[50vh] text-muted-foreground">
@@ -356,9 +391,67 @@ export default function PendingActivities() {
         )}
       </div>
 
+      {canManage && (
+        <Card className="p-4">
+          <div className="grid gap-3 md:grid-cols-[1.5fr_1fr_1fr_1fr_auto] md:items-end">
+            <div className="space-y-1.5">
+              <Label>Buscar</Label>
+              <Input
+                value={searchFilter}
+                onChange={(e) => setSearchFilter(e.target.value)}
+                placeholder="Loja, cliente, gestor ou atividade"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Time</Label>
+              <Select value={teamFilter} onValueChange={setTeamFilter}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos</SelectItem>
+                  <SelectItem value="active">Ativas</SelectItem>
+                  <SelectItem value="pending">Pendentes</SelectItem>
+                  <SelectItem value="in_progress">Em andamento</SelectItem>
+                  <SelectItem value="completed">Concluídas</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Gestor</Label>
+              <Select value={managerFilter} onValueChange={setManagerFilter}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos</SelectItem>
+                  {operationalUsers.map((manager) => (
+                    <SelectItem key={manager.user_id} value={manager.user_id}>
+                      {shortName(manager.display_name) || "Gestor"}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Prioridade</Label>
+              <Select value={priorityFilter} onValueChange={setPriorityFilter}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas</SelectItem>
+                  <SelectItem value="high">Alta</SelectItem>
+                  <SelectItem value="medium">Média</SelectItem>
+                  <SelectItem value="low">Baixa</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <Button variant="outline" onClick={clearFilters} disabled={!hasFilters}>
+              <X className="h-4 w-4 mr-2" />
+              Limpar
+            </Button>
+          </div>
+        </Card>
+      )}
+
       {(() => {
-        const pendingActs = activities.filter((a) => a.status !== "completed");
-        const completedActs = activities.filter((a) => a.status === "completed");
+        const pendingActs = filteredActivities.filter((a) => a.status !== "completed");
+        const completedActs = filteredActivities.filter((a) => a.status === "completed");
 
         const renderCard = (act: any) => (
           <Card key={act.id} className="p-4 space-y-3">
@@ -429,7 +522,7 @@ export default function PendingActivities() {
             {pendingActs.length === 0 && completedActs.length === 0 ? (
               <Card className="p-8 text-center text-muted-foreground">
                 <ListChecks className="h-10 w-10 mx-auto mb-3 opacity-40" />
-                <p>Nenhuma atividade encontrada.</p>
+                <p>{activities.length > 0 ? "Nenhuma atividade encontrada com esses filtros." : "Nenhuma atividade encontrada."}</p>
               </Card>
             ) : (
               <>
