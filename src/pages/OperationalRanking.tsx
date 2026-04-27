@@ -8,6 +8,7 @@ interface RankedManager {
   user_id: string;
   display_name: string;
   avatar_url: string;
+  platforms: string[];
   completed: number;
   waiting: number;
   inProgress: number;
@@ -48,15 +49,26 @@ export default function OperationalRanking() {
       // Get profiles
       const { data: profiles } = await supabase
         .from("profiles")
-        .select("user_id, display_name, avatar_url")
+        .select("user_id, display_name, avatar_url, platforms")
         .in("user_id", userIds)
         .eq("approved", true);
+
+      const visibleProfiles = (profiles || []).filter((profile: any) =>
+        platformFilter === "all" || (profile.platforms || []).includes(platformFilter)
+      );
+      const visibleUserIds = visibleProfiles.map((profile) => profile.user_id);
+
+      if (visibleUserIds.length === 0) {
+        setRanking([]);
+        setLoading(false);
+        return;
+      }
 
       // Get strategies assigned to operational managers
       let strategiesQuery = supabase
         .from("strategies")
         .select("assigned_to, status")
-        .in("assigned_to", userIds)
+        .in("assigned_to", visibleUserIds)
         .is("deleted_at", null);
 
       if (platformFilter !== "all") {
@@ -67,7 +79,7 @@ export default function OperationalRanking() {
 
       // Calculate strategy counts per manager
       const statsMap: Record<string, { completed: number; waiting: number; inProgress: number; pending: number; total: number }> = {};
-      userIds.forEach((uid) => {
+      visibleUserIds.forEach((uid) => {
         statsMap[uid] = { completed: 0, waiting: 0, inProgress: 0, pending: 0, total: 0 };
       });
 
@@ -81,11 +93,12 @@ export default function OperationalRanking() {
         else statsMap[uid].pending += 1;
       });
 
-      const ranked: RankedManager[] = (profiles || [])
+      const ranked: RankedManager[] = visibleProfiles
         .map((p) => ({
           user_id: p.user_id,
           display_name: p.display_name || "Sem nome",
           avatar_url: p.avatar_url || "",
+          platforms: (p as any).platforms || [],
           ...statsMap[p.user_id] || { completed: 0, waiting: 0, inProgress: 0, pending: 0, total: 0 },
         }))
         .sort((a, b) => 
