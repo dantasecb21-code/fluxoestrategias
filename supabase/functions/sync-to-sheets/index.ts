@@ -431,6 +431,9 @@ Deno.serve(async (req) => {
 
     // --- Bulk sync (strategies + orphan store_requests) ---
     if (body.action === "sync_all") {
+      const adminError = await requireAdmin(req, supabaseUrl, serviceRoleKey);
+      if (adminError) return adminError;
+
       console.log("Starting bulk sync...");
 
       const [strategies, storeRequests] = await Promise.all([
@@ -534,6 +537,9 @@ Deno.serve(async (req) => {
 
     // --- Reconcile: remove from sheet any row whose ID is not in the app anymore ---
     if (body.action === "reconcile") {
+      const adminError = await requireAdmin(req, supabaseUrl, serviceRoleKey);
+      if (adminError) return adminError;
+
       console.log("Starting reconcile...");
 
       const [strategies, storeRequests] = await Promise.all([
