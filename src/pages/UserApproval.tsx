@@ -187,18 +187,25 @@ export default function UserApproval() {
       </div>
 
       <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-muted-foreground">Tipo:</span>
-          <Select value={u.role} onValueChange={(val) => handleRoleChange(u.user_id, val)}>
-            <SelectTrigger className="h-8 w-48 text-xs">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="admin">Administrador</SelectItem>
-              <SelectItem value="strategic">Gestor Estratégico</SelectItem>
-              <SelectItem value="operational">Gestor Operacional</SelectItem>
-            </SelectContent>
-          </Select>
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-xs text-muted-foreground">Cargos:</span>
+          {(["admin", "strategic", "operational"] as const).map((userRole) => {
+            const active = u.roles.includes(userRole);
+            return (
+              <button
+                key={userRole}
+                type="button"
+                onClick={() => handleRoleToggle(u.user_id, userRole)}
+                className={`px-2.5 py-1 rounded-md text-xs font-medium border transition-colors ${
+                  active
+                    ? "border-primary bg-primary/10 text-primary"
+                    : "border-border bg-background text-muted-foreground hover:border-muted-foreground"
+                }`}
+              >
+                {roleLabel(userRole)}
+              </button>
+            );
+          })}
         </div>
 
         <div className="flex items-center gap-2">
