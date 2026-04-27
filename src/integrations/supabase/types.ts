@@ -41,6 +41,54 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_quota_settings: {
+        Row: {
+          id: string
+          monthly_limit: number
+          updated_at: string
+          updated_by: string | null
+          warning_threshold_pct: number
+        }
+        Insert: {
+          id?: string
+          monthly_limit?: number
+          updated_at?: string
+          updated_by?: string | null
+          warning_threshold_pct?: number
+        }
+        Update: {
+          id?: string
+          monthly_limit?: number
+          updated_at?: string
+          updated_by?: string | null
+          warning_threshold_pct?: number
+        }
+        Relationships: []
+      }
+      ai_usage: {
+        Row: {
+          call_count: number
+          created_at: string
+          id: string
+          updated_at: string
+          year_month: string
+        }
+        Insert: {
+          call_count?: number
+          created_at?: string
+          id?: string
+          updated_at?: string
+          year_month: string
+        }
+        Update: {
+          call_count?: number
+          created_at?: string
+          id?: string
+          updated_at?: string
+          year_month?: string
+        }
+        Relationships: []
+      }
       pending_activities: {
         Row: {
           assigned_to: string | null
@@ -395,6 +443,8 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_and_increment_ai_usage: { Args: never; Returns: Json }
+      get_ai_usage_status: { Args: never; Returns: Json }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
