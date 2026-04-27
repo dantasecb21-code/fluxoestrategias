@@ -21,6 +21,7 @@ export const STRATEGY_TYPE_LABELS: Record<StrategyType, string> = {
 export interface DbStrategy {
   id: string;
   user_id: string;
+  store_request_id?: string | null;
   assigned_to: string | null;
   store_name: string;
   manager_name: string;
@@ -236,7 +237,7 @@ export function useDbStrategies() {
     // Fetch fresh state from DB to avoid stale closure issues
     const { data: freshStrategy } = await supabase
       .from("strategies")
-      .select("started_at, completed_at, status")
+      .select("started_at, completed_at, status, store_request_id")
       .eq("id", id)
       .single();
 
@@ -258,6 +259,16 @@ export function useDbStrategies() {
     const { error } = await supabase.from("strategies").update(updateData as any).eq("id", id);
     if (error) {
       console.error("Update strategy error:", error);
+    }
+    if (!error && freshStrategy?.store_request_id && ["pending_approval", "approved"].includes(params.status || "")) {
+      const { error: requestError } = await supabase
+        .from("store_requests")
+        .update({ status: "completed", store_creation_status: "created" } as any)
+        .eq("id", freshStrategy.store_request_id);
+
+      if (requestError) {
+        console.error("Update linked store request error:", requestError);
+      }
     }
     // Sync to sheets after update
     const localStrategy = strategies.find((s) => s.id === id);
