@@ -338,6 +338,40 @@ function buildStoreRequestPayload(sr: any): SyncPayload {
   };
 }
 
+async function requireAdmin(req: Request, supabaseUrl: string, serviceRoleKey: string): Promise<Response | null> {
+  const authHeader = req.headers.get("Authorization");
+  if (!authHeader) {
+    return new Response(JSON.stringify({ error: "Acesso restrito ao administrador." }), {
+      status: 401,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
+  const userRes = await fetch(`${supabaseUrl}/auth/v1/user`, {
+    headers: { apikey: serviceRoleKey, Authorization: authHeader },
+  });
+  if (!userRes.ok) {
+    return new Response(JSON.stringify({ error: "Acesso restrito ao administrador." }), {
+      status: 401,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
+  const user = await userRes.json();
+  const roleRes = await fetch(`${supabaseUrl}/rest/v1/user_roles?user_id=eq.${user.id}&role=eq.admin&select=id&limit=1`, {
+    headers: buildRestHeaders(serviceRoleKey),
+  });
+  const roles = roleRes.ok ? await roleRes.json() : [];
+  if (!roles.length) {
+    return new Response(JSON.stringify({ error: "Acesso restrito ao administrador." }), {
+      status: 403,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
+  return null;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -397,6 +431,9 @@ Deno.serve(async (req) => {
 
     // --- Bulk sync (strategies + orphan store_requests) ---
     if (body.action === "sync_all") {
+      const adminError = await requireAdmin(req, supabaseUrl, serviceRoleKey);
+      if (adminError) return adminError;
+
       console.log("Starting bulk sync...");
 
       const [strategies, storeRequests] = await Promise.all([
@@ -500,6 +537,9 @@ Deno.serve(async (req) => {
 
     // --- Reconcile: remove from sheet any row whose ID is not in the app anymore ---
     if (body.action === "reconcile") {
+      const adminError = await requireAdmin(req, supabaseUrl, serviceRoleKey);
+      if (adminError) return adminError;
+
       console.log("Starting reconcile...");
 
       const [strategies, storeRequests] = await Promise.all([
