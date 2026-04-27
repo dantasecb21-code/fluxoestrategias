@@ -15,12 +15,23 @@ interface RankedManager {
   total: number;
 }
 
+type PlatformFilter = "all" | "ifood" | "99food" | "keeta";
+
+const PLATFORM_FILTERS: Array<{ value: PlatformFilter; label: string }> = [
+  { value: "all", label: "Todos" },
+  { value: "ifood", label: "iFood" },
+  { value: "99food", label: "99food" },
+  { value: "keeta", label: "Keeta" },
+];
+
 export default function OperationalRanking() {
   const [ranking, setRanking] = useState<RankedManager[]>([]);
   const [loading, setLoading] = useState(true);
+  const [platformFilter, setPlatformFilter] = useState<PlatformFilter>("all");
 
   useEffect(() => {
     async function fetchRanking() {
+      setLoading(true);
       // Get all operational users
       const { data: roles } = await supabase
         .from("user_roles")
@@ -42,11 +53,17 @@ export default function OperationalRanking() {
         .eq("approved", true);
 
       // Get strategies assigned to operational managers
-      const { data: strategies } = await supabase
+      let strategiesQuery = supabase
         .from("strategies")
         .select("assigned_to, status")
         .in("assigned_to", userIds)
         .is("deleted_at", null);
+
+      if (platformFilter !== "all") {
+        strategiesQuery = strategiesQuery.eq("platform", platformFilter);
+      }
+
+      const { data: strategies } = await strategiesQuery;
 
       // Calculate strategy counts per manager
       const statsMap: Record<string, { completed: number; waiting: number; inProgress: number; pending: number; total: number }> = {};
@@ -82,7 +99,7 @@ export default function OperationalRanking() {
     }
 
     fetchRanking();
-  }, []);
+  }, [platformFilter]);
 
   const positionStyle = (pos: number) => {
     if (pos === 0) return "from-yellow-500/20 to-yellow-600/5 border-yellow-500/40";
@@ -117,6 +134,19 @@ export default function OperationalRanking() {
           <Flame className="h-4 w-4 text-orange-500" />
           Quem está executando mais? Confira a posição de cada gestor!
         </p>
+      </div>
+
+      <div className="flex flex-wrap justify-center gap-2">
+        {PLATFORM_FILTERS.map((option) => (
+          <button
+            key={option.value}
+            type="button"
+            onClick={() => setPlatformFilter(option.value)}
+            className={`rounded-md border px-4 py-2 text-sm font-semibold transition-colors ${platformFilter === option.value ? "border-primary bg-primary text-primary-foreground" : "bg-card text-foreground hover:bg-muted/50"}`}
+          >
+            {option.label}
+          </button>
+        ))}
       </div>
 
       {loading ? (
