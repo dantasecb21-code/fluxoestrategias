@@ -70,7 +70,7 @@ export default function PricingCalculator() {
             <p className="text-xs text-muted-foreground">Clique para trocar a calculadora</p>
           </div>
         </div>
-        <Badge variant={mode === "ifood" ? "default" : "secondary"}>{mode === "ifood" ? "iFood" : "Fixo"}</Badge>
+        <Badge variant={mode === "ifood" ? "destructive" : "secondary"}>{mode === "ifood" ? "iFood" : "Fixo"}</Badge>
       </button>
 
       {/* Info alert */}
