@@ -4,12 +4,18 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { Calculator, DollarSign, Percent, Truck, AlertCircle } from "lucide-react";
+import { Calculator, DollarSign, Percent, Truck, AlertCircle, ToggleLeft, ToggleRight } from "lucide-react";
+
+type CalculatorMode = "fixed" | "ifood";
+
+const IFOOD_RATE_PRESETS = [23, 27, 30];
 
 export default function PricingCalculator() {
+  const [mode, setMode] = useState<CalculatorMode>("fixed");
   const [itemCost, setItemCost] = useState("");
   const [commissionRate, setCommissionRate] = useState("");
   const [hasLogistics, setHasLogistics] = useState(false);
+  const [ifoodRate, setIfoodRate] = useState("23");
   const paymentProcessingRate = 3.2;
   const logisticsExtra = 5;
 
@@ -18,6 +24,7 @@ export default function PricingCalculator() {
 
   const totalFeePercent = commission + paymentProcessingRate;
   const logisticsAdd = hasLogistics ? logisticsExtra : 0;
+  const selectedIfoodRate = parseFloat(ifoodRate) || 0;
 
   // Price = (cost + logistics) / (1 - totalFee/100), rounded to x.99
   const rawPrice = totalFeePercent < 100
@@ -27,6 +34,12 @@ export default function PricingCalculator() {
 
   const profit = suggestedPrice - cost - logisticsAdd;
   const feeAmount = suggestedPrice * (totalFeePercent / 100);
+  const ifoodRawPrice = selectedIfoodRate < 100
+    ? cost / (1 - selectedIfoodRate / 100)
+    : 0;
+  const ifoodSuggestedPrice = ifoodRawPrice > 0 ? Math.ceil(ifoodRawPrice) - 0.01 : 0;
+  const ifoodIncrease = ifoodSuggestedPrice - cost;
+  const activeSuggestedPrice = mode === "ifood" ? ifoodSuggestedPrice : suggestedPrice;
 
   return (
     <div className="space-y-6">
@@ -40,6 +53,26 @@ export default function PricingCalculator() {
         </p>
       </div>
 
+      <button
+        type="button"
+        onClick={() => setMode((current) => current === "fixed" ? "ifood" : "fixed")}
+        className="flex w-full items-center justify-between rounded-lg border bg-card px-4 py-3 text-left transition-colors hover:bg-muted/40 md:w-auto md:min-w-80"
+        aria-pressed={mode === "ifood"}
+      >
+        <div className="flex items-center gap-3">
+          {mode === "ifood" ? (
+            <ToggleRight className="h-6 w-6 text-success" />
+          ) : (
+            <ToggleLeft className="h-6 w-6 text-primary" />
+          )}
+          <div>
+            <p className="text-sm font-semibold text-foreground">{mode === "ifood" ? "Modo iFood" : "Modo fixo"}</p>
+            <p className="text-xs text-muted-foreground">Clique para trocar a calculadora</p>
+          </div>
+        </div>
+        <Badge variant={mode === "ifood" ? "default" : "secondary"}>{mode === "ifood" ? "iFood" : "Fixo"}</Badge>
+      </button>
+
       {/* Info alert */}
       <Card className="border-primary/30 bg-primary/5">
         <CardContent className="p-4 flex gap-3 items-start">
@@ -47,8 +80,9 @@ export default function PricingCalculator() {
           <div className="text-sm text-foreground space-y-1">
             <p className="font-medium">Como usar:</p>
             <p className="text-muted-foreground">
-              Verifique as taxas atuais nos pedidos da plataforma. A comissão e distribuição variam por loja. 
-              A taxa de processamento de pagamento é fixa em 3.2% por pedido.
+              {mode === "ifood" 
+                ? "Escolha uma taxa padrão ou personalize a taxa desejada para encontrar o preço final."
+                : "Verifique as taxas atuais nos pedidos da plataforma. A comissão e distribuição variam por loja. A taxa de processamento de pagamento é fixa em 3.2% por pedido."}
             </p>
           </div>
         </CardContent>
