@@ -66,7 +66,7 @@ export default function PricingCalculator() {
             <ToggleLeft className="h-6 w-6 text-primary" />
           )}
           <div>
-            <p className="text-sm font-semibold text-foreground">{mode === "ifood" ? "Modo iFood" : "Modo fixo"}</p>
+            <p className="text-sm font-semibold text-foreground">{mode === "ifood" ? "Modo iFood" : "Modo 99food"}</p>
             <p className="text-xs text-muted-foreground">Clique para trocar a calculadora</p>
           </div>
         </div>
