@@ -10,8 +10,10 @@ interface AuthContextType {
   displayName: string;
   avatarUrl: string;
   role: AppRole | null;
+  roles: AppRole[];
   approved: boolean;
   platforms: string[];
+  setActiveRole: (role: AppRole) => void;
   signOut: () => Promise<void>;
 }
 
@@ -21,10 +23,15 @@ const AuthContext = createContext<AuthContextType>({
   displayName: "",
   avatarUrl: "",
   role: null,
+  roles: [],
   approved: false,
   platforms: [],
+  setActiveRole: () => {},
   signOut: async () => {},
 });
+
+const rolePriority: AppRole[] = ["admin", "strategic", "operational"];
+const getStoredRoleKey = (userId: string) => `active-role:${userId}`;
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -32,6 +39,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [displayName, setDisplayName] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
   const [role, setRole] = useState<AppRole | null>(null);
+  const [roles, setRoles] = useState<AppRole[]>([]);
   const [approved, setApproved] = useState(false);
   const [platforms, setPlatforms] = useState<string[]>([]);
 
@@ -51,10 +59,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setPlatforms((profileRes.data as any).platforms || []);
           }
           if (roleRes.data && roleRes.data.length > 0) {
-            const roles = roleRes.data.map(r => r.role);
-            const priority: AppRole[] = ["admin", "strategic", "operational"];
-            const bestRole = priority.find(r => roles.includes(r)) || roles[0];
-            setRole(bestRole as AppRole);
+            const loadedRoles = rolePriority.filter((roleName) => roleRes.data.some((r) => r.role === roleName));
+            const storedRole = localStorage.getItem(getStoredRoleKey(session.user.id)) as AppRole | null;
+            const activeRole = storedRole && loadedRoles.includes(storedRole) ? storedRole : loadedRoles[0];
+            setRoles(loadedRoles);
+            setRole(activeRole);
+          } else {
+            setRoles([]);
+            setRole(null);
           }
           setLoading(false);
         }, 0);
@@ -62,6 +74,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setDisplayName("");
         setAvatarUrl("");
         setRole(null);
+        setRoles([]);
         setApproved(false);
         setPlatforms([]);
         setLoading(false);
@@ -79,11 +92,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signOut = async () => {
     await supabase.auth.signOut();
     setRole(null);
+    setRoles([]);
     setApproved(false);
   };
 
+  const setActiveRole = (nextRole: AppRole) => {
+    if (!user || !roles.includes(nextRole)) return;
+    localStorage.setItem(getStoredRoleKey(user.id), nextRole);
+    setRole(nextRole);
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, displayName, avatarUrl, role, approved, platforms, signOut }}>
+    <AuthContext.Provider value={{ user, loading, displayName, avatarUrl, role, roles, approved, platforms, setActiveRole, signOut }}>
       {children}
     </AuthContext.Provider>
   );
