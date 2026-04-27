@@ -7,7 +7,7 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const SYSTEM_PROMPT = `Você é o Assistente MiBusca — um especialista em plataformas de delivery como iFood e 99Food.
+const SYSTEM_PROMPT = `Você é o Assistente MiBusca — um especialista em plataformas de delivery.
 
 Seu papel:
 - Responder dúvidas sobre gestão de lojas em plataformas de delivery
@@ -38,9 +38,9 @@ serve(async (req) => {
       });
     }
 
-    const GEMINI_API_KEY = Deno.env.get("GOOGLE_GEMINI_API_KEY");
-    if (!GEMINI_API_KEY) {
-      throw new Error("GOOGLE_GEMINI_API_KEY is not configured");
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    if (!LOVABLE_API_KEY) {
+      throw new Error("LOVABLE_API_KEY is not configured");
     }
 
     // Check + increment monthly quota (atomic)
@@ -55,7 +55,7 @@ serve(async (req) => {
       const q = quota as any;
       return new Response(
         JSON.stringify({
-          error: `Limite mensal de IA atingido (${q.current}/${q.limit}). Recarregue a cota nas configurações para continuar.`,
+          error: `Modo gratuito protegido: a IA pausou em ${q.current}/${q.limit} chamadas para evitar cobrança.`,
           code: "QUOTA_EXCEEDED",
           quota: q,
         }),
@@ -63,36 +63,44 @@ serve(async (req) => {
       );
     }
 
-    // Convert OpenAI-style messages to Gemini format
-    const geminiContents = messages.map((msg: { role: string; content: string }) => ({
-      role: msg.role === "assistant" ? "model" : "user",
-      parts: [{ text: msg.content }],
-    }));
-
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:streamGenerateContent?alt=sse&key=${GEMINI_API_KEY}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
-          contents: geminiContents,
-          generationConfig: {
-            maxOutputTokens: 1024,
-          },
-        }),
-      }
-    );
+    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "google/gemini-3-flash-preview",
+        messages: [
+          { role: "system", content: SYSTEM_PROMPT },
+          ...messages.map((msg: { role: string; content: string }) => ({
+            role: msg.role === "assistant" ? "assistant" : "user",
+            content: msg.content,
+          })),
+        ],
+        stream: true,
+        max_tokens: 700,
+      }),
+    });
 
     if (!response.ok) {
       const t = await response.text();
-      console.error("Gemini API error:", response.status, t);
+      console.error("Lovable AI error:", response.status, t);
       if (response.status === 429) {
         return new Response(JSON.stringify({
-          error: "Limite do Google Gemini atingido (15 req/min ou 1.500/dia no plano grátis). Aguarde 1 minuto e tente novamente.",
-          code: "GEMINI_RATE_LIMIT"
+          error: "Muitas mensagens em pouco tempo. Aguarde um minuto e tente novamente.",
+          code: "AI_RATE_LIMIT"
         }), {
           status: 429,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      if (response.status === 402) {
+        return new Response(JSON.stringify({
+          error: "Modo gratuito protegido: a IA foi pausada para evitar cobrança.",
+          code: "AI_FREE_MODE_BLOCKED"
+        }), {
+          status: 402,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
@@ -102,56 +110,7 @@ serve(async (req) => {
       });
     }
 
-    // Transform Gemini SSE stream to OpenAI-compatible SSE stream
-    const { readable, writable } = new TransformStream();
-    const writer = writable.getWriter();
-    const encoder = new TextEncoder();
-
-    (async () => {
-      try {
-        const reader = response.body!.getReader();
-        const decoder = new TextDecoder();
-        let buffer = "";
-
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          buffer += decoder.decode(value, { stream: true });
-
-          let idx: number;
-          while ((idx = buffer.indexOf("\n")) !== -1) {
-            let line = buffer.slice(0, idx);
-            buffer = buffer.slice(idx + 1);
-            if (line.endsWith("\r")) line = line.slice(0, -1);
-            if (!line.startsWith("data: ")) continue;
-
-            const jsonStr = line.slice(6).trim();
-            if (!jsonStr) continue;
-
-            try {
-              const parsed = JSON.parse(jsonStr);
-              const text = parsed.candidates?.[0]?.content?.parts?.[0]?.text;
-              if (text) {
-                const chunk = {
-                  choices: [{ delta: { content: text } }],
-                };
-                await writer.write(encoder.encode(`data: ${JSON.stringify(chunk)}\n\n`));
-              }
-            } catch {
-              // skip unparseable lines
-            }
-          }
-        }
-
-        await writer.write(encoder.encode("data: [DONE]\n\n"));
-      } catch (e) {
-        console.error("Stream error:", e);
-      } finally {
-        await writer.close();
-      }
-    })();
-
-    return new Response(readable, {
+    return new Response(response.body, {
       headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
     });
   } catch (e) {
