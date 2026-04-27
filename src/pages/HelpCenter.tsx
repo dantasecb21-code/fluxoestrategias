@@ -6,10 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Search, Rocket, DollarSign, Monitor, Settings, Star, UtensilsCrossed,
-  Tag, Truck, ClipboardList, HelpCircle, ExternalLink, BookOpen, Zap, Bot
+  Tag, Truck, ClipboardList, HelpCircle, ExternalLink, BookOpen, Zap, Bot, AlertTriangle
 } from "lucide-react";
 import AiHelpChat from "@/components/AiHelpChat";
 import AiQuotaCard from "@/components/AiQuotaCard";
+import { useAuth } from "@/hooks/useAuth";
 interface Guide {
   title: string;
   url: string;
@@ -186,6 +187,8 @@ const INTERNAL_ARTICLES: Record<string, string> = {
 };
 
 export default function HelpCenter() {
+  const { role } = useAuth();
+  const isAdmin = role === "admin";
   const [search, setSearch] = useState("");
   const [expandedInternal, setExpandedInternal] = useState<string | null>(null);
 
@@ -205,6 +208,20 @@ export default function HelpCenter() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
+      {isAdmin && (
+        <Card className="border-warning/30 bg-warning/5 p-4">
+          <div className="flex gap-3 text-sm">
+            <AlertTriangle className="h-5 w-5 text-warning shrink-0 mt-0.5" />
+            <div>
+              <p className="font-semibold text-foreground">Aviso para administrador</p>
+              <p className="text-muted-foreground">
+                A IA está no modo gratuito protegido: ela pausa automaticamente em 90% de 1.000 chamadas no mês para evitar cobrança.
+              </p>
+            </div>
+          </div>
+        </Card>
+      )}
+
       {/* Header */}
       <div className="text-center space-y-3">
         <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto">
