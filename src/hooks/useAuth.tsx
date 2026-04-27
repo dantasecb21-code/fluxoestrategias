@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useState, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { User } from "@supabase/supabase-js";
 
@@ -43,33 +43,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [approved, setApproved] = useState(false);
   const [platforms, setPlatforms] = useState<string[]>([]);
 
+  const loadUserData = useCallback(async (sessionUser: User) => {
+    const [profileRes, roleRes] = await Promise.all([
+      supabase.from("profiles").select("display_name, approved, avatar_url, platforms").eq("user_id", sessionUser.id).single(),
+      supabase.from("user_roles").select("role").eq("user_id", sessionUser.id),
+    ]);
+
+    if (profileRes.data) {
+      setDisplayName(profileRes.data.display_name);
+      setApproved(profileRes.data.approved ?? false);
+      setAvatarUrl(profileRes.data.avatar_url || "");
+      setPlatforms((profileRes.data as any).platforms || []);
+    }
+
+    const loadedRoles = rolePriority.filter((roleName) => roleRes.data?.some((r) => r.role === roleName));
+    if (loadedRoles.length > 0) {
+      const storedRole = localStorage.getItem(getStoredRoleKey(sessionUser.id)) as AppRole | null;
+      const activeRole = storedRole && loadedRoles.includes(storedRole) ? storedRole : loadedRoles[0];
+      setRoles(loadedRoles);
+      setRole(activeRole);
+    } else {
+      setRoles([]);
+      setRole(null);
+    }
+
+    setLoading(false);
+  }, []);
+
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
       if (session?.user) {
-        setTimeout(async () => {
-          const [profileRes, roleRes] = await Promise.all([
-            supabase.from("profiles").select("display_name, approved, avatar_url, platforms").eq("user_id", session.user.id).single(),
-            supabase.from("user_roles").select("role").eq("user_id", session.user.id),
-          ]);
-          if (profileRes.data) {
-            setDisplayName(profileRes.data.display_name);
-            setApproved(profileRes.data.approved ?? false);
-            setAvatarUrl(profileRes.data.avatar_url || "");
-            setPlatforms((profileRes.data as any).platforms || []);
-          }
-          if (roleRes.data && roleRes.data.length > 0) {
-            const loadedRoles = rolePriority.filter((roleName) => roleRes.data.some((r) => r.role === roleName));
-            const storedRole = localStorage.getItem(getStoredRoleKey(session.user.id)) as AppRole | null;
-            const activeRole = storedRole && loadedRoles.includes(storedRole) ? storedRole : loadedRoles[0];
-            setRoles(loadedRoles);
-            setRole(activeRole);
-          } else {
-            setRoles([]);
-            setRole(null);
-          }
-          setLoading(false);
-        }, 0);
+        setTimeout(() => loadUserData(session.user), 0);
       } else {
         setDisplayName("");
         setAvatarUrl("");
@@ -83,11 +88,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
-      if (!session) setLoading(false);
+      if (session?.user) loadUserData(session.user);
+      else setLoading(false);
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [loadUserData]);
+
+  useEffect(() => {
+    if (!user) return;
+
+    const refreshRoles = () => loadUserData(user);
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") refreshRoles();
+    };
+    const handleRolesUpdated = (event: Event) => {
+      const updatedUserId = (event as CustomEvent<{ userId?: string }>).detail?.userId;
+      if (!updatedUserId || updatedUserId === user.id) refreshRoles();
+    };
+
+    window.addEventListener("focus", refreshRoles);
+    document.addEventListener("visibilitychange", handleVisibility);
+    window.addEventListener("roles-updated", handleRolesUpdated);
+
+    return () => {
+      window.removeEventListener("focus", refreshRoles);
+      document.removeEventListener("visibilitychange", handleVisibility);
+      window.removeEventListener("roles-updated", handleRolesUpdated);
+    };
+  }, [loadUserData, user]);
 
   const signOut = async () => {
     await supabase.auth.signOut();
