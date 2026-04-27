@@ -96,7 +96,7 @@ export default function PricingCalculator() {
               <Percent className="h-5 w-5 text-primary" />
               Taxas e Custos
             </CardTitle>
-            <CardDescription>Preencha com base nas taxas dos pedidos</CardDescription>
+            <CardDescription>{mode === "ifood" ? "Preencha a taxa desejada" : "Preencha com base nas taxas dos pedidos"}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-5">
             <div className="space-y-2">
@@ -112,47 +112,83 @@ export default function PricingCalculator() {
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="commission">Comissão e Distribuição (Tarifa 99Food) (%)</Label>
-              <Input
-                id="commission"
-                type="number"
-                placeholder="Ex: 20"
-                value={commissionRate}
-                onChange={(e) => setCommissionRate(e.target.value)}
-                min="0"
-                max="100"
-                step="0.1"
-              />
-              <p className="text-xs text-muted-foreground">
-                Verifique a % atual na aba de taxas dos pedidos da loja
-              </p>
-            </div>
+            {mode === "ifood" ? (
+              <>
+                <div className="space-y-2">
+                  <Label>Taxa desejada (%)</Label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {IFOOD_RATE_PRESETS.map((rate) => (
+                      <button
+                        key={rate}
+                        type="button"
+                        onClick={() => setIfoodRate(String(rate))}
+                        className={`rounded-md border px-3 py-2 text-sm font-semibold transition-colors ${Number(ifoodRate) === rate ? "border-success bg-success text-success-foreground" : "bg-background hover:bg-muted/50"}`}
+                      >
+                        {rate}%
+                      </button>
+                    ))}
+                  </div>
+                </div>
 
-            <div className="space-y-2">
-              <Label>Taxa de Processamento de Pagamento</Label>
-              <div className="flex items-center gap-2 px-3 py-2 rounded-md border bg-muted/50">
-                <Badge variant="secondary">Fixa</Badge>
-                <span className="text-sm font-medium">{paymentProcessingRate}% por pedido</span>
-              </div>
-            </div>
+                <div className="space-y-2">
+                  <Label htmlFor="ifood-rate">Personalizar taxa (%)</Label>
+                  <Input
+                    id="ifood-rate"
+                    type="number"
+                    placeholder="Ex: 25"
+                    value={ifoodRate}
+                    onChange={(e) => setIfoodRate(e.target.value)}
+                    min="0"
+                    max="100"
+                    step="0.1"
+                  />
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="commission">Comissão e Distribuição (Tarifa fixa) (%)</Label>
+                  <Input
+                    id="commission"
+                    type="number"
+                    placeholder="Ex: 20"
+                    value={commissionRate}
+                    onChange={(e) => setCommissionRate(e.target.value)}
+                    min="0"
+                    max="100"
+                    step="0.1"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Verifique a % atual na aba de taxas dos pedidos da loja
+                  </p>
+                </div>
 
-            <div className="flex items-center justify-between rounded-lg border p-4">
-              <div className="space-y-0.5">
-                <Label htmlFor="logistics" className="cursor-pointer flex items-center gap-2">
-                  <Truck className="h-4 w-4 text-muted-foreground" />
-                  Custos Logísticos?
-                </Label>
-                <p className="text-xs text-muted-foreground">
-                  Pode chegar até R$9,50 — adicionamos R$5,00 ao preço
-                </p>
-              </div>
-              <Switch
-                id="logistics"
-                checked={hasLogistics}
-                onCheckedChange={setHasLogistics}
-              />
-            </div>
+                <div className="space-y-2">
+                  <Label>Taxa de Processamento de Pagamento</Label>
+                  <div className="flex items-center gap-2 px-3 py-2 rounded-md border bg-muted/50">
+                    <Badge variant="secondary">Fixa</Badge>
+                    <span className="text-sm font-medium">{paymentProcessingRate}% por pedido</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between rounded-lg border p-4">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="logistics" className="cursor-pointer flex items-center gap-2">
+                      <Truck className="h-4 w-4 text-muted-foreground" />
+                      Custos Logísticos?
+                    </Label>
+                    <p className="text-xs text-muted-foreground">
+                      Pode chegar até R$9,50 — adicionamos R$5,00 ao preço
+                    </p>
+                  </div>
+                  <Switch
+                    id="logistics"
+                    checked={hasLogistics}
+                    onCheckedChange={setHasLogistics}
+                  />
+                </div>
+              </>
+            )}
           </CardContent>
         </Card>
 
