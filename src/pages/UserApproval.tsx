@@ -30,7 +30,7 @@ interface PendingUser {
   user_id: string;
   display_name: string;
   approved: boolean;
-  role: string;
+  roles: string[];
   email: string;
   whatsapp: string;
   platforms: string[];
@@ -53,20 +53,20 @@ export default function UserApproval() {
       .from("user_roles")
       .select("user_id, role");
 
-    const roleMap = new Map<string, string>();
+    const roleMap = new Map<string, string[]>();
     const rolePriority: Record<string, number> = { admin: 0, strategic: 1, operational: 2 };
     roles?.forEach((r) => {
-      const current = roleMap.get(r.user_id);
-      if (!current || (rolePriority[r.role] ?? 99) < (rolePriority[current] ?? 99)) {
-        roleMap.set(r.user_id, r.role);
-      }
+      roleMap.set(r.user_id, [...(roleMap.get(r.user_id) || []), r.role]);
+    });
+    roleMap.forEach((userRoles, userId) => {
+      roleMap.set(userId, [...new Set(userRoles)].sort((a, b) => (rolePriority[a] ?? 99) - (rolePriority[b] ?? 99)));
     });
 
     const mapped: PendingUser[] = profiles.map((p) => ({
       user_id: p.user_id,
       display_name: p.display_name,
       approved: p.approved,
-      role: roleMap.get(p.user_id) || "unknown",
+      roles: roleMap.get(p.user_id) || [],
       email: "",
       whatsapp: p.whatsapp || "",
       platforms: (p as any).platforms || [],
@@ -114,22 +114,25 @@ export default function UserApproval() {
     setUsers((prev) => prev.map((u) => u.user_id === userId ? { ...u, approved: false } : u));
   };
 
-  const handleRoleChange = async (userId: string, newRole: string) => {
-    // Delete all existing roles for this user, then insert the new one
-    const { error: deleteError } = await supabase
-      .from("user_roles")
-      .delete()
-      .eq("user_id", userId);
+  const handleRoleToggle = async (userId: string, targetRole: string) => {
+    const user = users.find((u) => u.user_id === userId);
+    if (!user) return;
+    const hasRole = user.roles.includes(targetRole);
 
-    if (deleteError) { toast.error("Erro ao alterar tipo de acesso"); return; }
+    if (hasRole && user.roles.length <= 1) {
+      toast.error("O usuário precisa ter pelo menos um cargo");
+      return;
+    }
 
-    const { error: insertError } = await supabase
-      .from("user_roles")
-      .insert({ user_id: userId, role: newRole as any });
+    const result = hasRole
+      ? await supabase.from("user_roles").delete().eq("user_id", userId).eq("role", targetRole as any)
+      : await supabase.from("user_roles").insert({ user_id: userId, role: targetRole as any });
 
-    if (insertError) { toast.error("Erro ao alterar tipo de acesso"); return; }
-    toast.success(`Tipo de acesso alterado para ${roleLabel(newRole)}`);
-    setUsers((prev) => prev.map((u) => u.user_id === userId ? { ...u, role: newRole } : u));
+    if (result.error) { toast.error("Erro ao alterar cargos"); return; }
+
+    const newRoles = hasRole ? user.roles.filter((role) => role !== targetRole) : [...user.roles, targetRole];
+    toast.success("Cargos atualizados");
+    setUsers((prev) => prev.map((u) => u.user_id === userId ? { ...u, roles: newRoles } : u));
   };
 
   const handlePlatformToggle = async (userId: string, platform: string) => {
@@ -184,18 +187,25 @@ export default function UserApproval() {
       </div>
 
       <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-muted-foreground">Tipo:</span>
-          <Select value={u.role} onValueChange={(val) => handleRoleChange(u.user_id, val)}>
-            <SelectTrigger className="h-8 w-48 text-xs">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="admin">Administrador</SelectItem>
-              <SelectItem value="strategic">Gestor Estratégico</SelectItem>
-              <SelectItem value="operational">Gestor Operacional</SelectItem>
-            </SelectContent>
-          </Select>
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-xs text-muted-foreground">Cargos:</span>
+          {(["admin", "strategic", "operational"] as const).map((userRole) => {
+            const active = u.roles.includes(userRole);
+            return (
+              <button
+                key={userRole}
+                type="button"
+                onClick={() => handleRoleToggle(u.user_id, userRole)}
+                className={`px-2.5 py-1 rounded-md text-xs font-medium border transition-colors ${
+                  active
+                    ? "border-primary bg-primary/10 text-primary"
+                    : "border-border bg-background text-muted-foreground hover:border-muted-foreground"
+                }`}
+              >
+                {roleLabel(userRole)}
+              </button>
+            );
+          })}
         </div>
 
         <div className="flex items-center gap-2">
