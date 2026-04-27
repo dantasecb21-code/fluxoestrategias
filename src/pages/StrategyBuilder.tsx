@@ -253,7 +253,7 @@ export default function StrategyBuilderPage() {
         if (storeRequestId) {
           const storeRequestUpdate: Record<string, string> = {
             status: "completed",
-            store_creation_status: "completed",
+            store_creation_status: "created",
           };
 
           const { data: storeRequest, error: storeRequestFetchError } = await supabase
