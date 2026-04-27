@@ -45,8 +45,8 @@ export default function AiQuotaCard() {
 
   const saveLimit = async () => {
     const n = parseInt(newLimit, 10);
-    if (isNaN(n) || n < 100) {
-      toast.error("Limite deve ser pelo menos 100");
+    if (isNaN(n) || n < 100 || n > 1000) {
+      toast.error("Use um limite entre 100 e 1000 para manter o modo gratuito");
       return;
     }
     const { data: existing } = await (supabase as any)
@@ -112,8 +112,8 @@ export default function AiQuotaCard() {
 
       {blocked && (
         <div className="text-xs bg-destructive/5 border border-destructive/20 rounded p-2 text-destructive">
-          <strong>IA pausada.</strong> Limite mensal de segurança atingido ({status.threshold_pct}% de {status.limit}). 
-          {isAdmin ? " Aumente o limite abaixo ou aguarde o próximo mês." : " Avise o administrador para liberar mais cota."}
+          <strong>IA pausada.</strong> Limite de segurança do modo gratuito atingido ({status.threshold_pct}% de {status.limit}).
+          Aguarde o próximo mês.
         </div>
       )}
 
@@ -130,6 +130,7 @@ export default function AiQuotaCard() {
               <Input
                 type="number"
                 min={100}
+                max={1000}
                 value={newLimit}
                 onChange={(e) => setNewLimit(e.target.value)}
                 className="h-8 text-sm w-32"
@@ -140,8 +141,8 @@ export default function AiQuotaCard() {
               </Button>
             </>
           ) : (
-            <Button size="sm" variant="outline" onClick={() => setEditing(true)} className="text-xs">
-              <Settings className="h-3 w-3 mr-1" /> Ajustar limite mensal
+              <Button size="sm" variant="outline" onClick={() => setEditing(true)} className="text-xs">
+                <Settings className="h-3 w-3 mr-1" /> Ajustar limite gratuito
             </Button>
           )}
         </div>
