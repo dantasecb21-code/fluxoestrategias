@@ -204,10 +204,10 @@ export default function PricingCalculator() {
           <CardContent className="space-y-5">
             {cost > 0 ? (
               <>
-                <div className="rounded-xl border-2 border-primary/50 bg-primary/5 p-6 text-center space-y-1">
+                <div className={`rounded-xl border-2 p-6 text-center space-y-1 ${mode === "ifood" ? "border-success/50 bg-success/5" : "border-primary/50 bg-primary/5"}`}>
                   <p className="text-sm text-muted-foreground">Preço Sugerido</p>
-                  <p className="text-4xl font-bold text-primary">
-                    R$ {suggestedPrice.toFixed(2)}
+                  <p className={`text-4xl font-bold ${mode === "ifood" ? "text-success" : "text-primary"}`}>
+                    R$ {activeSuggestedPrice.toFixed(2)}
                   </p>
                 </div>
 
@@ -216,27 +216,44 @@ export default function PricingCalculator() {
                     <span className="text-muted-foreground">Preço do Balcão</span>
                     <span className="font-medium">R$ {cost.toFixed(2)}</span>
                   </div>
-                  {hasLogistics && (
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Custo logístico adicionado</span>
-                      <span className="font-medium text-orange-500">+ R$ {logisticsExtra.toFixed(2)}</span>
-                    </div>
+                  {mode === "ifood" ? (
+                    <>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Taxa desejada ({selectedIfoodRate.toFixed(1)}%)</span>
+                        <span className="font-medium text-primary">+ R$ {ifoodIncrease.toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Soma a mais no preço</span>
+                        <span className="font-medium text-success">R$ {ifoodIncrease.toFixed(2)}</span>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      {hasLogistics && (
+                        <div className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">Custo logístico adicionado</span>
+                          <span className="font-medium text-primary">+ R$ {logisticsExtra.toFixed(2)}</span>
+                        </div>
+                      )}
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Taxas da plataforma ({totalFeePercent.toFixed(1)}%)</span>
+                        <span className="font-medium text-primary">+ R$ {feeAmount.toFixed(2)}</span>
+                      </div>
+                    </>
                   )}
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Taxas da plataforma ({totalFeePercent.toFixed(1)}%)</span>
-                    <span className="font-medium text-orange-500">+ R$ {feeAmount.toFixed(2)}</span>
-                  </div>
                   <div className="border-t pt-3 flex justify-between text-sm">
                     <span className="text-muted-foreground">Preço final com taxas incluídas</span>
-                    <span className="font-medium text-green-600">R$ {suggestedPrice.toFixed(2)}</span>
+                    <span className="font-medium text-success">R$ {activeSuggestedPrice.toFixed(2)}</span>
                   </div>
                 </div>
 
                 <div className="rounded-lg bg-muted/50 p-3">
                   <p className="text-xs text-muted-foreground">
-                    <strong>Resumo:</strong> Com comissão de {commission}% + processamento de {paymentProcessingRate}%
-                    {hasLogistics ? " + logística" : ""}, o preço de <strong>R$ {suggestedPrice.toFixed(2)}</strong> cobre 
-                    todos os custos e mantém a margem.
+                    {mode === "ifood" ? (
+                      <><strong>Resumo:</strong> Com taxa de {selectedIfoodRate.toFixed(1)}%, o preço aumenta <strong>R$ {ifoodIncrease.toFixed(2)}</strong> e fica em <strong>R$ {ifoodSuggestedPrice.toFixed(2)}</strong>.</>
+                    ) : (
+                      <><strong>Resumo:</strong> Com comissão de {commission}% + processamento de {paymentProcessingRate}%{hasLogistics ? " + logística" : ""}, o preço de <strong>R$ {suggestedPrice.toFixed(2)}</strong> cobre todos os custos e mantém a margem.</>
+                    )}
                   </p>
                 </div>
 
