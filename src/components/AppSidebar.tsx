@@ -15,6 +15,7 @@ import {
 import { NavLink } from "@/components/NavLink";
 import { Home, Plus, LogOut, Zap, ClipboardList, Users, AlertTriangle, ShieldCheck, MessageCircleQuestion, BookOpen, Store, Trophy, ListChecks, Calculator, FileText, CalendarDays } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
@@ -22,7 +23,7 @@ export function AppSidebar() {
   const { state, setOpenMobile } = useSidebar();
   const collapsed = state === "collapsed";
   const isMobile = useIsMobile();
-  const { user, displayName, avatarUrl, role, signOut } = useAuth();
+  const { user, displayName, avatarUrl, role, roles, setActiveRole, signOut } = useAuth();
   const navigate = useNavigate();
 
   const handleNav = (path: string) => {
@@ -39,7 +40,11 @@ export function AppSidebar() {
   const isOperational = role === "operational";
   const canManage = isAdmin || isStrategic;
 
-  const roleLabel = isAdmin ? "Administrador" : isStrategic ? "Gestor Estratégico" : "Gestor Operacional";
+  const roleLabel = (value: string | null) => {
+    if (value === "admin") return "Administrador";
+    if (value === "strategic") return "Gestor Estratégico";
+    return "Gestor Operacional";
+  };
 
   return (
     <Sidebar collapsible="icon">
@@ -293,10 +298,22 @@ export function AppSidebar() {
               </div>
               <div className="min-w-0">
                 {displayName && <p className="text-xs text-foreground font-medium truncate">{shortName(displayName)}</p>}
-                <p className="text-[10px] text-muted-foreground">{roleLabel}</p>
+                <p className="text-[10px] text-muted-foreground">{roleLabel(role)}</p>
                 <p className="text-[10px] text-primary">Ver perfil →</p>
               </div>
             </div>
+          )}
+          {user && !collapsed && roles.length > 1 && role && (
+            <Select value={role} onValueChange={(value) => setActiveRole(value as typeof role)}>
+              <SelectTrigger className="mb-2 h-8 text-xs bg-sidebar-accent/40 border-sidebar-border">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {roles.map((userRole) => (
+                  <SelectItem key={userRole} value={userRole}>{roleLabel(userRole)}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           )}
           <Button
             variant="ghost"
