@@ -354,7 +354,7 @@ export default function HelpCenter() {
 
         <TabsContent value="ai" className="mt-4">
           <div className="space-y-3">
-            <AiQuotaCard />
+            {isAdmin && <AiQuotaCard />}
             <Card className="overflow-hidden">
               <AiHelpChat />
             </Card>
