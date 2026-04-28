@@ -34,10 +34,17 @@ interface PendingUser {
   email: string;
   whatsapp: string;
   platforms: string[];
+  strategicLink?: string;
+}
+
+interface StrategicUser {
+  user_id: string;
+  display_name: string;
 }
 
 export default function UserApproval() {
   const [users, setUsers] = useState<PendingUser[]>([]);
+  const [strategicUsers, setStrategicUsers] = useState<StrategicUser[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
