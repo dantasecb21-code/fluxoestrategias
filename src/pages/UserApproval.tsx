@@ -148,6 +148,10 @@ export default function UserApproval() {
 
     if (result.error) { toast.error("Erro ao alterar cargos"); return; }
 
+    if (hasRole && targetRole === "strategic_assistant") {
+      await supabase.from("strategic_assistant_links" as any).delete().eq("assistant_user_id", userId);
+    }
+
     const newRoles = hasRole ? user.roles.filter((role) => role !== targetRole) : [...user.roles, targetRole];
     toast.success("Cargos atualizados");
     setUsers((prev) => prev.map((u) => u.user_id === userId ? { ...u, roles: newRoles } : u));
