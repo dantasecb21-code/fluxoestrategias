@@ -60,14 +60,22 @@ export default function UserApproval() {
       .from("user_roles")
       .select("user_id, role");
 
+    const { data: links } = await supabase
+      .from("strategic_assistant_links" as any)
+      .select("assistant_user_id, strategic_user_id");
+
     const roleMap = new Map<string, string[]>();
-    const rolePriority: Record<string, number> = { admin: 0, strategic: 1, operational: 2 };
+    const rolePriority: Record<string, number> = { admin: 0, strategic: 1, strategic_assistant: 2, operational: 3 };
     roles?.forEach((r) => {
       roleMap.set(r.user_id, [...(roleMap.get(r.user_id) || []), r.role]);
     });
     roleMap.forEach((userRoles, userId) => {
       roleMap.set(userId, [...new Set(userRoles)].sort((a, b) => (rolePriority[a] ?? 99) - (rolePriority[b] ?? 99)));
     });
+
+    const linkMap = new Map<string, string>();
+    (links as any[] | null)?.forEach((link) => linkMap.set(link.assistant_user_id, link.strategic_user_id));
+    const strategicIds = new Set((roles || []).filter((r) => r.role === "strategic").map((r) => r.user_id));
 
     const mapped: PendingUser[] = profiles.map((p) => ({
       user_id: p.user_id,
@@ -77,7 +85,10 @@ export default function UserApproval() {
       email: "",
       whatsapp: p.whatsapp || "",
       platforms: (p as any).platforms || [],
+      strategicLink: linkMap.get(p.user_id) || "",
     }));
+
+    setStrategicUsers(mapped.filter((u) => strategicIds.has(u.user_id)).map((u) => ({ user_id: u.user_id, display_name: u.display_name })));
 
     mapped.sort((a, b) => {
       if (a.approved === b.approved) return 0;
