@@ -60,7 +60,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setPlatforms((profileRes.data as any).platforms || []);
     }
 
-    const loadedRoles = rolePriority.filter((roleName) => roleRes.data?.some((r) => r.role === roleName));
+    const loadedRoles = rolePriority.filter((roleName) => roleRes.data?.some((r) => String(r.role) === roleName));
     setFollowedStrategicIds(((linkRes.data as any[]) || []).map((link) => link.strategic_user_id).filter(Boolean));
     if (loadedRoles.length > 0) {
       const storedRole = localStorage.getItem(getStoredRoleKey(sessionUser.id)) as AppRole | null;
