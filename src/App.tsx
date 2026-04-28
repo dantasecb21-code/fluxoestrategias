@@ -80,9 +80,9 @@ const App = () => (
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/" element={<ProtectedRoute><HomeRedirect /></ProtectedRoute>} />
             <Route path="/nova" element={<ProtectedRoute allowedRoles={["admin", "strategic"]}><StrategyBuilderPage /></ProtectedRoute>} />
-            <Route path="/estrategia/:id" element={<ProtectedRoute allowedRoles={["admin", "strategic"]}><StrategyBuilderPage /></ProtectedRoute>} />
+            <Route path="/estrategia/:id" element={<ProtectedRoute allowedRoles={["admin", "strategic", "strategic_assistant"]}><StrategyBuilderPage /></ProtectedRoute>} />
             <Route path="/gestores" element={<ProtectedRoute allowedRoles={["admin", "strategic"]}><ManagersList /></ProtectedRoute>} />
-            <Route path="/pendentes" element={<ProtectedRoute allowedRoles={["admin", "strategic"]}><PendingStrategies /></ProtectedRoute>} />
+            <Route path="/pendentes" element={<ProtectedRoute allowedRoles={["admin", "strategic", "strategic_assistant"]}><PendingStrategies /></ProtectedRoute>} />
             <Route path="/notas" element={<ProtectedRoute><StrategyNotes /></ProtectedRoute>} />
             <Route path="/aprovacoes" element={<ProtectedRoute allowedRoles={["admin"]}><UserApproval /></ProtectedRoute>} />
             <Route path="/operacional/:id" element={<ProtectedRoute allowedRoles={["operational"]}><OperationalStrategyView /></ProtectedRoute>} />
