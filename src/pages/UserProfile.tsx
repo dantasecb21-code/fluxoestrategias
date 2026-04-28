@@ -12,6 +12,7 @@ import { ArrowLeft, Camera, Phone, Mail, Shield, CheckCircle, Clock, Edit2, Save
 import { toast } from "sonner";
 import { calcManagerStats } from "@/lib/strategyStatus";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface ProfileData {
   user_id: string;
@@ -25,7 +26,7 @@ interface ProfileData {
 export default function UserProfile() {
   const { userId } = useParams();
   const navigate = useNavigate();
-  const { user, role: myRole } = useAuth();
+  const { user, role: myRole, roles, setActiveRole } = useAuth();
   const { strategies } = useDbStrategies();
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [userRole, setUserRole] = useState("");
@@ -176,8 +177,21 @@ export default function UserProfile() {
               )}
             </div>
 
-            <div className="flex items-center gap-2 mb-2">
-              <Badge variant="outline" className="text-xs">{roleLabel(userRole)}</Badge>
+            <div className="flex flex-wrap items-center gap-2 mb-2">
+              {isOwnProfile && roles.length > 1 && myRole ? (
+                <Select value={myRole} onValueChange={(value) => setActiveRole(value as Parameters<typeof setActiveRole>[0])}>
+                  <SelectTrigger className="h-8 w-[190px] text-xs bg-background border-border">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {roles.map((roleOption) => (
+                      <SelectItem key={roleOption} value={roleOption}>{roleLabel(roleOption)}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <Badge variant="outline" className="text-xs">{roleLabel(isOwnProfile ? myRole || userRole : userRole)}</Badge>
+              )}
               <Badge className={`text-xs ${profile.approved ? "bg-success/20 text-success border-success/30" : "bg-warning/20 text-warning border-warning/30"}`}>
                 {profile.approved ? <><CheckCircle className="h-3 w-3 mr-1" /> Aprovado</> : <><Clock className="h-3 w-3 mr-1" /> Pendente</>}
               </Badge>
