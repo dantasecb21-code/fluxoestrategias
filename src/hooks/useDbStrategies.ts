@@ -112,6 +112,8 @@ export function useDbStrategies() {
 
     if (role === "operational") {
       query = query.eq("assigned_to", user.id);
+    } else if (role === "strategic") {
+      query = query.or(`user_id.eq.${user.id},assigned_to.eq.${user.id}`);
     }
 
     // Filter by user's platforms (admin sees all)
@@ -294,6 +296,8 @@ export function useDbStrategies() {
     let query = supabase.from("strategies").select("*").not("deleted_at", "is", null);
     if (role === "operational") {
       query = query.eq("assigned_to", user.id);
+    } else if (role === "strategic") {
+      query = query.or(`user_id.eq.${user.id},assigned_to.eq.${user.id}`);
     }
     if (role !== "admin" && platforms.length > 0) {
       query = query.in("platform", platforms);
