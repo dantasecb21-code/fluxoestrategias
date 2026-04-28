@@ -233,6 +233,30 @@ export type Database = {
         }
         Relationships: []
       }
+      strategic_assistant_links: {
+        Row: {
+          assistant_user_id: string
+          created_at: string
+          id: string
+          strategic_user_id: string
+          updated_at: string
+        }
+        Insert: {
+          assistant_user_id: string
+          created_at?: string
+          id?: string
+          strategic_user_id: string
+          updated_at?: string
+        }
+        Update: {
+          assistant_user_id?: string
+          created_at?: string
+          id?: string
+          strategic_user_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       strategies: {
         Row: {
           assigned_to: string | null
@@ -443,8 +467,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_follow_strategic: {
+        Args: { _assistant_user_id: string; _strategic_user_id: string }
+        Returns: boolean
+      }
       check_and_increment_ai_usage: { Args: never; Returns: Json }
       get_ai_usage_status: { Args: never; Returns: Json }
+      get_followed_strategic_ids: {
+        Args: { _user_id: string }
+        Returns: string[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
