@@ -171,9 +171,21 @@ export default function UserApproval() {
     toast.success("Plataformas atualizadas");
   };
 
+  const handleStrategicLinkChange = async (userId: string, strategicUserId: string) => {
+    const { error } = await supabase
+      .from("strategic_assistant_links" as any)
+      .upsert({ assistant_user_id: userId, strategic_user_id: strategicUserId } as any, { onConflict: "assistant_user_id" });
+
+    if (error) { toast.error("Erro ao vincular gestor estratégico"); return; }
+    setUsers((prev) => prev.map((u) => u.user_id === userId ? { ...u, strategicLink: strategicUserId } : u));
+    window.dispatchEvent(new CustomEvent("roles-updated", { detail: { userId } }));
+    toast.success("Vínculo atualizado");
+  };
+
   const roleLabel = (role: string) => {
     if (role === "admin") return "Administrador";
     if (role === "strategic") return "Gestor Estratégico";
+    if (role === "strategic_assistant") return "Auxiliar Estratégico";
     if (role === "operational") return "Gestor Operacional";
     return role;
   };
