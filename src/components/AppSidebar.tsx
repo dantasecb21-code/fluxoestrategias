@@ -37,12 +37,14 @@ export function AppSidebar() {
 
   const isAdmin = role === "admin";
   const isStrategic = role === "strategic";
+  const isStrategicAssistant = role === "strategic_assistant";
   const isOperational = role === "operational";
   const canManage = isAdmin || isStrategic;
 
   const roleLabel = (value: string | null) => {
     if (value === "admin") return "Administrador";
     if (value === "strategic") return "Gestor Estratégico";
+    if (value === "strategic_assistant") return "Auxiliar Estratégico";
     return "Gestor Operacional";
   };
 
@@ -106,7 +108,7 @@ export function AppSidebar() {
               </SidebarMenuItem>
 
               {/* Lojas Novas */}
-              {canManage && (
+              {(canManage || isStrategicAssistant) && (
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild>
                     <NavLink
