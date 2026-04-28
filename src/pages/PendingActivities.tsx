@@ -70,6 +70,7 @@ export default function PendingActivities() {
   const { user, role } = useAuth();
   const isAdmin = role === "admin";
   const isStrategic = role === "strategic";
+  const isStrategicAssistant = role === "strategic_assistant";
   const canManage = isAdmin || isStrategic;
   const isOperational = role === "operational";
 
@@ -122,8 +123,8 @@ export default function PendingActivities() {
 
   useEffect(() => {
     fetchActivities();
-    if (canManage) fetchOperationalUsers();
-  }, [canManage]);
+    if (canManage || isStrategicAssistant) fetchOperationalUsers();
+  }, [canManage, isStrategicAssistant]);
 
   const resetForm = () => {
     setClientName("");
@@ -484,7 +485,7 @@ export default function PendingActivities() {
                   <Clock className="h-3.5 w-3.5" /> Prazo: {formatDateBR(act.deadline)}
                 </span>
               )}
-              {canManage && (
+              {(canManage || isStrategicAssistant) && (
                 <span>Gestor: {getAssigneeName(act.assigned_to)}</span>
               )}
               <span>
