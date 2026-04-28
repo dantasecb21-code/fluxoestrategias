@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { deriveStrategyDisplayStatus, getStatusLabel, getStatusBadgeProps } from "@/lib/strategyStatus";
 import { toast } from "sonner";
 import { PlatformBadge } from "@/components/PlatformBadge";
+import { useAuth } from "@/hooks/useAuth";
 
 function calcProgress(categories: any[]) {
   const allItems = categories.flatMap((c: any) => c.items);
@@ -27,7 +28,9 @@ function calcProgress(categories: any[]) {
 
 export default function Dashboard() {
   const navigate = useNavigate();
+  const { role } = useAuth();
   const { strategies, loading, deleteStrategy, duplicateStrategy, restoreStrategy, fetchDeletedStrategies, permanentDeleteStrategy } = useDbStrategies();
+  const isStrategicAssistant = role === "strategic_assistant";
   const [showTrash, setShowTrash] = useState(false);
   const [deletedStrategies, setDeletedStrategies] = useState<DbStrategy[]>([]);
   const [loadingTrash, setLoadingTrash] = useState(false);
@@ -127,17 +130,21 @@ export default function Dashboard() {
               onClick={() => navigate(`/estrategia/${s.id}`)}>
               <Pencil className="h-4 w-4" />
             </Button>
-            <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-foreground"
-              onClick={async () => {
-                const dup = await duplicateStrategy(s.id);
-                if (dup) navigate(`/estrategia/${dup.id}`);
-              }}>
-              <Copy className="h-4 w-4" />
-            </Button>
-            <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-destructive"
-              onClick={() => deleteStrategy(s.id)}>
-              <Trash2 className="h-4 w-4" />
-            </Button>
+            {!isStrategicAssistant && (
+              <>
+                <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                  onClick={async () => {
+                    const dup = await duplicateStrategy(s.id);
+                    if (dup) navigate(`/estrategia/${dup.id}`);
+                  }}>
+                  <Copy className="h-4 w-4" />
+                </Button>
+                <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                  onClick={() => deleteStrategy(s.id)}>
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </>
+            )}
           </div>
         </div>
         {progress.total > 0 && (
@@ -173,9 +180,11 @@ export default function Dashboard() {
         <p className="text-muted-foreground">
           Construtor inteligente de estratégias — crie, atribua e acompanhe a execução.
         </p>
-        <Button onClick={() => navigate("/nova")} className="mt-4" size="lg">
-          <Plus className="h-5 w-5 mr-2" /> Nova Estratégia
-        </Button>
+        {!isStrategicAssistant && (
+          <Button onClick={() => navigate("/nova")} className="mt-4" size="lg">
+            <Plus className="h-5 w-5 mr-2" /> Nova Estratégia
+          </Button>
+        )}
       </div>
 
       {/* Search & Filter */}
@@ -222,10 +231,12 @@ export default function Dashboard() {
         <Card className="p-12 text-center border-dashed">
           <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
           <h2 className="font-heading font-semibold text-xl text-foreground mb-2">Nenhuma estratégia criada</h2>
-          <p className="text-muted-foreground mb-6">Comece criando sua primeira estratégia personalizada.</p>
-          <Button onClick={() => navigate("/nova")}>
-            <Plus className="h-4 w-4 mr-2" /> Criar primeira estratégia
-          </Button>
+          <p className="text-muted-foreground mb-6">Nenhuma estratégia disponível para acompanhamento.</p>
+          {!isStrategicAssistant && (
+            <Button onClick={() => navigate("/nova")}>
+              <Plus className="h-4 w-4 mr-2" /> Criar primeira estratégia
+            </Button>
+          )}
         </Card>
       ) : (
         <div className="space-y-6">
@@ -261,7 +272,7 @@ export default function Dashboard() {
       )}
 
       {/* Lixeira */}
-      <div className="mt-8">
+      {!isStrategicAssistant && <div className="mt-8">
         <Button variant="ghost" onClick={toggleTrash} className="text-muted-foreground hover:text-foreground gap-2">
           {showTrash ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
           <Trash2 className="h-4 w-4" />
@@ -298,7 +309,7 @@ export default function Dashboard() {
             )}
           </div>
         )}
-      </div>
+      </div>}
     </div>
   );
 }

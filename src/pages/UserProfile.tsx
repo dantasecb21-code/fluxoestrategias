@@ -51,7 +51,7 @@ export default function UserProfile() {
       if (!userId) return;
       const [profileRes, roleRes] = await Promise.all([
         supabase.from("profiles").select("user_id, display_name, whatsapp, approved, avatar_url, status_text, email, store_count, store_limit").eq("user_id", userId).single(),
-        supabase.from("user_roles").select("role").eq("user_id", userId).single(),
+        supabase.from("user_roles").select("role").eq("user_id", userId).limit(1).maybeSingle(),
       ]);
       if (profileRes.data) {
         const p = profileRes.data as ProfileData;
@@ -68,6 +68,7 @@ export default function UserProfile() {
   const roleLabel = (role: string) => {
     if (role === "admin") return "Administrador";
     if (role === "strategic") return "Gestor Estratégico";
+    if (role === "strategic_assistant") return "Auxiliar Estratégico";
     if (role === "operational") return "Gestor Operacional";
     return role;
   };

@@ -34,10 +34,17 @@ interface PendingUser {
   email: string;
   whatsapp: string;
   platforms: string[];
+  strategicLink?: string;
+}
+
+interface StrategicUser {
+  user_id: string;
+  display_name: string;
 }
 
 export default function UserApproval() {
   const [users, setUsers] = useState<PendingUser[]>([]);
+  const [strategicUsers, setStrategicUsers] = useState<StrategicUser[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
@@ -53,14 +60,22 @@ export default function UserApproval() {
       .from("user_roles")
       .select("user_id, role");
 
+    const { data: links } = await supabase
+      .from("strategic_assistant_links" as any)
+      .select("assistant_user_id, strategic_user_id");
+
     const roleMap = new Map<string, string[]>();
-    const rolePriority: Record<string, number> = { admin: 0, strategic: 1, operational: 2 };
+    const rolePriority: Record<string, number> = { admin: 0, strategic: 1, strategic_assistant: 2, operational: 3 };
     roles?.forEach((r) => {
       roleMap.set(r.user_id, [...(roleMap.get(r.user_id) || []), r.role]);
     });
     roleMap.forEach((userRoles, userId) => {
       roleMap.set(userId, [...new Set(userRoles)].sort((a, b) => (rolePriority[a] ?? 99) - (rolePriority[b] ?? 99)));
     });
+
+    const linkMap = new Map<string, string>();
+    (links as any[] | null)?.forEach((link) => linkMap.set(link.assistant_user_id, link.strategic_user_id));
+    const strategicIds = new Set((roles || []).filter((r) => r.role === "strategic").map((r) => r.user_id));
 
     const mapped: PendingUser[] = profiles.map((p) => ({
       user_id: p.user_id,
@@ -70,7 +85,10 @@ export default function UserApproval() {
       email: "",
       whatsapp: p.whatsapp || "",
       platforms: (p as any).platforms || [],
+      strategicLink: linkMap.get(p.user_id) || "",
     }));
+
+    setStrategicUsers(mapped.filter((u) => strategicIds.has(u.user_id)).map((u) => ({ user_id: u.user_id, display_name: u.display_name })));
 
     mapped.sort((a, b) => {
       if (a.approved === b.approved) return 0;
@@ -130,6 +148,10 @@ export default function UserApproval() {
 
     if (result.error) { toast.error("Erro ao alterar cargos"); return; }
 
+    if (hasRole && targetRole === "strategic_assistant") {
+      await supabase.from("strategic_assistant_links" as any).delete().eq("assistant_user_id", userId);
+    }
+
     const newRoles = hasRole ? user.roles.filter((role) => role !== targetRole) : [...user.roles, targetRole];
     toast.success("Cargos atualizados");
     setUsers((prev) => prev.map((u) => u.user_id === userId ? { ...u, roles: newRoles } : u));
@@ -153,9 +175,21 @@ export default function UserApproval() {
     toast.success("Plataformas atualizadas");
   };
 
+  const handleStrategicLinkChange = async (userId: string, strategicUserId: string) => {
+    const { error } = await supabase
+      .from("strategic_assistant_links" as any)
+      .upsert({ assistant_user_id: userId, strategic_user_id: strategicUserId } as any, { onConflict: "assistant_user_id" });
+
+    if (error) { toast.error("Erro ao vincular gestor estratégico"); return; }
+    setUsers((prev) => prev.map((u) => u.user_id === userId ? { ...u, strategicLink: strategicUserId } : u));
+    window.dispatchEvent(new CustomEvent("roles-updated", { detail: { userId } }));
+    toast.success("Vínculo atualizado");
+  };
+
   const roleLabel = (role: string) => {
     if (role === "admin") return "Administrador";
     if (role === "strategic") return "Gestor Estratégico";
+    if (role === "strategic_assistant") return "Auxiliar Estratégico";
     if (role === "operational") return "Gestor Operacional";
     return role;
   };
@@ -190,7 +224,7 @@ export default function UserApproval() {
       <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
         <div className="flex items-center gap-2 flex-wrap">
           <span className="text-xs text-muted-foreground">Cargos:</span>
-          {(["admin", "strategic", "operational"] as const).map((userRole) => {
+          {(["admin", "strategic", "strategic_assistant", "operational"] as const).map((userRole) => {
             const active = u.roles.includes(userRole);
             return (
               <button
@@ -208,6 +242,24 @@ export default function UserApproval() {
             );
           })}
         </div>
+
+        {u.roles.includes("strategic_assistant") && (
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-muted-foreground">Acompanha:</span>
+            <Select value={u.strategicLink || ""} onValueChange={(value) => handleStrategicLinkChange(u.user_id, value)}>
+              <SelectTrigger className="h-8 w-[220px] text-xs">
+                <SelectValue placeholder="Selecionar gestor" />
+              </SelectTrigger>
+              <SelectContent>
+                {strategicUsers.filter((s) => s.user_id !== u.user_id).map((strategic) => (
+                  <SelectItem key={strategic.user_id} value={strategic.user_id}>
+                    {shortName(strategic.display_name) || "Gestor Estratégico"}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
 
         <div className="flex items-center gap-2">
           <span className="text-xs text-muted-foreground">Plataformas:</span>
