@@ -467,16 +467,8 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      can_follow_strategic: {
-        Args: { _assistant_user_id: string; _strategic_user_id: string }
-        Returns: boolean
-      }
       check_and_increment_ai_usage: { Args: never; Returns: Json }
       get_ai_usage_status: { Args: never; Returns: Json }
-      get_followed_strategic_ids: {
-        Args: { _user_id: string }
-        Returns: string[]
-      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

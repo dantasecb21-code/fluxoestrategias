@@ -75,7 +75,7 @@ export default function UserApproval() {
 
     const linkMap = new Map<string, string>();
     (links as any[] | null)?.forEach((link) => linkMap.set(link.assistant_user_id, link.strategic_user_id));
-    const strategicIds = new Set((roles || []).filter((r) => r.role === "strategic").map((r) => r.user_id));
+    const strategicIds = new Set((roles || []).filter((r) => String(r.role) === "strategic").map((r) => r.user_id));
 
     const mapped: PendingUser[] = profiles.map((p) => ({
       user_id: p.user_id,
