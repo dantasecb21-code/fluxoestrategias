@@ -81,6 +81,7 @@ export default function StrategyBuilderPage() {
   const [searchParams] = useSearchParams();
   const { strategies, createStrategy, updateStrategy, loading } = useDbStrategies();
   const { role } = useAuth();
+  const isStrategicAssistant = role === "strategic_assistant";
 
   const existing = id ? strategies.find((s) => s.id === id) : null;
   const draft = !id ? loadDraft() : null;
@@ -209,6 +210,10 @@ export default function StrategyBuilderPage() {
   };
 
   const handleSave = async () => {
+    if (isStrategicAssistant) {
+      toast.error("Auxiliar Estratégico acompanha, mas não edita estratégias.");
+      return;
+    }
     if (!meta.storeName.trim()) {
       toast.error("Preencha o nome da loja!");
       return;
@@ -348,9 +353,11 @@ export default function StrategyBuilderPage() {
               )}
             </div>
           </div>
-          <Button size="sm" onClick={handleSave} className="bg-primary text-primary-foreground hover:bg-primary/90 shrink-0">
-            <Save className="h-4 w-4 mr-1" /> Salvar
-          </Button>
+          {!isStrategicAssistant && (
+            <Button size="sm" onClick={handleSave} className="bg-primary text-primary-foreground hover:bg-primary/90 shrink-0">
+              <Save className="h-4 w-4 mr-1" /> Salvar
+            </Button>
+          )}
         </div>
         {id && (
           <div className="flex gap-2">
@@ -381,7 +388,7 @@ export default function StrategyBuilderPage() {
       )}
 
       {/* Store access + approval for pending_approval */}
-      {id && existing && strategyStatus === "pending_approval" && (
+      {id && existing && strategyStatus === "pending_approval" && !isStrategicAssistant && (
         <Card className="p-4 border-warning/50 space-y-3">
           <div className="flex items-center gap-2 text-sm">
             <ShieldCheck className="h-4 w-4 text-primary" />
@@ -415,7 +422,7 @@ export default function StrategyBuilderPage() {
         </Card>
       )}
 
-      {id && existing && strategyStatus === "approved" && (
+      {id && existing && strategyStatus === "approved" && !isStrategicAssistant && (
         <Card className="p-4 border-success/50 bg-success/10 space-y-2">
           <p className="text-sm text-success font-medium text-center">✅ Estratégia aprovada</p>
           <div className="flex justify-center">
