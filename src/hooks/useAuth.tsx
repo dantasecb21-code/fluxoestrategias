@@ -2,7 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useState, ReactNode 
 import { supabase } from "@/integrations/supabase/client";
 import type { User } from "@supabase/supabase-js";
 
-type AppRole = "admin" | "strategic" | "operational";
+type AppRole = "admin" | "strategic" | "strategic_assistant" | "operational";
 
 interface AuthContextType {
   user: User | null;
@@ -13,6 +13,7 @@ interface AuthContextType {
   roles: AppRole[];
   approved: boolean;
   platforms: string[];
+  followedStrategicIds: string[];
   setActiveRole: (role: AppRole) => void;
   signOut: () => Promise<void>;
 }
@@ -26,11 +27,12 @@ const AuthContext = createContext<AuthContextType>({
   roles: [],
   approved: false,
   platforms: [],
+  followedStrategicIds: [],
   setActiveRole: () => {},
   signOut: async () => {},
 });
 
-const rolePriority: AppRole[] = ["admin", "strategic", "operational"];
+const rolePriority: AppRole[] = ["admin", "strategic", "strategic_assistant", "operational"];
 const getStoredRoleKey = (userId: string) => `active-role:${userId}`;
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -42,11 +44,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [roles, setRoles] = useState<AppRole[]>([]);
   const [approved, setApproved] = useState(false);
   const [platforms, setPlatforms] = useState<string[]>([]);
+  const [followedStrategicIds, setFollowedStrategicIds] = useState<string[]>([]);
 
   const loadUserData = useCallback(async (sessionUser: User) => {
-    const [profileRes, roleRes] = await Promise.all([
+    const [profileRes, roleRes, linkRes] = await Promise.all([
       supabase.from("profiles").select("display_name, approved, avatar_url, platforms").eq("user_id", sessionUser.id).single(),
       supabase.from("user_roles").select("role").eq("user_id", sessionUser.id),
+      supabase.from("strategic_assistant_links" as any).select("strategic_user_id").eq("assistant_user_id", sessionUser.id),
     ]);
 
     if (profileRes.data) {
@@ -57,6 +61,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     const loadedRoles = rolePriority.filter((roleName) => roleRes.data?.some((r) => r.role === roleName));
+    setFollowedStrategicIds(((linkRes.data as any[]) || []).map((link) => link.strategic_user_id).filter(Boolean));
     if (loadedRoles.length > 0) {
       const storedRole = localStorage.getItem(getStoredRoleKey(sessionUser.id)) as AppRole | null;
       const activeRole = storedRole && loadedRoles.includes(storedRole) ? storedRole : loadedRoles[0];
@@ -82,6 +87,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setRoles([]);
         setApproved(false);
         setPlatforms([]);
+        setFollowedStrategicIds([]);
         setLoading(false);
       }
     });
@@ -123,6 +129,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setRole(null);
     setRoles([]);
     setApproved(false);
+    setFollowedStrategicIds([]);
   };
 
   const setActiveRole = (nextRole: AppRole) => {
@@ -132,7 +139,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, displayName, avatarUrl, role, roles, approved, platforms, setActiveRole, signOut }}>
+    <AuthContext.Provider value={{ user, loading, displayName, avatarUrl, role, roles, approved, platforms, followedStrategicIds, setActiveRole, signOut }}>
       {children}
     </AuthContext.Provider>
   );
