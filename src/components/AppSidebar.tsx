@@ -108,7 +108,7 @@ export function AppSidebar() {
               </SidebarMenuItem>
 
               {/* Lojas Novas */}
-              {(canManage || isStrategicAssistant) && (
+              {canManage && (
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild>
                     <NavLink
@@ -125,7 +125,7 @@ export function AppSidebar() {
               )}
 
               {/* Nova Estratégia */}
-              {canManage && (
+              {(canManage || isStrategicAssistant) && (
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild>
                     <NavLink
