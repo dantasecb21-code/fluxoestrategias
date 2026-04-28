@@ -101,7 +101,7 @@ async function syncToSheets(strategy: DbStrategy) {
 }
 
 export function useDbStrategies() {
-  const { user, role, platforms } = useAuth();
+  const { user, role, platforms, followedStrategicIds } = useAuth();
   const [strategies, setStrategies] = useState<DbStrategy[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -114,6 +114,10 @@ export function useDbStrategies() {
       query = query.eq("assigned_to", user.id);
     } else if (role === "strategic") {
       query = query.or(`user_id.eq.${user.id},assigned_to.eq.${user.id}`);
+    } else if (role === "strategic_assistant") {
+      if (followedStrategicIds.length === 0) { setStrategies([]); setLoading(false); return; }
+      const ids = followedStrategicIds.join(",");
+      query = query.or(`user_id.in.(${ids}),assigned_to.in.(${ids})`);
     }
 
     // Filter by user's platforms (admin sees all)
@@ -124,7 +128,7 @@ export function useDbStrategies() {
     const { data } = await query.order("updated_at", { ascending: false });
     if (data) setStrategies(data.map(mapRow));
     setLoading(false);
-  }, [user, role, platforms]);
+  }, [user, role, platforms, followedStrategicIds]);
 
   useEffect(() => { fetchStrategies(); }, [fetchStrategies]);
 
@@ -298,6 +302,10 @@ export function useDbStrategies() {
       query = query.eq("assigned_to", user.id);
     } else if (role === "strategic") {
       query = query.or(`user_id.eq.${user.id},assigned_to.eq.${user.id}`);
+    } else if (role === "strategic_assistant") {
+      if (followedStrategicIds.length === 0) return [];
+      const ids = followedStrategicIds.join(",");
+      query = query.or(`user_id.in.(${ids}),assigned_to.in.(${ids})`);
     }
     if (role !== "admin" && platforms.length > 0) {
       query = query.in("platform", platforms);
