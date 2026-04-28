@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { deriveStrategyDisplayStatus, getStatusLabel, getStatusBadgeProps } from "@/lib/strategyStatus";
 import { toast } from "sonner";
 import { PlatformBadge } from "@/components/PlatformBadge";
+import { useAuth } from "@/hooks/useAuth";
 
 function calcProgress(categories: any[]) {
   const allItems = categories.flatMap((c: any) => c.items);
@@ -27,7 +28,9 @@ function calcProgress(categories: any[]) {
 
 export default function Dashboard() {
   const navigate = useNavigate();
+  const { role } = useAuth();
   const { strategies, loading, deleteStrategy, duplicateStrategy, restoreStrategy, fetchDeletedStrategies, permanentDeleteStrategy } = useDbStrategies();
+  const isStrategicAssistant = role === "strategic_assistant";
   const [showTrash, setShowTrash] = useState(false);
   const [deletedStrategies, setDeletedStrategies] = useState<DbStrategy[]>([]);
   const [loadingTrash, setLoadingTrash] = useState(false);
@@ -127,17 +130,21 @@ export default function Dashboard() {
               onClick={() => navigate(`/estrategia/${s.id}`)}>
               <Pencil className="h-4 w-4" />
             </Button>
-            <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-foreground"
-              onClick={async () => {
-                const dup = await duplicateStrategy(s.id);
-                if (dup) navigate(`/estrategia/${dup.id}`);
-              }}>
-              <Copy className="h-4 w-4" />
-            </Button>
-            <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-destructive"
-              onClick={() => deleteStrategy(s.id)}>
-              <Trash2 className="h-4 w-4" />
-            </Button>
+            {!isStrategicAssistant && (
+              <>
+                <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                  onClick={async () => {
+                    const dup = await duplicateStrategy(s.id);
+                    if (dup) navigate(`/estrategia/${dup.id}`);
+                  }}>
+                  <Copy className="h-4 w-4" />
+                </Button>
+                <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                  onClick={() => deleteStrategy(s.id)}>
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </>
+            )}
           </div>
         </div>
         {progress.total > 0 && (
