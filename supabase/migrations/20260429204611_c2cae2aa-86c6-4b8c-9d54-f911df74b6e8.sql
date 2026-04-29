@@ -1,0 +1,6 @@
+ALTER TABLE public.strategic_assistant_links
+DROP CONSTRAINT IF EXISTS strategic_assistant_links_assistant_user_id_key;
+
+ALTER TABLE public.strategic_assistant_links
+ADD CONSTRAINT strategic_assistant_links_assistant_strategic_unique
+UNIQUE (assistant_user_id, strategic_user_id);
