@@ -24,7 +24,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Store, Plus, Clock, CheckCircle2, User, ArrowRight, Pencil, Trash2, Sparkles, Loader2, Hammer, Filter, ChevronDown, ChevronRight, Globe } from "lucide-react";
+import { Store, Plus, Clock, CheckCircle2, User, ArrowRight, Pencil, Trash2, Sparkles, Loader2, Hammer, Filter, ChevronDown, ChevronRight, Globe, Search } from "lucide-react";
 import { toast } from "sonner";
 import { PlatformBadge, PLATFORM_LABELS, PLATFORM_OPTIONS, Platform } from "@/components/PlatformBadge";
 import { format } from "date-fns";
@@ -103,6 +103,7 @@ export default function StoreRequests() {
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [filterCreation, setFilterCreation] = useState<string>("all");
   const [filterPlatform, setFilterPlatform] = useState<string>("all");
+  const [searchQuery, setSearchQuery] = useState("");
   const [platformField, setPlatformField] = useState<string>("99food");
   const [showCompleted, setShowCompleted] = useState(false);
 
@@ -722,6 +723,15 @@ export default function StoreRequests() {
       {requests.length > 0 && (
         <div className="flex flex-wrap items-center gap-3">
           <Filter className="h-4 w-4 text-muted-foreground" />
+          <div className="relative w-full sm:w-[260px]">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.target.value)}
+              placeholder="Buscar loja ou cliente"
+              className="h-9 pl-9 text-xs"
+            />
+          </div>
           <Select value={filterStatus} onValueChange={setFilterStatus}>
             <SelectTrigger className="w-[160px] h-9 text-xs">
               <SelectValue placeholder="Status" />
@@ -755,8 +765,8 @@ export default function StoreRequests() {
               ))}
             </SelectContent>
           </Select>
-          {(filterStatus !== "all" || filterCreation !== "all" || filterPlatform !== "all") && (
-            <Button variant="ghost" size="sm" className="text-xs h-8" onClick={() => { setFilterStatus("all"); setFilterCreation("all"); setFilterPlatform("all"); }}>
+          {(filterStatus !== "all" || filterCreation !== "all" || filterPlatform !== "all" || searchQuery.trim()) && (
+            <Button variant="ghost" size="sm" className="text-xs h-8" onClick={() => { setFilterStatus("all"); setFilterCreation("all"); setFilterPlatform("all"); setSearchQuery(""); }}>
               Limpar filtros
             </Button>
           )}
@@ -765,6 +775,17 @@ export default function StoreRequests() {
 
       {(() => {
         const filtered = requests.filter(r => {
+          const search = searchQuery.trim().toLowerCase();
+          if (search) {
+            const searchable = [
+              r.store_name,
+              r.client_name,
+              r.observation,
+              getAssigneeName(r.assigned_to),
+              PLATFORM_LABELS[(r.platform || "99food") as Platform] || r.platform,
+            ].join(" ").toLowerCase();
+            if (!searchable.includes(search)) return false;
+          }
           if (filterStatus !== "all" && r.status !== filterStatus) return false;
           if (filterCreation !== "all" && (r.store_creation_status || "pending") !== filterCreation) return false;
           if (filterPlatform !== "all" && (r.platform || "99food") !== filterPlatform) return false;
