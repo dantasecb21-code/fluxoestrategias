@@ -4,8 +4,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { UserCheck, UserX, ShieldCheck, Clock, AlertTriangle, Eye } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -34,7 +32,7 @@ interface PendingUser {
   email: string;
   whatsapp: string;
   platforms: string[];
-  strategicLink?: string;
+  strategicLinks: string[];
 }
 
 interface StrategicUser {
@@ -73,8 +71,10 @@ export default function UserApproval() {
       roleMap.set(userId, [...new Set(userRoles)].sort((a, b) => (rolePriority[a] ?? 99) - (rolePriority[b] ?? 99)));
     });
 
-    const linkMap = new Map<string, string>();
-    (links as any[] | null)?.forEach((link) => linkMap.set(link.assistant_user_id, link.strategic_user_id));
+    const linkMap = new Map<string, string[]>();
+    (links as any[] | null)?.forEach((link) => {
+      linkMap.set(link.assistant_user_id, [...(linkMap.get(link.assistant_user_id) || []), link.strategic_user_id]);
+    });
     const strategicIds = new Set((roles || []).filter((r) => String(r.role) === "strategic").map((r) => r.user_id));
 
     const mapped: PendingUser[] = profiles.map((p) => ({
@@ -85,7 +85,7 @@ export default function UserApproval() {
       email: "",
       whatsapp: p.whatsapp || "",
       platforms: (p as any).platforms || [],
-      strategicLink: linkMap.get(p.user_id) || "",
+      strategicLinks: linkMap.get(p.user_id) || [],
     }));
 
     setStrategicUsers(mapped.filter((u) => strategicIds.has(u.user_id)).map((u) => ({ user_id: u.user_id, display_name: u.display_name })));
@@ -175,15 +175,28 @@ export default function UserApproval() {
     toast.success("Plataformas atualizadas");
   };
 
-  const handleStrategicLinkChange = async (userId: string, strategicUserId: string) => {
-    const { error } = await supabase
-      .from("strategic_assistant_links" as any)
-      .upsert({ assistant_user_id: userId, strategic_user_id: strategicUserId } as any, { onConflict: "assistant_user_id" });
+  const handleStrategicLinkToggle = async (userId: string, strategicUserId: string) => {
+    const user = users.find((u) => u.user_id === userId);
+    if (!user) return;
+    const isLinked = user.strategicLinks.includes(strategicUserId);
 
-    if (error) { toast.error("Erro ao vincular gestor estratégico"); return; }
-    setUsers((prev) => prev.map((u) => u.user_id === userId ? { ...u, strategicLink: strategicUserId } : u));
+    const result = isLinked
+      ? await supabase
+          .from("strategic_assistant_links" as any)
+          .delete()
+          .eq("assistant_user_id", userId)
+          .eq("strategic_user_id", strategicUserId)
+      : await supabase
+          .from("strategic_assistant_links" as any)
+          .insert({ assistant_user_id: userId, strategic_user_id: strategicUserId } as any);
+
+    if (result.error) { toast.error("Erro ao atualizar vínculos"); return; }
+    const strategicLinks = isLinked
+      ? user.strategicLinks.filter((id) => id !== strategicUserId)
+      : [...user.strategicLinks, strategicUserId];
+    setUsers((prev) => prev.map((u) => u.user_id === userId ? { ...u, strategicLinks } : u));
     window.dispatchEvent(new CustomEvent("roles-updated", { detail: { userId } }));
-    toast.success("Vínculo atualizado");
+    toast.success("Vínculos atualizados");
   };
 
   const roleLabel = (role: string) => {
