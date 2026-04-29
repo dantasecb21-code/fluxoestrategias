@@ -257,20 +257,27 @@ export default function UserApproval() {
         </div>
 
         {u.roles.includes("strategic_assistant") && (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <span className="text-xs text-muted-foreground">Acompanha:</span>
-            <Select value={u.strategicLink || ""} onValueChange={(value) => handleStrategicLinkChange(u.user_id, value)}>
-              <SelectTrigger className="h-8 w-[220px] text-xs">
-                <SelectValue placeholder="Selecionar gestor" />
-              </SelectTrigger>
-              <SelectContent>
-                {strategicUsers.filter((s) => s.user_id !== u.user_id).map((strategic) => (
-                  <SelectItem key={strategic.user_id} value={strategic.user_id}>
+            <div className="flex gap-1.5 flex-wrap">
+              {strategicUsers.filter((s) => s.user_id !== u.user_id).map((strategic) => {
+                const active = u.strategicLinks.includes(strategic.user_id);
+                return (
+                  <button
+                    key={strategic.user_id}
+                    type="button"
+                    onClick={() => handleStrategicLinkToggle(u.user_id, strategic.user_id)}
+                    className={`px-2.5 py-1 rounded-md text-xs font-medium border transition-colors ${
+                      active
+                        ? "border-primary bg-primary/10 text-primary"
+                        : "border-border bg-background text-muted-foreground hover:border-muted-foreground"
+                    }`}
+                  >
                     {shortName(strategic.display_name) || "Gestor Estratégico"}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+                  </button>
+                );
+              })}
+            </div>
           </div>
         )}
 
