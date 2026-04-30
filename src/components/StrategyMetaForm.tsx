@@ -77,9 +77,15 @@ export function StrategyMetaForm({ meta, onChange, strategyType, onTypeChange, p
         </div>
         <div className="space-y-1.5">
           <Label className="text-muted-foreground text-xs flex items-center gap-1">
-            <CalendarDays className="h-3 w-3" /> Prazo
+            <CalendarDays className="h-3 w-3" /> Prazo final
           </Label>
           <Input type="date" value={meta.deadline} onChange={(e) => update("deadline", e.target.value)} className="bg-background" />
+        </div>
+        <div className="space-y-1.5">
+          <Label className="text-muted-foreground text-xs flex items-center gap-1">
+            <CalendarDays className="h-3 w-3" /> Data de início prevista
+          </Label>
+          <Input type="date" value={meta.plannedStartDate} onChange={(e) => update("plannedStartDate", e.target.value)} className="bg-background" />
         </div>
       </div>
     </Card>
