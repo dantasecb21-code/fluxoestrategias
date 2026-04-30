@@ -387,6 +387,13 @@ export default function StrategyBuilderPage() {
             <span className="text-primary">{progress.inProgress} em andamento</span>
             <span className="text-warning">{progress.pending} pendentes</span>
           </div>
+          {existing && (
+            <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground mt-3 pt-3 border-t border-border">
+              <span>📅 Início previsto: <strong className="text-foreground">{existing.planned_start_date ? formatDateBR(existing.planned_start_date) : "—"}</strong></span>
+              <span>🚀 Início real: <strong className="text-foreground">{existing.started_at ? formatDateBR(existing.started_at) : "ainda não iniciada"}</strong></span>
+              <span>⏰ Prazo final: <strong className="text-foreground">{existing.deadline ? formatDateBR(existing.deadline) : "—"}</strong></span>
+            </div>
+          )}
         </Card>
       )}
 
