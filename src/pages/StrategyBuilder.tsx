@@ -112,6 +112,7 @@ export default function StrategyBuilderPage() {
   const [showReport, setShowReport] = useState(false);
   const [showDetailedProgress, setShowDetailedProgress] = useState(false);
   const [expandedCats, setExpandedCats] = useState<Record<string, boolean>>({});
+  const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "in_progress" | "completed">("all");
   const [showRejectDialog, setShowRejectDialog] = useState(false);
   const [newDeadline, setNewDeadline] = useState("");
   const [addingCategory, setAddingCategory] = useState(false);
@@ -446,7 +447,31 @@ export default function StrategyBuilderPage() {
       {/* Detailed progress view */}
       {showDetailedProgress && id ? (
         <div className="space-y-4">
-          {categories.filter((c) => c.items.length > 0).map((cat) => {
+          <Card className="p-3 flex flex-wrap gap-2">
+            {([
+              { key: "all", label: `Todos (${progress.total})`, cls: "" },
+              { key: "pending", label: `Pendentes (${progress.pending})`, cls: "border-warning/40 text-warning" },
+              { key: "in_progress", label: `Em andamento (${progress.inProgress})`, cls: "border-primary/40 text-primary" },
+              { key: "completed", label: `Concluídos (${progress.completed})`, cls: "border-success/40 text-success" },
+            ] as const).map((f) => (
+              <Button
+                key={f.key}
+                size="sm"
+                variant={statusFilter === f.key ? "default" : "outline"}
+                className={statusFilter === f.key ? "" : f.cls}
+                onClick={() => setStatusFilter(f.key)}
+              >
+                {f.label}
+              </Button>
+            ))}
+          </Card>
+          {categories.map((cat) => {
+            const filteredItems = cat.items.filter((i) => {
+              if (statusFilter === "all") return true;
+              const st = i.status || "pending";
+              return st === statusFilter;
+            });
+            if (filteredItems.length === 0) return null;
             const isExpanded = expandedCats[cat.id] !== false;
             const catCompleted = cat.items.filter((i) => i.status === "completed").length;
             return (
@@ -459,11 +484,15 @@ export default function StrategyBuilderPage() {
                     {isExpanded ? <ChevronDown className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />}
                     {cat.name}
                   </h3>
-                  <span className="text-xs text-muted-foreground">{catCompleted}/{cat.items.length} concluídos</span>
+                  <span className="text-xs text-muted-foreground">
+                    {statusFilter === "all"
+                      ? `${catCompleted}/${cat.items.length} concluídos`
+                      : `${filteredItems.length} item(s)`}
+                  </span>
                 </button>
                 {isExpanded && (
                   <div className="divide-y divide-border">
-                    {cat.items.map((item) => {
+                    {filteredItems.map((item) => {
                       const st = item.status || "pending";
                       return (
                         <div key={item.id} className="p-4 flex items-start justify-between gap-4">
