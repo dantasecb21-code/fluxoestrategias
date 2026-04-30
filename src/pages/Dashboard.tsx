@@ -122,7 +122,7 @@ export default function Dashboard() {
                   <Clock className="h-3 w-3" /> Prazo: {formatDateBR(s.deadline)}
                 </span>
               )}
-              <span>{new Date(s.updated_at).toLocaleDateString("pt-BR")}</span>
+              <span>{new Date(s.created_at).toLocaleDateString("pt-BR")}</span>
             </div>
           </div>
           <div className="flex items-center gap-1 ml-4 shrink-0" onClick={(e) => e.stopPropagation()}>
