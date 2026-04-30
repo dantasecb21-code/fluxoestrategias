@@ -1,0 +1,1 @@
+ALTER TABLE public.strategies ADD COLUMN IF NOT EXISTS planned_start_date text NOT NULL DEFAULT '';

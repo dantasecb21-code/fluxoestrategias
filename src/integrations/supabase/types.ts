@@ -269,6 +269,7 @@ export type Database = {
           manager_name: string
           observation: string
           operational_manager: string
+          planned_start_date: string
           platform: string
           returned: boolean
           started_at: string | null
@@ -291,6 +292,7 @@ export type Database = {
           manager_name?: string
           observation?: string
           operational_manager?: string
+          planned_start_date?: string
           platform?: string
           returned?: boolean
           started_at?: string | null
@@ -313,6 +315,7 @@ export type Database = {
           manager_name?: string
           observation?: string
           operational_manager?: string
+          planned_start_date?: string
           platform?: string
           returned?: boolean
           started_at?: string | null

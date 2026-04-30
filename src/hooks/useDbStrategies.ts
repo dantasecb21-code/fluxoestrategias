@@ -27,6 +27,7 @@ export interface DbStrategy {
   manager_name: string;
   operational_manager: string;
   deadline: string;
+  planned_start_date: string;
   categories: StrategyCategory[];
   status: string;
   strategy_type: StrategyType;
@@ -161,6 +162,7 @@ export function useDbStrategies() {
     manager_name: string;
     operational_manager: string;
     deadline: string;
+    planned_start_date?: string;
     categories: StrategyCategory[];
     assigned_to?: string | null;
     strategy_type?: string;
@@ -175,6 +177,7 @@ export function useDbStrategies() {
       manager_name: params.manager_name,
       operational_manager: params.operational_manager,
       deadline: params.deadline,
+      planned_start_date: params.planned_start_date || "",
       categories: params.categories as unknown as Json,
       assigned_to: params.assigned_to || null,
       strategy_type: params.strategy_type || "initial",
@@ -202,6 +205,7 @@ export function useDbStrategies() {
     manager_name?: string;
     operational_manager?: string;
     deadline?: string;
+    planned_start_date?: string;
     categories?: StrategyCategory[];
     assigned_to?: string | null;
     status?: string;

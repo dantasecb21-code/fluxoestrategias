@@ -20,6 +20,7 @@ export interface StrategyMeta {
   managerName: string;
   operationalManager: string;
   deadline: string;
+  plannedStartDate: string;
 }
 
 export const STATUS_LABELS: Record<ItemStatus, string> = {
