@@ -94,13 +94,13 @@ export default function StrategyBuilderPage() {
 
   const [meta, setMeta] = useState<StrategyMeta>(() => {
     if (existing) {
-      return { storeName: existing.store_name, managerName: existing.manager_name, operationalManager: existing.operational_manager, deadline: existing.deadline };
+      return { storeName: existing.store_name, managerName: existing.manager_name, operationalManager: existing.operational_manager, deadline: existing.deadline, plannedStartDate: existing.planned_start_date || "" };
     }
     // Query params take priority over draft
     if (prefillStore) {
-      return { storeName: prefillStore, managerName: prefillManager, operationalManager: "", deadline: "" };
+      return { storeName: prefillStore, managerName: prefillManager, operationalManager: "", deadline: "", plannedStartDate: "" };
     }
-    return draft?.meta || { storeName: "", managerName: "", operationalManager: "", deadline: "" };
+    return draft?.meta || { storeName: "", managerName: "", operationalManager: "", deadline: "", plannedStartDate: "" };
   });
   const [categories, setCategories] = useState<StrategyCategory[]>(
     existing?.categories?.length ? existing.categories : draft?.categories?.length ? draft.categories : initCategories()
@@ -153,6 +153,7 @@ export default function StrategyBuilderPage() {
         managerName: existing.manager_name,
         operationalManager: existing.operational_manager,
         deadline: existing.deadline,
+        plannedStartDate: existing.planned_start_date || "",
       });
       setCategories(existing.categories);
       setAssignedTo(existing.assigned_to || "");
@@ -229,6 +230,7 @@ export default function StrategyBuilderPage() {
         manager_name: meta.managerName,
         operational_manager: meta.operationalManager,
         deadline: meta.deadline,
+        planned_start_date: meta.plannedStartDate,
         categories,
         assigned_to: assignedTo || null,
         store_access_confirmed: storeAccess,
@@ -244,6 +246,7 @@ export default function StrategyBuilderPage() {
         manager_name: meta.managerName,
         operational_manager: meta.operationalManager,
         deadline: meta.deadline,
+        planned_start_date: meta.plannedStartDate,
         categories,
         assigned_to: assignedTo || null,
         strategy_type: strategyType,
