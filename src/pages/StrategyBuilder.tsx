@@ -119,6 +119,7 @@ export default function StrategyBuilderPage() {
   const [newCatName, setNewCatName] = useState("");
   const [savedId, setSavedId] = useState<string | null>(id || null);
   const [managers, setManagers] = useState<Manager[]>([]);
+  const [saving, setSaving] = useState(false);
 
   const [storeAccess, setStoreAccess] = useState(existing?.store_access_confirmed || false);
 
@@ -212,6 +213,7 @@ export default function StrategyBuilderPage() {
   };
 
   const handleSave = async () => {
+    if (saving) return;
     if (!meta.storeName.trim()) {
       toast.error("Preencha o nome da loja!");
       return;
@@ -221,6 +223,8 @@ export default function StrategyBuilderPage() {
       toast.error("Selecione um Gestor Operacional!");
       return;
     }
+    setSaving(true);
+    try {
     if (savedId) {
       await updateStrategy(savedId, {
         store_name: meta.storeName,
@@ -283,6 +287,9 @@ export default function StrategyBuilderPage() {
         toast.success("Estratégia criada!");
         navigate(`/estrategia/${created.id}`, { replace: true });
       }
+    }
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -353,8 +360,9 @@ export default function StrategyBuilderPage() {
               )}
             </div>
           </div>
-          <Button size="sm" onClick={handleSave} className="bg-primary text-primary-foreground hover:bg-primary/90 shrink-0">
-            <Save className="h-4 w-4 mr-1" /> Salvar
+          <Button size="sm" onClick={handleSave} disabled={saving} className="bg-primary text-primary-foreground hover:bg-primary/90 shrink-0">
+            {saving ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Save className="h-4 w-4 mr-1" />}
+            {saving ? "Salvando..." : "Salvar"}
           </Button>
         </div>
         {id && (
