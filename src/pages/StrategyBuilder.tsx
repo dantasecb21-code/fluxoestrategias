@@ -353,11 +353,9 @@ export default function StrategyBuilderPage() {
               )}
             </div>
           </div>
-          {!isStrategicAssistant && (
-            <Button size="sm" onClick={handleSave} className="bg-primary text-primary-foreground hover:bg-primary/90 shrink-0">
-              <Save className="h-4 w-4 mr-1" /> Salvar
-            </Button>
-          )}
+          <Button size="sm" onClick={handleSave} className="bg-primary text-primary-foreground hover:bg-primary/90 shrink-0">
+            <Save className="h-4 w-4 mr-1" /> Salvar
+          </Button>
         </div>
         {id && (
           <div className="flex gap-2">
