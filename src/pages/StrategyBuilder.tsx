@@ -212,10 +212,6 @@ export default function StrategyBuilderPage() {
   };
 
   const handleSave = async () => {
-    if (isStrategicAssistant) {
-      toast.error("Auxiliar Estratégico acompanha, mas não edita estratégias.");
-      return;
-    }
     if (!meta.storeName.trim()) {
       toast.error("Preencha o nome da loja!");
       return;
