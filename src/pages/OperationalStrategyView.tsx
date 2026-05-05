@@ -262,7 +262,12 @@ export default function OperationalStrategyView() {
                   <div key={item.id} className="p-4 space-y-3">
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex-1">
-                        <p className="text-sm text-foreground leading-relaxed">{item.text}</p>
+                        {item.name && item.name !== item.text && (
+                          <p className="text-sm font-medium text-foreground leading-relaxed">{item.name}</p>
+                        )}
+                        {item.text && (
+                          <p className={`text-sm leading-relaxed ${item.name && item.name !== item.text ? "text-muted-foreground mt-0.5" : "text-foreground"}`}>{item.text}</p>
+                        )}
                       </div>
                       <Select
                         value={status}
