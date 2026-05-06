@@ -80,7 +80,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "TOKEN_REFRESHED" && !session) {
+        // refresh failed — clear stale tokens
+        try { supabase.auth.signOut(); } catch {}
+      }
       setUser(session?.user ?? null);
       if (session?.user) {
         setTimeout(() => loadUserData(session.user), 0);
@@ -102,9 +106,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (session?.user) loadUserData(session.user);
         else setLoading(false);
       })
-      .catch((err) => {
-        console.error("getSession failed:", err);
-        setLoading(false);
+      .catch(async (err) => {
+        console.error("getSession failed, clearing stale session:", err);
+        try {
+          // Wipe any corrupted auth tokens from localStorage
+          Object.keys(localStorage)
+            .filter((k) => k.startsWith("sb-") && k.includes("-auth-token"))
+            .forEach((k) => localStorage.removeItem(k));
+          await supabase.auth.signOut().catch(() => {});
+        } finally {
+          setUser(null);
+          setLoading(false);
+        }
       });
 
     return () => subscription.unsubscribe();
