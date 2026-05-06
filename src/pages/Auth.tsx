@@ -43,7 +43,13 @@ export default function Auth() {
         toast.success("Email de recuperação enviado! Verifique sua caixa de entrada.");
         setMode("login");
       } else if (isLogin) {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        const timeout = new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error("Servidor de autenticação demorou a responder. Tente novamente em instantes.")), 15000)
+        );
+        const { error } = await Promise.race([
+          supabase.auth.signInWithPassword({ email, password }),
+          timeout,
+        ]) as Awaited<ReturnType<typeof supabase.auth.signInWithPassword>>;
         if (error) throw error;
         const { data: { user: loggedUser } } = await supabase.auth.getUser();
         if (loggedUser) {
