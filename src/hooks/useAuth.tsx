@@ -47,32 +47,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [followedStrategicIds, setFollowedStrategicIds] = useState<string[]>([]);
 
   const loadUserData = useCallback(async (sessionUser: User) => {
-    const [profileRes, roleRes, linkRes] = await Promise.all([
-      supabase.from("profiles").select("display_name, approved, avatar_url, platforms").eq("user_id", sessionUser.id).single(),
-      supabase.from("user_roles").select("role").eq("user_id", sessionUser.id),
-      supabase.from("strategic_assistant_links" as any).select("strategic_user_id").eq("assistant_user_id", sessionUser.id),
-    ]);
+    try {
+      const [profileRes, roleRes, linkRes] = await Promise.all([
+        supabase.from("profiles").select("display_name, approved, avatar_url, platforms").eq("user_id", sessionUser.id).single(),
+        supabase.from("user_roles").select("role").eq("user_id", sessionUser.id),
+        supabase.from("strategic_assistant_links" as any).select("strategic_user_id").eq("assistant_user_id", sessionUser.id),
+      ]);
 
-    if (profileRes.data) {
-      setDisplayName(profileRes.data.display_name);
-      setApproved(profileRes.data.approved ?? false);
-      setAvatarUrl(profileRes.data.avatar_url || "");
-      setPlatforms((profileRes.data as any).platforms || []);
+      if (profileRes.data) {
+        setDisplayName(profileRes.data.display_name);
+        setApproved(profileRes.data.approved ?? false);
+        setAvatarUrl(profileRes.data.avatar_url || "");
+        setPlatforms((profileRes.data as any).platforms || []);
+      }
+
+      const loadedRoles = rolePriority.filter((roleName) => roleRes.data?.some((r) => String(r.role) === roleName));
+      setFollowedStrategicIds(((linkRes.data as any[]) || []).map((link) => link.strategic_user_id).filter(Boolean));
+      if (loadedRoles.length > 0) {
+        const storedRole = localStorage.getItem(getStoredRoleKey(sessionUser.id)) as AppRole | null;
+        const activeRole = storedRole && loadedRoles.includes(storedRole) ? storedRole : loadedRoles[0];
+        setRoles(loadedRoles);
+        setRole(activeRole);
+      } else {
+        setRoles([]);
+        setRole(null);
+      }
+    } catch (err) {
+      console.error("loadUserData failed:", err);
+    } finally {
+      setLoading(false);
     }
-
-    const loadedRoles = rolePriority.filter((roleName) => roleRes.data?.some((r) => String(r.role) === roleName));
-    setFollowedStrategicIds(((linkRes.data as any[]) || []).map((link) => link.strategic_user_id).filter(Boolean));
-    if (loadedRoles.length > 0) {
-      const storedRole = localStorage.getItem(getStoredRoleKey(sessionUser.id)) as AppRole | null;
-      const activeRole = storedRole && loadedRoles.includes(storedRole) ? storedRole : loadedRoles[0];
-      setRoles(loadedRoles);
-      setRole(activeRole);
-    } else {
-      setRoles([]);
-      setRole(null);
-    }
-
-    setLoading(false);
   }, []);
 
   useEffect(() => {
@@ -92,11 +96,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     });
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      if (session?.user) loadUserData(session.user);
-      else setLoading(false);
-    });
+    supabase.auth.getSession()
+      .then(({ data: { session } }) => {
+        setUser(session?.user ?? null);
+        if (session?.user) loadUserData(session.user);
+        else setLoading(false);
+      })
+      .catch((err) => {
+        console.error("getSession failed:", err);
+        setLoading(false);
+      });
 
     return () => subscription.unsubscribe();
   }, [loadUserData]);
