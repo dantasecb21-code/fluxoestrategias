@@ -434,16 +434,19 @@ Deno.serve(async (req) => {
       const adminError = await requireAdmin(req, supabaseUrl, serviceRoleKey);
       if (adminError) return adminError;
 
-      console.log("Starting bulk sync...");
+      console.log("Starting bulk sync (background)...");
 
-      const [strategies, storeRequests] = await Promise.all([
+      // Run heavy work in background to avoid 150s edge-function timeout
+      const work = (async () => {
+        try {
+          const [strategies, storeRequests] = await Promise.all([
         fetchStrategiesFromDb(supabaseUrl, serviceRoleKey),
         fetchStoreRequestsFromDb(supabaseUrl, serviceRoleKey),
       ]);
 
-      const { orphanRequests, resolvedRequestIds } = buildStoreRequestResolution(storeRequests, strategies);
+          const { orphanRequests, resolvedRequestIds } = buildStoreRequestResolution(storeRequests, strategies);
 
-      const [operationalManagerMap, storeCreatedAtMap] = await Promise.all([
+          const [operationalManagerMap, storeCreatedAtMap] = await Promise.all([
         fetchOperationalManagerMap(
           supabaseUrl,
           serviceRoleKey,
@@ -456,12 +459,12 @@ Deno.serve(async (req) => {
         ),
       ]);
 
-      console.log(`Found ${strategies.length} strategies and ${orphanRequests.length} orphan store requests to sync`);
+          console.log(`Found ${strategies.length} strategies and ${orphanRequests.length} orphan store requests to sync`);
 
-      let success = 0;
-      let fail = 0;
+          let success = 0;
+          let fail = 0;
 
-      for (const resolvedRequestId of resolvedRequestIds) {
+          for (const resolvedRequestId of resolvedRequestIds) {
         try {
           const emptyPayload = buildEmptyPayload(resolvedRequestId);
           await sendToSheets(SHEETS_WEBHOOK_URL, emptyPayload);
@@ -471,8 +474,8 @@ Deno.serve(async (req) => {
         await sleep(500);
       }
 
-      // Sync strategies
-      for (const strategy of strategies) {
+          // Sync strategies
+          for (const strategy of strategies) {
         try {
           const payload = buildPayloadFromRow(
             strategy,
@@ -492,8 +495,8 @@ Deno.serve(async (req) => {
         await sleep(500);
       }
 
-      // Sync orphan store_requests (no strategy linked yet)
-      for (const sr of orphanRequests) {
+          // Sync orphan store_requests (no strategy linked yet)
+          for (const sr of orphanRequests) {
         try {
           const payload = buildStoreRequestPayload(sr);
           const response = await sendToSheets(SHEETS_WEBHOOK_URL, payload);
@@ -509,9 +512,9 @@ Deno.serve(async (req) => {
         await sleep(500);
       }
 
-      // Clean up deleted strategies from the sheet
-      let cleaned = 0;
-      try {
+          // Clean up deleted strategies from the sheet
+          let cleaned = 0;
+          try {
         const deletedIds = await fetchDeletedStrategyIds(supabaseUrl, serviceRoleKey);
         console.log(`Found ${deletedIds.length} deleted strategies to clean from sheet`);
         const results = await Promise.allSettled(
@@ -522,16 +525,26 @@ Deno.serve(async (req) => {
           })
         );
         cleaned = results.filter(r => r.status === "fulfilled" && r.value).length;
-      } catch (e) {
+          } catch (e) {
         console.error("Error cleaning deleted strategies:", e);
       }
 
-      const total = strategies.length + orphanRequests.length;
-      console.log(`Bulk sync complete: ${success} ok, ${fail} failed out of ${total}. Cleaned ${cleaned} deleted rows.`);
+          const total = strategies.length + orphanRequests.length;
+          console.log(`Bulk sync complete: ${success} ok, ${fail} failed out of ${total}. Cleaned ${cleaned} deleted rows.`);
+        } catch (e) {
+          console.error("Bulk sync background error:", e);
+        }
+      })();
+
+      // @ts-ignore - EdgeRuntime is available in Supabase edge runtime
+      if (typeof EdgeRuntime !== "undefined" && EdgeRuntime.waitUntil) {
+        // @ts-ignore
+        EdgeRuntime.waitUntil(work);
+      }
 
       return new Response(
-        JSON.stringify({ success: true, total, synced: success, failed: fail, cleaned, orphanRequests: orphanRequests.length }),
-        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({ success: true, queued: true, message: "Sincronização iniciada em background. Acompanhe o progresso na planilha." }),
+        { status: 202, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
