@@ -401,7 +401,7 @@ export default function StrategyBuilderPage() {
       )}
 
       {/* Store access + approval for pending_approval */}
-      {id && existing && strategyStatus === "pending_approval" && !isStrategicAssistant && (
+      {id && existing && strategyStatus === "pending_approval" && (
         <Card className="p-4 border-warning/50 space-y-3">
           <div className="flex items-center gap-2 text-sm">
             <ShieldCheck className="h-4 w-4 text-primary" />
@@ -435,7 +435,7 @@ export default function StrategyBuilderPage() {
         </Card>
       )}
 
-      {id && existing && strategyStatus === "approved" && !isStrategicAssistant && (
+      {id && existing && strategyStatus === "approved" && (
         <Card className="p-4 border-success/50 bg-success/10 space-y-2">
           <p className="text-sm text-success font-medium text-center">✅ Estratégia aprovada</p>
           <div className="flex justify-center">
