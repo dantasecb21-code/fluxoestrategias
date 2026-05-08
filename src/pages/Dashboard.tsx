@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Copy, Pencil, Trash2, FileText, Zap, Clock, UserCheck, Undo2, ChevronDown, ChevronRight, CheckCircle2, X, Search } from "lucide-react";
+import { Plus, Copy, Pencil, Trash2, FileText, Zap, Clock, UserCheck, Undo2, ChevronDown, ChevronRight, CheckCircle2, X, Search, ShieldCheck } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { formatDateBR, shortName } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -28,9 +28,11 @@ function calcProgress(categories: any[]) {
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const { role } = useAuth();
+  const { role, user } = useAuth();
   const { strategies, loading, deleteStrategy, duplicateStrategy, restoreStrategy, fetchDeletedStrategies, permanentDeleteStrategy } = useDbStrategies();
   const isStrategicAssistant = role === "strategic_assistant";
+  const isAdmin = role === "admin";
+  const isStrategic = role === "strategic";
   const [showTrash, setShowTrash] = useState(false);
   const [deletedStrategies, setDeletedStrategies] = useState<DbStrategy[]>([]);
   const [loadingTrash, setLoadingTrash] = useState(false);
@@ -65,6 +67,18 @@ export default function Dashboard() {
 
   const activeStrategies = sortByPriority(filterStrategies(strategies.filter((s) => deriveStrategyDisplayStatus(s) !== "completed")));
   const completedStrategies = filterStrategies(strategies.filter((s) => deriveStrategyDisplayStatus(s) === "completed"));
+
+  // "Aguardando validação" — admin vê todas, estrategista vê só as que ele criou
+  const awaitingValidation = useMemo(() => {
+    if (!isAdmin && !isStrategic) return [];
+    return filterStrategies(
+      strategies.filter((s) => {
+        if (s.status !== "pending_admin_approval") return false;
+        if (isStrategic && s.user_id !== user?.id) return false;
+        return true;
+      })
+    );
+  }, [strategies, isAdmin, isStrategic, user?.id, searchTerm, filterManager, filterPlatform]);
 
   const toggleTrash = async () => {
     if (!showTrash) {
@@ -240,6 +254,17 @@ export default function Dashboard() {
         </Card>
       ) : (
         <div className="space-y-6">
+          {/* Aguardando validação do administrador */}
+          {(isAdmin || isStrategic) && awaitingValidation.length > 0 && (
+            <div className="space-y-3">
+              <h2 className="font-heading font-semibold text-lg text-foreground flex items-center gap-2">
+                <ShieldCheck className="h-5 w-5 text-purple-400" />
+                Aguardando validação ({awaitingValidation.length})
+              </h2>
+              {awaitingValidation.map((s) => renderStrategyCard(s))}
+            </div>
+          )}
+
           {/* Active strategies */}
           <div className="space-y-3">
             <h2 className="font-heading font-semibold text-lg text-foreground flex items-center gap-2">
