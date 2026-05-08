@@ -85,7 +85,6 @@ export default function StrategyBuilderPage() {
   const isAdmin = role === "admin";
 
   const existing = id ? strategies.find((s) => s.id === id) : null;
-  const draft = !id ? loadDraft() : null;
 
   // Pre-fill from query params (store request flow)
   const prefillStore = searchParams.get("store") || "";
@@ -101,12 +100,12 @@ export default function StrategyBuilderPage() {
     if (prefillStore) {
       return { storeName: prefillStore, managerName: prefillManager, operationalManager: "", deadline: "", plannedStartDate: "" };
     }
-    return draft?.meta || { storeName: "", managerName: "", operationalManager: "", deadline: "", plannedStartDate: "" };
+    return { storeName: "", managerName: "", operationalManager: "", deadline: "", plannedStartDate: "" };
   });
   const [categories, setCategories] = useState<StrategyCategory[]>(
-    existing?.categories?.length ? existing.categories : draft?.categories?.length ? draft.categories : initCategories()
+    existing?.categories?.length ? existing.categories : initCategories()
   );
-  const [assignedTo, setAssignedTo] = useState<string>(existing?.assigned_to || draft?.assignedTo || "");
+  const [assignedTo, setAssignedTo] = useState<string>(existing?.assigned_to || "");
   const [strategyType, setStrategyType] = useState<StrategyType>((existing?.strategy_type as StrategyType) || "initial");
   const [platform, setPlatform] = useState<string>(existing?.platform || prefillPlatform || "99food");
   const [observation, setObservation] = useState<string>(existing?.observation || "");
@@ -142,12 +141,10 @@ export default function StrategyBuilderPage() {
       .then(({ data }) => { if (data) setHistory(data as any); });
   }, [id, strategyStatus]);
 
-  // Save draft to localStorage for new strategies
+  // Garante que rascunhos antigos sejam descartados ao abrir nova estratégia
   useEffect(() => {
-    if (!id) {
-      saveDraft({ meta, categories, assignedTo, freeText: "" });
-    }
-  }, [meta, categories, assignedTo, id]);
+    if (!id) clearDraft();
+  }, [id]);
 
   useEffect(() => {
     if (existing) {
