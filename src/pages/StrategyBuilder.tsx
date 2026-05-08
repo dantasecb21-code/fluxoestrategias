@@ -82,6 +82,7 @@ export default function StrategyBuilderPage() {
   const { strategies, createStrategy, updateStrategy, loading } = useDbStrategies();
   const { role } = useAuth();
   const isStrategicAssistant = role === "strategic_assistant";
+  const isAdmin = role === "admin";
 
   const existing = id ? strategies.find((s) => s.id === id) : null;
   const draft = !id ? loadDraft() : null;
@@ -333,8 +334,36 @@ export default function StrategyBuilderPage() {
     toast.success("Aprovação removida. Estratégia voltou para análise.");
   };
 
+  // Estrategista encaminha a estratégia pro administrador validar antes de ir pro gestor
+  const handleSendToAdmin = async () => {
+    if (!savedId) return;
+    if (!assignedTo || assignedTo === "none") {
+      toast.error("Selecione um Gestor Operacional antes de encaminhar!");
+      return;
+    }
+    if (!window.confirm("Encaminhar para o administrador validar?")) return;
+    await updateStrategy(savedId, { status: "pending_admin_approval" });
+    toast.success("Encaminhada ao administrador.");
+  };
+
+  // Admin aprova a validação inicial → libera para o gestor operacional
+  const handleAdminApprove = async () => {
+    if (!savedId) return;
+    await updateStrategy(savedId, { status: "in_progress", admin_approved: true, returned: false });
+    toast.success("Aprovada e liberada para o gestor.");
+  };
+
+  // Admin devolve para o estrategista revisar
+  const handleAdminReturn = async () => {
+    if (!savedId) return;
+    if (!window.confirm("Devolver para o estrategista revisar?")) return;
+    await updateStrategy(savedId, { status: "in_progress", returned: true });
+    toast.success("Devolvida ao estrategista.");
+  };
+
   const STATUS_BADGE_MAP: Record<string, { label: string; variant: "default" | "secondary" | "outline" | "destructive" }> = {
     in_progress: { label: "Em andamento", variant: "secondary" },
+    pending_admin_approval: { label: "Aguardando admin", variant: "outline" },
     pending_approval: { label: "Aguardando aprovação", variant: "outline" },
     approved: { label: "Aprovada ✓", variant: "default" },
   };
