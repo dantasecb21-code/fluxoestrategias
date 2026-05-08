@@ -35,6 +35,7 @@ export interface DbStrategy {
   store_access_confirmed: boolean;
   returned: boolean;
   platform: string;
+  admin_approved: boolean;
   created_at: string;
   updated_at: string;
   deleted_at: string | null;
@@ -112,7 +113,8 @@ export function useDbStrategies() {
     let query = supabase.from("strategies").select("*").is("deleted_at", null);
 
     if (role === "operational") {
-      query = query.eq("assigned_to", user.id);
+      // Operacional só vê estratégias já validadas pelo admin
+      query = query.eq("assigned_to", user.id).eq("admin_approved", true);
     } else if (role === "strategic") {
       query = query.or(`user_id.eq.${user.id},assigned_to.eq.${user.id}`);
     } else if (role === "strategic_assistant") {
@@ -216,6 +218,7 @@ export function useDbStrategies() {
     platform?: string;
     started_at?: string;
     completed_at?: string;
+    admin_approved?: boolean;
   }) => {
     // Track status change in history
     if (params.status && user) {

@@ -82,6 +82,7 @@ export default function StrategyBuilderPage() {
   const { strategies, createStrategy, updateStrategy, loading } = useDbStrategies();
   const { role } = useAuth();
   const isStrategicAssistant = role === "strategic_assistant";
+  const isAdmin = role === "admin";
 
   const existing = id ? strategies.find((s) => s.id === id) : null;
   const draft = !id ? loadDraft() : null;
@@ -333,8 +334,36 @@ export default function StrategyBuilderPage() {
     toast.success("Aprovação removida. Estratégia voltou para análise.");
   };
 
+  // Estrategista encaminha a estratégia pro administrador validar antes de ir pro gestor
+  const handleSendToAdmin = async () => {
+    if (!savedId) return;
+    if (!assignedTo || assignedTo === "none") {
+      toast.error("Selecione um Gestor Operacional antes de encaminhar!");
+      return;
+    }
+    if (!window.confirm("Encaminhar para o administrador validar?")) return;
+    await updateStrategy(savedId, { status: "pending_admin_approval" });
+    toast.success("Encaminhada ao administrador.");
+  };
+
+  // Admin aprova a validação inicial → libera para o gestor operacional
+  const handleAdminApprove = async () => {
+    if (!savedId) return;
+    await updateStrategy(savedId, { status: "in_progress", admin_approved: true, returned: false });
+    toast.success("Aprovada e liberada para o gestor.");
+  };
+
+  // Admin devolve para o estrategista revisar
+  const handleAdminReturn = async () => {
+    if (!savedId) return;
+    if (!window.confirm("Devolver para o estrategista revisar?")) return;
+    await updateStrategy(savedId, { status: "in_progress", returned: true });
+    toast.success("Devolvida ao estrategista.");
+  };
+
   const STATUS_BADGE_MAP: Record<string, { label: string; variant: "default" | "secondary" | "outline" | "destructive" }> = {
     in_progress: { label: "Em andamento", variant: "secondary" },
+    pending_admin_approval: { label: "Aguardando admin", variant: "outline" },
     pending_approval: { label: "Aguardando aprovação", variant: "outline" },
     approved: { label: "Aprovada ✓", variant: "default" },
   };
@@ -446,6 +475,50 @@ export default function StrategyBuilderPage() {
               Remover aprovação
             </Button>
           </div>
+        </Card>
+      )}
+
+      {/* Aguardando admin: visão do administrador para aprovar/devolver */}
+      {id && existing && strategyStatus === "pending_admin_approval" && isAdmin && (
+        <Card className="p-4 border-purple-500/40 bg-purple-500/5 space-y-3">
+          <div className="flex items-center gap-2 text-sm">
+            <ShieldCheck className="h-4 w-4 text-purple-400" />
+            <span className="text-foreground font-medium">
+              Estratégia aguardando sua validação antes de ir pro gestor.
+            </span>
+          </div>
+          <div className="flex gap-2 flex-wrap">
+            <Button size="sm" onClick={handleAdminApprove} className="bg-success text-success-foreground hover:bg-success/90">
+              <CheckCircle2 className="h-3 w-3 mr-1" /> Aprovar e enviar ao gestor
+            </Button>
+            <Button size="sm" variant="outline" onClick={handleAdminReturn}>
+              Devolver ao estrategista
+            </Button>
+          </div>
+        </Card>
+      )}
+
+      {/* Aguardando admin: visão do estrategista (somente leitura do status) */}
+      {id && existing && strategyStatus === "pending_admin_approval" && !isAdmin && (
+        <Card className="p-4 border-purple-500/40 bg-purple-500/5">
+          <p className="text-sm text-foreground text-center">
+            ⏳ Aguardando validação do administrador antes de ir pro gestor.
+          </p>
+        </Card>
+      )}
+
+      {/* Botão "Encaminhar pro admin" — estrategista, antes da primeira aprovação */}
+      {id && existing && !isStrategicAssistant && !existing.admin_approved && strategyStatus === "in_progress" && (
+        <Card className="p-4 border-primary/30 bg-primary/5 space-y-3">
+          <div className="flex items-center gap-2 text-sm">
+            <UserCheck className="h-4 w-4 text-primary" />
+            <span className="text-foreground font-medium">
+              Pronta para enviar? Toda estratégia nova passa pelo administrador antes de ir pro gestor.
+            </span>
+          </div>
+          <Button size="sm" onClick={handleSendToAdmin} className="bg-primary text-primary-foreground hover:bg-primary/90">
+            <ShieldCheck className="h-3 w-3 mr-1" /> Encaminhar para o administrador
+          </Button>
         </Card>
       )}
 
