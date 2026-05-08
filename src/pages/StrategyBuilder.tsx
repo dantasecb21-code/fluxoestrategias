@@ -419,7 +419,7 @@ export default function StrategyBuilderPage() {
           <Progress value={progress.percent} className="h-2 mb-2" />
           <div className="flex gap-4 text-xs text-muted-foreground">
             <span className="text-success">{progress.completed} concluídos</span>
-            <span className="text-primary">{progress.inProgress} em andamento</span>
+            <span className="text-info">{progress.inProgress} em andamento</span>
             <span className="text-warning">{progress.pending} pendentes</span>
           </div>
           {existing && (
@@ -529,7 +529,7 @@ export default function StrategyBuilderPage() {
             {([
               { key: "all", label: `Todos (${progress.total})`, cls: "" },
               { key: "pending", label: `Pendentes (${progress.pending})`, cls: "border-warning/40 text-warning" },
-              { key: "in_progress", label: `Em andamento (${progress.inProgress})`, cls: "border-primary/40 text-primary" },
+              { key: "in_progress", label: `Em andamento (${progress.inProgress})`, cls: "border-info/40 text-info" },
               { key: "completed", label: `Concluídos (${progress.completed})`, cls: "border-success/40 text-success" },
             ] as const).map((f) => (
               <Button
@@ -597,7 +597,7 @@ export default function StrategyBuilderPage() {
                             </SelectTrigger>
                             <SelectContent>
                               <SelectItem value="pending"><span className="text-warning">● </span>Pendente</SelectItem>
-                              <SelectItem value="in_progress"><span className="text-primary">● </span>Em andamento</SelectItem>
+                              <SelectItem value="in_progress"><span className="text-info">● </span>Em andamento</SelectItem>
                               <SelectItem value="completed"><span className="text-success">● </span>Concluído</SelectItem>
                             </SelectContent>
                           </Select>

@@ -50,7 +50,7 @@ export function getStatusBadgeProps(status: ReturnType<typeof deriveStrategyDisp
     case "pending_admin_approval":
       return { variant: "outline" as const, className: "border-purple-500/30 text-purple-400" };
     case "in_progress":
-      return { variant: "secondary" as const, className: "" };
+      return { variant: "secondary" as const, className: "bg-info/20 text-info border-info/30" };
     case "pending":
       return { variant: "outline" as const, className: "border-warning/30 text-warning" };
     case "returned":
