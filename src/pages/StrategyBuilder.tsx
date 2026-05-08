@@ -478,6 +478,50 @@ export default function StrategyBuilderPage() {
         </Card>
       )}
 
+      {/* Aguardando admin: visão do administrador para aprovar/devolver */}
+      {id && existing && strategyStatus === "pending_admin_approval" && isAdmin && (
+        <Card className="p-4 border-purple-500/40 bg-purple-500/5 space-y-3">
+          <div className="flex items-center gap-2 text-sm">
+            <ShieldCheck className="h-4 w-4 text-purple-400" />
+            <span className="text-foreground font-medium">
+              Estratégia aguardando sua validação antes de ir pro gestor.
+            </span>
+          </div>
+          <div className="flex gap-2 flex-wrap">
+            <Button size="sm" onClick={handleAdminApprove} className="bg-success text-success-foreground hover:bg-success/90">
+              <CheckCircle2 className="h-3 w-3 mr-1" /> Aprovar e enviar ao gestor
+            </Button>
+            <Button size="sm" variant="outline" onClick={handleAdminReturn}>
+              Devolver ao estrategista
+            </Button>
+          </div>
+        </Card>
+      )}
+
+      {/* Aguardando admin: visão do estrategista (somente leitura do status) */}
+      {id && existing && strategyStatus === "pending_admin_approval" && !isAdmin && (
+        <Card className="p-4 border-purple-500/40 bg-purple-500/5">
+          <p className="text-sm text-foreground text-center">
+            ⏳ Aguardando validação do administrador antes de ir pro gestor.
+          </p>
+        </Card>
+      )}
+
+      {/* Botão "Encaminhar pro admin" — estrategista, antes da primeira aprovação */}
+      {id && existing && !isStrategicAssistant && !existing.admin_approved && strategyStatus === "in_progress" && (
+        <Card className="p-4 border-primary/30 bg-primary/5 space-y-3">
+          <div className="flex items-center gap-2 text-sm">
+            <UserCheck className="h-4 w-4 text-primary" />
+            <span className="text-foreground font-medium">
+              Pronta para enviar? Toda estratégia nova passa pelo administrador antes de ir pro gestor.
+            </span>
+          </div>
+          <Button size="sm" onClick={handleSendToAdmin} className="bg-primary text-primary-foreground hover:bg-primary/90">
+            <ShieldCheck className="h-3 w-3 mr-1" /> Encaminhar para o administrador
+          </Button>
+        </Card>
+      )}
+
       {/* Detailed progress view */}
       {showDetailedProgress && id ? (
         <div className="space-y-4">
