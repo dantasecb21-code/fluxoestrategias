@@ -208,7 +208,7 @@ export default function OperationalStrategyView() {
         <Progress value={progress.percent} className="h-3 mb-3" />
         <div className="flex gap-6 text-sm">
           <span className="text-success font-medium">{progress.completed} concluídos</span>
-          <span className="text-primary font-medium">{progress.inProgress} em andamento</span>
+          <span className="text-info font-medium">{progress.inProgress} em andamento</span>
           <span className="text-warning font-medium">{progress.pending} pendentes</span>
         </div>
       </Card>
@@ -282,7 +282,7 @@ export default function OperationalStrategyView() {
                             <span className="text-warning">● </span>Pendente
                           </SelectItem>
                           <SelectItem value="in_progress">
-                            <span className="text-primary">● </span>Em andamento
+                            <span className="text-info">● </span>Em andamento
                           </SelectItem>
                           <SelectItem value="completed">
                             <span className="text-success">● </span>Concluído
