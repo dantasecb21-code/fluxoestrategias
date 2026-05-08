@@ -180,7 +180,7 @@ export default function Dashboard() {
             <Progress value={progress.percent} className="h-1.5" />
             <div className="flex gap-3 text-xs text-muted-foreground">
               <span className="text-success">{progress.completed} concluídos</span>
-              <span className="text-primary">{progress.inProgress} em andamento</span>
+              <span className="text-info">{progress.inProgress} em andamento</span>
               <span className="text-warning">{progress.pending} pendentes</span>
             </div>
           </div>
