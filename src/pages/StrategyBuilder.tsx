@@ -318,7 +318,10 @@ export default function StrategyBuilderPage() {
       toast.error("Defina o novo prazo antes de devolver!");
       return;
     }
-    await updateStrategy(savedId, { status: "in_progress", deadline: newDeadline, categories, returned: true });
+    // Importante: NÃO enviar categories aqui. Devolver é só mudança de status/prazo.
+    // Se mandar categories do estado local, podemos sobrescrever o conteúdo que o gestor salvou
+    // (ex: se o estado ainda estiver no template inicial enquanto strategies carrega).
+    await updateStrategy(savedId, { status: "in_progress", deadline: newDeadline, returned: true });
     setShowRejectDialog(false);
     setNewDeadline("");
     toast.success("Estratégia devolvida com novo prazo.");
