@@ -167,11 +167,9 @@ export function AppSidebar() {
                       {!collapsed && (
                         <span className="flex items-center justify-between w-full">
                           <span>Aguardando Validação</span>
-                          {pendingValidationCount > 0 && (
-                            <span className="ml-2 inline-flex items-center justify-center h-5 min-w-5 px-1.5 rounded-full bg-purple-500/20 text-purple-300 text-[10px] font-semibold border border-purple-500/30">
-                              {pendingValidationCount}
-                            </span>
-                          )}
+                          <span className="ml-2 inline-flex items-center justify-center h-5 min-w-5 px-1.5 rounded-full bg-primary/15 text-primary text-[10px] font-semibold border border-primary/30">
+                            {pendingValidationCount}
+                          </span>
                         </span>
                       )}
                     </NavLink>
