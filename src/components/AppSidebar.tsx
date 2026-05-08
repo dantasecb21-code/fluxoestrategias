@@ -18,6 +18,8 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { useDbStrategies } from "@/hooks/useDbStrategies";
+import { useMemo } from "react";
 
 export function AppSidebar() {
   const { state, setOpenMobile } = useSidebar();
@@ -25,6 +27,16 @@ export function AppSidebar() {
   const isMobile = useIsMobile();
   const { user, displayName, avatarUrl, role, roles, setActiveRole, signOut } = useAuth();
   const navigate = useNavigate();
+  const { strategies } = useDbStrategies();
+  const pendingValidationCount = useMemo(
+    () =>
+      strategies.filter((s) => {
+        if (s.status !== "pending_admin_approval") return false;
+        if (role === "strategic" && s.user_id !== user?.id) return false;
+        return true;
+      }).length,
+    [strategies, role, user?.id]
+  );
 
   const handleNav = (path: string) => {
     if (isMobile) setOpenMobile(false);
@@ -136,6 +148,32 @@ export function AppSidebar() {
                     >
                       <Plus className="mr-2 h-4 w-4" />
                       {!collapsed && <span>Nova Estratégia</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
+
+              {/* Aguardando Validação */}
+              {canManage && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild>
+                    <NavLink
+                      to="/aguardando-validacao"
+                      onClick={() => handleNav("/aguardando-validacao")}
+                      className="hover:bg-sidebar-accent/50"
+                      activeClassName="bg-sidebar-accent text-primary font-medium"
+                    >
+                      <ShieldCheck className="mr-2 h-4 w-4" />
+                      {!collapsed && (
+                        <span className="flex items-center justify-between w-full">
+                          <span>Aguardando Validação</span>
+                          {pendingValidationCount > 0 && (
+                            <span className="ml-2 inline-flex items-center justify-center h-5 min-w-5 px-1.5 rounded-full bg-purple-500/20 text-purple-300 text-[10px] font-semibold border border-purple-500/30">
+                              {pendingValidationCount}
+                            </span>
+                          )}
+                        </span>
+                      )}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
