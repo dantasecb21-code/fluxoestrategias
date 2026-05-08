@@ -14,6 +14,7 @@ import UserProfile from "./pages/UserProfile";
 import ManagersList from "./pages/ManagersList";
 import StrategyNotes from "./pages/StrategyNotes";
 import PendingStrategies from "./pages/PendingStrategies";
+import PendingValidation from "./pages/PendingValidation";
 import UserApproval from "./pages/UserApproval";
 import HelpCenter from "./pages/HelpCenter";
 import TrainingCourses from "./pages/TrainingCourses";
@@ -83,6 +84,7 @@ const App = () => (
             <Route path="/estrategia/:id" element={<ProtectedRoute allowedRoles={["admin", "strategic", "strategic_assistant"]}><StrategyBuilderPage /></ProtectedRoute>} />
             <Route path="/gestores" element={<ProtectedRoute allowedRoles={["admin", "strategic"]}><ManagersList /></ProtectedRoute>} />
             <Route path="/pendentes" element={<ProtectedRoute allowedRoles={["admin", "strategic", "strategic_assistant"]}><PendingStrategies /></ProtectedRoute>} />
+            <Route path="/aguardando-validacao" element={<ProtectedRoute allowedRoles={["admin", "strategic"]}><PendingValidation /></ProtectedRoute>} />
             <Route path="/notas" element={<ProtectedRoute><StrategyNotes /></ProtectedRoute>} />
             <Route path="/aprovacoes" element={<ProtectedRoute allowedRoles={["admin"]}><UserApproval /></ProtectedRoute>} />
             <Route path="/operacional/:id" element={<ProtectedRoute allowedRoles={["operational"]}><OperationalStrategyView /></ProtectedRoute>} />
