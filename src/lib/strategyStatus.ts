@@ -10,8 +10,10 @@ export function deriveStrategyDisplayStatus(strategy: {
   status: string;
   categories: any[];
   returned?: boolean;
-}): "completed" | "pending_approval" | "in_progress" | "pending" | "returned" {
+  admin_approved?: boolean;
+}): "completed" | "pending_approval" | "pending_admin_approval" | "in_progress" | "pending" | "returned" {
   if (strategy.status === "approved") return "completed";
+  if (strategy.status === "pending_admin_approval") return "pending_admin_approval";
   if (strategy.returned && strategy.status === "in_progress") return "returned";
 
   const allItems = (strategy.categories || []).flatMap((c: any) => c.items || []);
@@ -32,6 +34,7 @@ export function getStatusLabel(status: ReturnType<typeof deriveStrategyDisplaySt
   switch (status) {
     case "completed": return "Concluída ✓";
     case "pending_approval": return "Aguardando aprovação";
+    case "pending_admin_approval": return "Aguardando admin";
     case "in_progress": return "Em andamento";
     case "pending": return "Pendente";
     case "returned": return "Devolvida";
@@ -44,6 +47,8 @@ export function getStatusBadgeProps(status: ReturnType<typeof deriveStrategyDisp
       return { variant: "default" as const, className: "bg-success/20 text-success border-success/30" };
     case "pending_approval":
       return { variant: "outline" as const, className: "border-blue-500/30 text-blue-400" };
+    case "pending_admin_approval":
+      return { variant: "outline" as const, className: "border-purple-500/30 text-purple-400" };
     case "in_progress":
       return { variant: "secondary" as const, className: "" };
     case "pending":
@@ -72,6 +77,7 @@ export function calcManagerStats(strategies: any[], managerId: string): ManagerS
     switch (displayStatus) {
       case "completed": completed++; break;
       case "pending_approval": pendingApproval++; break;
+      case "pending_admin_approval": pendingApproval++; break;
       case "in_progress": inProgress++; break;
       case "returned": inProgress++; break;
       // "pending" falls through to be counted as pending below
