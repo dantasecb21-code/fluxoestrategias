@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDbStrategies } from "@/hooks/useDbStrategies";
 import { useAuth } from "@/hooks/useAuth";
@@ -7,6 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { ShieldCheck, Clock, UserCheck } from "lucide-react";
 import { formatDateBR, shortName } from "@/lib/utils";
 import { PlatformBadge } from "@/components/PlatformBadge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function PendingValidation() {
   const navigate = useNavigate();
@@ -14,8 +16,11 @@ export default function PendingValidation() {
   const { strategies, loading } = useDbStrategies();
   const isAdmin = role === "admin";
   const isStrategic = role === "strategic";
+  const [filterPlatform, setFilterPlatform] = useState<string>("all");
+  const [filterStrategist, setFilterStrategist] = useState<string>("all");
+  const [strategistNames, setStrategistNames] = useState<Record<string, string>>({});
 
-  const list = useMemo(
+  const allPending = useMemo(
     () =>
       strategies.filter((s) => {
         if (s.status !== "pending_admin_approval") return false;
@@ -23,6 +28,36 @@ export default function PendingValidation() {
         return true;
       }),
     [strategies, isStrategic, user?.id]
+  );
+
+  const strategistIds = useMemo(
+    () => [...new Set(allPending.map((s) => s.user_id).filter(Boolean))],
+    [allPending]
+  );
+
+  useEffect(() => {
+    if (strategistIds.length === 0) return;
+    supabase
+      .from("profiles")
+      .select("user_id, display_name")
+      .in("user_id", strategistIds)
+      .then(({ data }) => {
+        if (data) {
+          const map: Record<string, string> = {};
+          data.forEach((p) => { map[p.user_id] = p.display_name; });
+          setStrategistNames(map);
+        }
+      });
+  }, [strategistIds]);
+
+  const list = useMemo(
+    () =>
+      allPending.filter((s) => {
+        if (filterPlatform !== "all" && s.platform !== filterPlatform) return false;
+        if (filterStrategist !== "all" && s.user_id !== filterStrategist) return false;
+        return true;
+      }),
+    [allPending, filterPlatform, filterStrategist]
   );
 
   if (!isAdmin && !isStrategic) {
@@ -41,6 +76,34 @@ export default function PendingValidation() {
             {isAdmin ? "Todas as estratégias enviadas para validação." : "Suas estratégias enviadas para validação."}
           </p>
         </div>
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        <Select value={filterPlatform} onValueChange={setFilterPlatform}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Setor" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos os setores</SelectItem>
+            <SelectItem value="ifood">iFood</SelectItem>
+            <SelectItem value="99food">99Food</SelectItem>
+          </SelectContent>
+        </Select>
+        {isAdmin && (
+          <Select value={filterStrategist} onValueChange={setFilterStrategist}>
+            <SelectTrigger className="w-[220px]">
+              <SelectValue placeholder="Estrategista" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos estrategistas</SelectItem>
+              {strategistIds.map((id) => (
+                <SelectItem key={id} value={id}>
+                  {strategistNames[id] || "Sem nome"}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
       </div>
 
       {loading ? (
