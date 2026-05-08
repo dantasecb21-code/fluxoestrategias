@@ -65,7 +65,17 @@ export default function Dashboard() {
       return dateA - dateB;
     });
 
-  const activeStrategies = sortByPriority(filterStrategies(strategies.filter((s) => deriveStrategyDisplayStatus(s) !== "completed")));
+  const activeStrategies = sortByPriority(
+    filterStrategies(
+      strategies.filter((s) => {
+        const ds = deriveStrategyDisplayStatus(s);
+        if (ds === "completed") return false;
+        // "Aguardando validação" tem sua própria seção (admin/estrategista dono)
+        if (ds === "pending_admin_approval" && (isAdmin || (isStrategic && s.user_id === user?.id))) return false;
+        return true;
+      })
+    )
+  );
   const completedStrategies = filterStrategies(strategies.filter((s) => deriveStrategyDisplayStatus(s) === "completed"));
 
   // "Aguardando validação" — admin vê todas, estrategista vê só as que ele criou
