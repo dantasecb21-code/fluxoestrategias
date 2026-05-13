@@ -255,6 +255,10 @@ export default function StrategyBuilderPage() {
         observation,
         platform,
         store_request_id: storeRequestId || undefined,
+        // Estrategista: vai direto pro admin validar antes do gestor.
+        // Admin: já cria validada (pula a etapa de validação).
+        status: isAdmin ? "in_progress" : "pending_admin_approval",
+        admin_approved: isAdmin ? true : false,
       });
       if (created) {
         setSavedId(created.id);
