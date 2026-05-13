@@ -341,7 +341,7 @@ export default function StrategyBuilderPage() {
       return;
     }
     if (!window.confirm("Encaminhar para o administrador validar?")) return;
-    await updateStrategy(savedId, { status: "pending_admin_approval" });
+    await updateStrategy(savedId, { status: "pending_admin_approval", returned: false, admin_return_reason: "" } as any);
     toast.success("Encaminhada ao administrador.");
   };
 
