@@ -115,6 +115,8 @@ export default function StrategyBuilderPage() {
   const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "in_progress" | "completed">("all");
   const [showRejectDialog, setShowRejectDialog] = useState(false);
   const [newDeadline, setNewDeadline] = useState("");
+  const [showAdminReturnDialog, setShowAdminReturnDialog] = useState(false);
+  const [adminReturnReason, setAdminReturnReason] = useState("");
   const [addingCategory, setAddingCategory] = useState(false);
   const [newCatName, setNewCatName] = useState("");
   const [savedId, setSavedId] = useState<string | null>(id || null);
@@ -353,9 +355,18 @@ export default function StrategyBuilderPage() {
   // Admin devolve para o estrategista revisar
   const handleAdminReturn = async () => {
     if (!savedId) return;
-    if (!window.confirm("Devolver para o estrategista revisar?")) return;
-    await updateStrategy(savedId, { status: "in_progress", returned: true });
-    toast.success("Devolvida ao estrategista.");
+    if (!adminReturnReason.trim()) {
+      toast.error("Escreve o motivo da devolução.");
+      return;
+    }
+    await updateStrategy(savedId, {
+      status: "in_progress",
+      returned: true,
+      admin_return_reason: adminReturnReason.trim(),
+    } as any);
+    toast.success("Devolvida ao estrategista com o motivo.");
+    setShowAdminReturnDialog(false);
+    setAdminReturnReason("");
   };
 
   const STATUS_BADGE_MAP: Record<string, { label: string; variant: "default" | "secondary" | "outline" | "destructive" }> = {
