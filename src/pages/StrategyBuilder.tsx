@@ -16,6 +16,7 @@ import { Progress } from "@/components/ui/progress";
 import { Card } from "@/components/ui/card";
 import { FileText, Plus, Save, Check, X, UserCheck, Loader2, Mail, ChevronDown, ChevronRight, CheckCircle2, ShieldCheck, History } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { StrategyMeta } from "@/types/strategy";
 import { supabase } from "@/integrations/supabase/client";
