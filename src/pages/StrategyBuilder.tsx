@@ -504,29 +504,30 @@ export default function StrategyBuilderPage() {
               Devolver ao estrategista
             </Button>
           </div>
-          {showAdminReturnDialog && (
-            <div className="space-y-2 pt-2 border-t border-border">
-              <label className="text-xs text-muted-foreground">Motivo da devolução</label>
-              <Textarea
-                value={adminReturnReason}
-                onChange={(e) => setAdminReturnReason(e.target.value)}
-                placeholder="Escreva o motivo pra mandar pro estrategista..."
-                rows={3}
-                className="bg-background"
-                autoFocus
-              />
-              <div className="flex gap-2">
-                <Button size="sm" variant="outline" onClick={handleAdminReturn} disabled={!adminReturnReason.trim()}>
-                  Confirmar devolução
-                </Button>
-                <Button size="sm" variant="ghost" onClick={() => { setShowAdminReturnDialog(false); setAdminReturnReason(""); }}>
-                  <X className="h-3 w-3" />
-                </Button>
-              </div>
-            </div>
-          )}
         </Card>
       )}
+
+      <Dialog open={showAdminReturnDialog} onOpenChange={(o) => { setShowAdminReturnDialog(o); if (!o) setAdminReturnReason(""); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Devolver ao estrategista</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2">
+            <label className="text-xs text-muted-foreground">Motivo da devolução</label>
+            <Textarea
+              value={adminReturnReason}
+              onChange={(e) => setAdminReturnReason(e.target.value)}
+              placeholder="Escreva o motivo pra mandar pro estrategista..."
+              rows={4}
+              autoFocus
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => { setShowAdminReturnDialog(false); setAdminReturnReason(""); }}>Cancelar</Button>
+            <Button onClick={handleAdminReturn} disabled={!adminReturnReason.trim()}>Confirmar devolução</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Aguardando admin: visão do estrategista (somente leitura do status) */}
       {id && existing && strategyStatus === "pending_admin_approval" && !isAdmin && (
