@@ -171,6 +171,8 @@ export function useDbStrategies() {
     observation?: string;
     store_request_id?: string;
     platform?: string;
+    status?: string;
+    admin_approved?: boolean;
   }): Promise<DbStrategy | null> => {
     if (!user) return null;
     const insertData: any = {
@@ -186,6 +188,8 @@ export function useDbStrategies() {
       observation: params.observation || "",
       platform: params.platform || "99food",
     };
+    if (params.status) insertData.status = params.status;
+    if (typeof params.admin_approved === "boolean") insertData.admin_approved = params.admin_approved;
     if (params.store_request_id) {
       insertData.store_request_id = params.store_request_id;
     }
