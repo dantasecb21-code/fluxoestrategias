@@ -115,6 +115,8 @@ export default function StrategyBuilderPage() {
   const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "in_progress" | "completed">("all");
   const [showRejectDialog, setShowRejectDialog] = useState(false);
   const [newDeadline, setNewDeadline] = useState("");
+  const [showAdminReturnDialog, setShowAdminReturnDialog] = useState(false);
+  const [adminReturnReason, setAdminReturnReason] = useState("");
   const [addingCategory, setAddingCategory] = useState(false);
   const [newCatName, setNewCatName] = useState("");
   const [savedId, setSavedId] = useState<string | null>(id || null);
@@ -339,7 +341,7 @@ export default function StrategyBuilderPage() {
       return;
     }
     if (!window.confirm("Encaminhar para o administrador validar?")) return;
-    await updateStrategy(savedId, { status: "pending_admin_approval" });
+    await updateStrategy(savedId, { status: "pending_admin_approval", returned: false, admin_return_reason: "" } as any);
     toast.success("Encaminhada ao administrador.");
   };
 
@@ -353,9 +355,18 @@ export default function StrategyBuilderPage() {
   // Admin devolve para o estrategista revisar
   const handleAdminReturn = async () => {
     if (!savedId) return;
-    if (!window.confirm("Devolver para o estrategista revisar?")) return;
-    await updateStrategy(savedId, { status: "in_progress", returned: true });
-    toast.success("Devolvida ao estrategista.");
+    if (!adminReturnReason.trim()) {
+      toast.error("Escreve o motivo da devolução.");
+      return;
+    }
+    await updateStrategy(savedId, {
+      status: "in_progress",
+      returned: true,
+      admin_return_reason: adminReturnReason.trim(),
+    } as any);
+    toast.success("Devolvida ao estrategista com o motivo.");
+    setShowAdminReturnDialog(false);
+    setAdminReturnReason("");
   };
 
   const STATUS_BADGE_MAP: Record<string, { label: string; variant: "default" | "secondary" | "outline" | "destructive" }> = {
@@ -488,10 +499,31 @@ export default function StrategyBuilderPage() {
             <Button size="sm" onClick={handleAdminApprove} className="bg-success text-success-foreground hover:bg-success/90">
               <CheckCircle2 className="h-3 w-3 mr-1" /> Aprovar e enviar ao gestor
             </Button>
-            <Button size="sm" variant="outline" onClick={handleAdminReturn}>
+            <Button size="sm" variant="outline" onClick={() => setShowAdminReturnDialog(true)}>
               Devolver ao estrategista
             </Button>
           </div>
+          {showAdminReturnDialog && (
+            <div className="space-y-2 pt-2 border-t border-border">
+              <label className="text-xs text-muted-foreground">Motivo da devolução</label>
+              <Textarea
+                value={adminReturnReason}
+                onChange={(e) => setAdminReturnReason(e.target.value)}
+                placeholder="Escreva o motivo pra mandar pro estrategista..."
+                rows={3}
+                className="bg-background"
+                autoFocus
+              />
+              <div className="flex gap-2">
+                <Button size="sm" variant="outline" onClick={handleAdminReturn} disabled={!adminReturnReason.trim()}>
+                  Confirmar devolução
+                </Button>
+                <Button size="sm" variant="ghost" onClick={() => { setShowAdminReturnDialog(false); setAdminReturnReason(""); }}>
+                  <X className="h-3 w-3" />
+                </Button>
+              </div>
+            </div>
+          )}
         </Card>
       )}
 
@@ -501,6 +533,14 @@ export default function StrategyBuilderPage() {
           <p className="text-sm text-foreground text-center">
             ⏳ Aguardando validação do administrador antes de ir pro gestor.
           </p>
+        </Card>
+      )}
+
+      {/* Estratégia devolvida pelo admin: alerta com motivo (estrategista) */}
+      {id && existing && (existing as any).returned && (existing as any).admin_return_reason && !isAdmin && (
+        <Card className="p-4 border-destructive/40 bg-destructive/10 space-y-1">
+          <p className="text-sm font-medium text-destructive">⚠️ Devolvida pelo administrador</p>
+          <p className="text-sm text-foreground whitespace-pre-wrap">{(existing as any).admin_return_reason}</p>
         </Card>
       )}
 
