@@ -1,0 +1,1 @@
+ALTER TABLE public.strategies ADD COLUMN IF NOT EXISTS admin_return_reason TEXT NOT NULL DEFAULT '';

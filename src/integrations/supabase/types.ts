@@ -260,6 +260,7 @@ export type Database = {
       strategies: {
         Row: {
           admin_approved: boolean
+          admin_return_reason: string
           assigned_to: string | null
           categories: Json
           completed_at: string | null
@@ -284,6 +285,7 @@ export type Database = {
         }
         Insert: {
           admin_approved?: boolean
+          admin_return_reason?: string
           assigned_to?: string | null
           categories?: Json
           completed_at?: string | null
@@ -308,6 +310,7 @@ export type Database = {
         }
         Update: {
           admin_approved?: boolean
+          admin_return_reason?: string
           assigned_to?: string | null
           categories?: Json
           completed_at?: string | null
