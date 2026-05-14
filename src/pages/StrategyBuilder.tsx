@@ -81,7 +81,7 @@ export default function StrategyBuilderPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { strategies, createStrategy, updateStrategy, loading } = useDbStrategies();
-  const { role } = useAuth();
+  const { role, user, displayName } = useAuth();
   const isStrategicAssistant = role === "strategic_assistant";
   const isAdmin = role === "admin";
 
@@ -215,13 +215,45 @@ export default function StrategyBuilderPage() {
 
   const handleSave = async () => {
     if (saving) return;
+    const logAttempt = async (outcome: string, reason = "", extra: Record<string, unknown> = {}) => {
+      try {
+        if (!user) return;
+        await supabase.from("strategy_save_attempts").insert({
+          user_id: user.id,
+          user_name: displayName || user.email || "",
+          strategy_id: savedId || null,
+          store_name: meta.storeName || "",
+          operational_manager: assignedTo || "",
+          is_new: !savedId,
+          outcome,
+          reason,
+          payload: {
+            strategy_type: strategyType,
+            platform,
+            deadline: meta.deadline,
+            planned_start_date: meta.plannedStartDate,
+            categories_count: categories.length,
+            items_count: categories.reduce((acc, c) => acc + c.items.length, 0),
+            ...extra,
+          },
+        } as any);
+      } catch (e) {
+        console.warn("logAttempt failed", e);
+      }
+    };
+
     if (!meta.storeName.trim()) {
       toast.error("Preencha o nome da loja!");
+      logAttempt("validation_failed", "missing_store_name");
       return;
     }
-    if (!window.confirm("Deseja salvar as alterações?")) return;
+    if (!window.confirm("Deseja salvar as alterações?")) {
+      logAttempt("cancelled", "user_cancelled_confirm");
+      return;
+    }
     if (!assignedTo || assignedTo === "none") {
       toast.error("Selecione um Gestor Operacional!");
+      logAttempt("validation_failed", "missing_operational_manager");
       return;
     }
     setSaving(true);
@@ -242,6 +274,7 @@ export default function StrategyBuilderPage() {
       });
       clearDraft();
       toast.success("Estratégia atualizada!");
+      logAttempt("success", "updated");
     } else {
       const created = await createStrategy({
         store_name: meta.storeName,
@@ -290,9 +323,17 @@ export default function StrategyBuilderPage() {
           }
         }
         toast.success("Estratégia criada!");
+        logAttempt("success", "created", { created_id: created.id });
         navigate(`/estrategia/${created.id}`, { replace: true });
+      } else {
+        logAttempt("error", "create_returned_null");
+        toast.error("Falha ao criar estratégia. Tenta de novo!");
       }
     }
+    } catch (err: any) {
+      console.error("handleSave error", err);
+      logAttempt("error", err?.message || "exception_thrown");
+      toast.error("Erro ao salvar. Tenta de novo!");
     } finally {
       setSaving(false);
     }

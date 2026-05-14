@@ -414,6 +414,48 @@ export type Database = {
         }
         Relationships: []
       }
+      strategy_save_attempts: {
+        Row: {
+          created_at: string
+          id: string
+          is_new: boolean
+          operational_manager: string
+          outcome: string
+          payload: Json
+          reason: string
+          store_name: string
+          strategy_id: string | null
+          user_id: string
+          user_name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_new?: boolean
+          operational_manager?: string
+          outcome: string
+          payload?: Json
+          reason?: string
+          store_name?: string
+          strategy_id?: string | null
+          user_id: string
+          user_name?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_new?: boolean
+          operational_manager?: string
+          outcome?: string
+          payload?: Json
+          reason?: string
+          store_name?: string
+          strategy_id?: string | null
+          user_id?: string
+          user_name?: string
+        }
+        Relationships: []
+      }
       training_courses: {
         Row: {
           category: string
