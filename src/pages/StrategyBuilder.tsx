@@ -81,7 +81,7 @@ export default function StrategyBuilderPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { strategies, createStrategy, updateStrategy, loading } = useDbStrategies();
-  const { role, user, profile } = useAuth();
+  const { role, user, displayName } = useAuth();
   const isStrategicAssistant = role === "strategic_assistant";
   const isAdmin = role === "admin";
 
@@ -220,7 +220,7 @@ export default function StrategyBuilderPage() {
         if (!user) return;
         await supabase.from("strategy_save_attempts").insert({
           user_id: user.id,
-          user_name: profile?.display_name || user.email || "",
+          user_name: displayName || user.email || "",
           strategy_id: savedId || null,
           store_name: meta.storeName || "",
           operational_manager: assignedTo || "",
