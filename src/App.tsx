@@ -22,6 +22,7 @@ import StoreRequests from "./pages/StoreRequests";
 import ResetPassword from "./pages/ResetPassword";
 import OperationalRanking from "./pages/OperationalRanking";
 import PendingActivities from "./pages/PendingActivities";
+import Occurrences from "./pages/Occurrences";
 import PricingCalculator from "./pages/PricingCalculator";
 import StrategyCalendar from "./pages/StrategyCalendar";
 import NotFound from "./pages/NotFound";
@@ -94,6 +95,7 @@ const App = () => (
             <Route path="/treinamentos" element={<ProtectedRoute allowedRoles={["admin", "strategic", "operational"]}><TrainingCourses /></ProtectedRoute>} />
             <Route path="/lojas-novas" element={<ProtectedRoute allowedRoles={["admin", "strategic"]}><StoreRequests /></ProtectedRoute>} />
             <Route path="/atividades" element={<ProtectedRoute><PendingActivities /></ProtectedRoute>} />
+            <Route path="/ocorrencias" element={<ProtectedRoute><Occurrences /></ProtectedRoute>} />
             <Route path="/precificacao" element={<ProtectedRoute><PricingCalculator /></ProtectedRoute>} />
             <Route path="/calendario" element={<ProtectedRoute><StrategyCalendar /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
