@@ -1,0 +1,1 @@
+ALTER TABLE public.occurrences ADD COLUMN sector text NOT NULL DEFAULT 'Operacional';

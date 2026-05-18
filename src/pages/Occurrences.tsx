@@ -23,6 +23,7 @@ interface Occurrence {
   operational_manager_id: string;
   operational_manager_name: string;
   creator_role: string;
+  sector: string;
   status: string;
   resolution: string;
   resolved_by: string | null;
@@ -37,6 +38,17 @@ const ROLE_LABELS: Record<string, string> = {
   strategic_assistant: "Auxiliar Estratégico",
   operational: "Operacional",
 };
+
+const SECTORS = [
+  "Operacional",
+  "Estratégico",
+  "Atendimento",
+  "Financeiro",
+  "Marketing",
+  "Comercial",
+  "Suporte / TI",
+  "Outros",
+];
 
 export default function Occurrences() {
   const { user, role, displayName } = useAuth();
@@ -54,6 +66,7 @@ export default function Occurrences() {
   const [occDate, setOccDate] = useState(format(new Date(), "yyyy-MM-dd"));
   const [occTime, setOccTime] = useState(format(new Date(), "HH:mm"));
   const [description, setDescription] = useState("");
+  const [sector, setSector] = useState<string>("Operacional");
 
   // resolve dialog
   const [resolveTarget, setResolveTarget] = useState<Occurrence | null>(null);
@@ -107,6 +120,7 @@ export default function Occurrences() {
     setOccDate(format(new Date(), "yyyy-MM-dd"));
     setOccTime(format(new Date(), "HH:mm"));
     setDescription("");
+    setSector("Operacional");
   };
 
   const handleCreate = async () => {
@@ -124,6 +138,7 @@ export default function Occurrences() {
       operational_manager_id: user.id,
       operational_manager_name: displayName || "",
       creator_role: role || "operational",
+      sector,
     } as any);
     setSubmitting(false);
     if (error) {
@@ -190,7 +205,7 @@ export default function Occurrences() {
     const term = search.trim().toLowerCase();
     return items.filter((o) => {
       const matchStatus = statusFilter === "all" || o.status === statusFilter;
-      const matchSector = sectorFilter === "all" || (o.creator_role || "operational") === sectorFilter;
+      const matchSector = sectorFilter === "all" || (o.sector || "Operacional") === sectorFilter;
       const matchCreator = creatorFilter === "all" || o.operational_manager_id === creatorFilter;
       const matchTerm =
         !term ||
@@ -209,6 +224,12 @@ export default function Occurrences() {
       }
     });
     return Array.from(map.entries()).map(([id, name]) => ({ id, name }));
+  }, [items]);
+
+  const sectorOptions = useMemo(() => {
+    const set = new Set<string>(SECTORS);
+    items.forEach((o) => { if (o.sector) set.add(o.sector); });
+    return Array.from(set);
   }, [items]);
 
   if (loading) {
