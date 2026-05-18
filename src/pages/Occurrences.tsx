@@ -292,6 +292,17 @@ export default function Occurrences() {
                   />
                 </div>
                 <div>
+                  <Label>Setor *</Label>
+                  <Select value={sector} onValueChange={setSector}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {SECTORS.map((s) => (
+                        <SelectItem key={s} value={s}>{s}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
                   <Label>Gestor (operacional)</Label>
                   <Input value={displayName || ""} readOnly className="bg-muted" />
                 </div>
@@ -333,10 +344,9 @@ export default function Occurrences() {
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">Todos</SelectItem>
-                    <SelectItem value="operational">Operacional</SelectItem>
-                    <SelectItem value="strategic">Estratégico</SelectItem>
-                    <SelectItem value="strategic_assistant">Auxiliar Estratégico</SelectItem>
-                    <SelectItem value="admin">Administrador</SelectItem>
+                    {sectorOptions.map((s) => (
+                      <SelectItem key={s} value={s}>{s}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -392,7 +402,7 @@ export default function Occurrences() {
                       )}
                     </Badge>
                     <Badge variant="outline" className="text-[10px]">
-                      {ROLE_LABELS[occ.creator_role] || "Operacional"}
+                      {occ.sector || "Operacional"}
                     </Badge>
                     <span className="text-xs text-muted-foreground">
                       {(() => {
