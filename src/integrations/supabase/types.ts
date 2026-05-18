@@ -103,6 +103,7 @@ export type Database = {
           resolved_at: string | null
           resolved_by: string | null
           resolved_by_name: string
+          sector: string
           status: string
           store_id: string
           updated_at: string
@@ -120,6 +121,7 @@ export type Database = {
           resolved_at?: string | null
           resolved_by?: string | null
           resolved_by_name?: string
+          sector?: string
           status?: string
           store_id?: string
           updated_at?: string
@@ -137,6 +139,7 @@ export type Database = {
           resolved_at?: string | null
           resolved_by?: string | null
           resolved_by_name?: string
+          sector?: string
           status?: string
           store_id?: string
           updated_at?: string
