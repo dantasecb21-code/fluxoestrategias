@@ -32,6 +32,7 @@ interface Occurrence {
   resolved_by_name: string;
   resolved_at: string | null;
   created_at: string;
+  possible_solution: string;
 }
 
 const ROLE_LABELS: Record<string, string> = {
@@ -59,6 +60,7 @@ export default function Occurrences() {
   const [occDate, setOccDate] = useState(format(new Date(), "yyyy-MM-dd"));
   const [occTime, setOccTime] = useState(format(new Date(), "HH:mm"));
   const [description, setDescription] = useState("");
+  const [possibleSolution, setPossibleSolution] = useState("");
   const [sector, setSector] = useState<string>("99");
 
   // resolve dialog
@@ -113,6 +115,7 @@ export default function Occurrences() {
     setOccDate(format(new Date(), "yyyy-MM-dd"));
     setOccTime(format(new Date(), "HH:mm"));
     setDescription("");
+    setPossibleSolution("");
     setSector("99");
   };
 
@@ -128,6 +131,7 @@ export default function Occurrences() {
       occurrence_date: occDate,
       occurrence_time: occTime,
       description: description.trim(),
+      possible_solution: possibleSolution.trim(),
       operational_manager_id: user.id,
       operational_manager_name: displayName || "",
       creator_role: role || "operational",

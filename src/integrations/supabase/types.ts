@@ -99,6 +99,7 @@ export type Database = {
           occurrence_time: string
           operational_manager_id: string
           operational_manager_name: string
+          possible_solution: string
           resolution: string
           resolved_at: string | null
           resolved_by: string | null
@@ -117,6 +118,7 @@ export type Database = {
           occurrence_time?: string
           operational_manager_id: string
           operational_manager_name?: string
+          possible_solution?: string
           resolution?: string
           resolved_at?: string | null
           resolved_by?: string | null
@@ -135,6 +137,7 @@ export type Database = {
           occurrence_time?: string
           operational_manager_id?: string
           operational_manager_name?: string
+          possible_solution?: string
           resolution?: string
           resolved_at?: string | null
           resolved_by?: string | null
