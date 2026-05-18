@@ -1,0 +1,1 @@
+ALTER TABLE public.occurrences ADD COLUMN IF NOT EXISTS possible_solution text NOT NULL DEFAULT '';

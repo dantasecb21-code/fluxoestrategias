@@ -32,6 +32,7 @@ interface Occurrence {
   resolved_by_name: string;
   resolved_at: string | null;
   created_at: string;
+  possible_solution: string;
 }
 
 const ROLE_LABELS: Record<string, string> = {
@@ -59,6 +60,7 @@ export default function Occurrences() {
   const [occDate, setOccDate] = useState(format(new Date(), "yyyy-MM-dd"));
   const [occTime, setOccTime] = useState(format(new Date(), "HH:mm"));
   const [description, setDescription] = useState("");
+  const [possibleSolution, setPossibleSolution] = useState("");
   const [sector, setSector] = useState<string>("99");
 
   // resolve dialog
@@ -113,6 +115,7 @@ export default function Occurrences() {
     setOccDate(format(new Date(), "yyyy-MM-dd"));
     setOccTime(format(new Date(), "HH:mm"));
     setDescription("");
+    setPossibleSolution("");
     setSector("99");
   };
 
@@ -128,6 +131,7 @@ export default function Occurrences() {
       occurrence_date: occDate,
       occurrence_time: occTime,
       description: description.trim(),
+      possible_solution: possibleSolution.trim(),
       operational_manager_id: user.id,
       operational_manager_name: displayName || "",
       creator_role: role || "operational",
@@ -282,6 +286,15 @@ export default function Occurrences() {
                     onChange={(e) => setDescription(e.target.value)}
                     placeholder="Descreva o que aconteceu..."
                     rows={4}
+                  />
+                </div>
+                <div>
+                  <Label>Possível Solução</Label>
+                  <Textarea
+                    value={possibleSolution}
+                    onChange={(e) => setPossibleSolution(e.target.value)}
+                    placeholder="Se tiver uma ideia de como resolver, escreva aqui..."
+                    rows={3}
                   />
                 </div>
                 <div>
@@ -483,6 +496,13 @@ export default function Occurrences() {
                 </div>
 
                 <p className="text-sm text-foreground whitespace-pre-wrap">{occ.description}</p>
+
+                {occ.possible_solution && (
+                  <div className="rounded-md border border-border bg-muted/40 p-2.5">
+                    <div className="text-[11px] font-medium text-muted-foreground mb-0.5">Possível solução (sugestão do gestor)</div>
+                    <p className="text-sm text-foreground whitespace-pre-wrap">{occ.possible_solution}</p>
+                  </div>
+                )}
 
                 <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                   <User className="h-3 w-3" />
