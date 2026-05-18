@@ -39,16 +39,7 @@ const ROLE_LABELS: Record<string, string> = {
   operational: "Operacional",
 };
 
-const SECTORS = [
-  "Operacional",
-  "Estratégico",
-  "Atendimento",
-  "Financeiro",
-  "Marketing",
-  "Comercial",
-  "Suporte / TI",
-  "Outros",
-];
+const SECTORS = ["99", "iFood"];
 
 export default function Occurrences() {
   const { user, role, displayName } = useAuth();
