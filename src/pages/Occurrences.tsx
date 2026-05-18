@@ -9,7 +9,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { AlertCircle, Plus, CheckCircle2, Clock, User, Store, Trash2, RotateCcw } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Checkbox } from "@/components/ui/checkbox";
+import { AlertCircle, Plus, CheckCircle2, Clock, User, Store, Trash2, RotateCcw, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { shortName } from "@/lib/utils";
@@ -67,7 +69,7 @@ export default function Occurrences() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [search, setSearch] = useState("");
   const [sectorFilter, setSectorFilter] = useState("all");
-  const [creatorFilter, setCreatorFilter] = useState("all");
+  const [creatorFilter, setCreatorFilter] = useState<string[]>([]);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
 
   const toggleExpanded = (id: string) => {
@@ -197,7 +199,7 @@ export default function Occurrences() {
     return items.filter((o) => {
       const matchStatus = statusFilter === "all" || o.status === statusFilter;
       const matchSector = sectorFilter === "all" || (o.sector || "Operacional") === sectorFilter;
-      const matchCreator = creatorFilter === "all" || o.operational_manager_id === creatorFilter;
+      const matchCreator = creatorFilter.length === 0 || creatorFilter.includes(o.operational_manager_id);
       const matchTerm =
         !term ||
         o.store_id.toLowerCase().includes(term) ||
@@ -343,15 +345,60 @@ export default function Occurrences() {
               </div>
               <div className="space-y-1.5">
                 <Label>Gestor</Label>
-                <Select value={creatorFilter} onValueChange={setCreatorFilter}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todos</SelectItem>
-                    {creatorOptions.map((c) => (
-                      <SelectItem key={c.id} value={c.id}>{shortName(c.name) || "—"}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className="w-full justify-between font-normal">
+                      <span className="truncate">
+                        {creatorFilter.length === 0
+                          ? "Todos"
+                          : creatorFilter.length === 1
+                          ? shortName(creatorOptions.find((c) => c.id === creatorFilter[0])?.name || "") || "—"
+                          : `${creatorFilter.length} selecionados`}
+                      </span>
+                      <ChevronDown className="h-4 w-4 opacity-50 shrink-0" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-64 p-2 max-h-72 overflow-y-auto" align="start">
+                    <div className="flex items-center justify-between px-2 py-1 mb-1">
+                      <button
+                        type="button"
+                        className="text-xs text-primary hover:underline"
+                        onClick={() => setCreatorFilter(creatorOptions.map((c) => c.id))}
+                      >
+                        Selecionar todos
+                      </button>
+                      <button
+                        type="button"
+                        className="text-xs text-muted-foreground hover:underline"
+                        onClick={() => setCreatorFilter([])}
+                      >
+                        Limpar
+                      </button>
+                    </div>
+                    {creatorOptions.map((c) => {
+                      const checked = creatorFilter.includes(c.id);
+                      return (
+                        <label
+                          key={c.id}
+                          className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-accent cursor-pointer text-sm"
+                        >
+                          <Checkbox
+                            checked={checked}
+                            onCheckedChange={(v) => {
+                              setCreatorFilter((prev) =>
+                                v ? [...prev, c.id] : prev.filter((id) => id !== c.id),
+                              );
+                            }}
+                          />
+                          <span className="truncate">{shortName(c.name) || "—"}</span>
+                        </label>
+                      );
+                    })}
+                    {creatorOptions.length === 0 && (
+                      <div className="px-2 py-3 text-xs text-muted-foreground text-center">Nenhum gestor</div>
+                    )}
+                  </PopoverContent>
+                </Popover>
               </div>
             </>
           )}
@@ -404,6 +451,17 @@ export default function Occurrences() {
                         }
                       })()} às {occ.occurrence_time}
                     </span>
+                    {!isOpen && (
+                      <span className="text-xs text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                        <CheckCircle2 className="h-3 w-3" />
+                        {shortName(occ.resolved_by_name) || "—"}
+                        {occ.resolved_at && (
+                          <span className="text-muted-foreground">
+                            · {format(new Date(occ.resolved_at), "dd/MM/yyyy HH:mm")}
+                          </span>
+                        )}
+                      </span>
+                    )}
                   </div>
                   <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
                     {canResolve && isOpen && (
