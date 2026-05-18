@@ -289,6 +289,15 @@ export default function Occurrences() {
                   />
                 </div>
                 <div>
+                  <Label>Possível Solução</Label>
+                  <Textarea
+                    value={possibleSolution}
+                    onChange={(e) => setPossibleSolution(e.target.value)}
+                    placeholder="Se tiver uma ideia de como resolver, escreva aqui..."
+                    rows={3}
+                  />
+                </div>
+                <div>
                   <Label>Setor *</Label>
                   <Select value={sector} onValueChange={setSector}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
