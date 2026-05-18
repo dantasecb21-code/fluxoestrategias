@@ -89,6 +89,57 @@ export type Database = {
         }
         Relationships: []
       }
+      occurrences: {
+        Row: {
+          created_at: string
+          description: string
+          id: string
+          occurrence_date: string
+          occurrence_time: string
+          operational_manager_id: string
+          operational_manager_name: string
+          resolution: string
+          resolved_at: string | null
+          resolved_by: string | null
+          resolved_by_name: string
+          status: string
+          store_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string
+          id?: string
+          occurrence_date?: string
+          occurrence_time?: string
+          operational_manager_id: string
+          operational_manager_name?: string
+          resolution?: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          resolved_by_name?: string
+          status?: string
+          store_id?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          id?: string
+          occurrence_date?: string
+          occurrence_time?: string
+          operational_manager_id?: string
+          operational_manager_name?: string
+          resolution?: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          resolved_by_name?: string
+          status?: string
+          store_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       pending_activities: {
         Row: {
           assigned_to: string | null

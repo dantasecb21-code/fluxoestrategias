@@ -13,7 +13,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { NavLink } from "@/components/NavLink";
-import { Home, Plus, LogOut, Zap, ClipboardList, Users, AlertTriangle, ShieldCheck, MessageCircleQuestion, BookOpen, Store, Trophy, ListChecks, Calculator, FileText, CalendarDays } from "lucide-react";
+import { Home, Plus, LogOut, Zap, ClipboardList, Users, AlertTriangle, ShieldCheck, MessageCircleQuestion, BookOpen, Store, Trophy, ListChecks, Calculator, FileText, CalendarDays, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -205,6 +205,21 @@ export function AppSidebar() {
                   >
                     <ListChecks className="mr-2 h-4 w-4" />
                     {!collapsed && <span>Atividades</span>}
+                  </NavLink>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+
+              {/* Ocorrências */}
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <NavLink
+                    to="/ocorrencias"
+                    onClick={() => handleNav("/ocorrencias")}
+                    className="hover:bg-sidebar-accent/50"
+                    activeClassName="bg-sidebar-accent text-primary font-medium"
+                  >
+                    <AlertCircle className="mr-2 h-4 w-4" />
+                    {!collapsed && <span>Ocorrências</span>}
                   </NavLink>
                 </SidebarMenuButton>
               </SidebarMenuItem>
