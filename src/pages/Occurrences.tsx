@@ -22,6 +22,7 @@ interface Occurrence {
   description: string;
   operational_manager_id: string;
   operational_manager_name: string;
+  creator_role: string;
   status: string;
   resolution: string;
   resolved_by: string | null;
@@ -29,6 +30,13 @@ interface Occurrence {
   resolved_at: string | null;
   created_at: string;
 }
+
+const ROLE_LABELS: Record<string, string> = {
+  admin: "Administrador",
+  strategic: "Estratégico",
+  strategic_assistant: "Auxiliar Estratégico",
+  operational: "Operacional",
+};
 
 export default function Occurrences() {
   const { user, role, displayName } = useAuth();
@@ -54,6 +62,18 @@ export default function Occurrences() {
   // filters
   const [statusFilter, setStatusFilter] = useState("all");
   const [search, setSearch] = useState("");
+  const [sectorFilter, setSectorFilter] = useState("all");
+  const [creatorFilter, setCreatorFilter] = useState("all");
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+
+  const toggleExpanded = (id: string) => {
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
 
   const fetchItems = async () => {
     const { data, error } = await supabase
@@ -103,6 +123,7 @@ export default function Occurrences() {
       description: description.trim(),
       operational_manager_id: user.id,
       operational_manager_name: displayName || "",
+      creator_role: role || "operational",
     } as any);
     setSubmitting(false);
     if (error) {
@@ -169,14 +190,26 @@ export default function Occurrences() {
     const term = search.trim().toLowerCase();
     return items.filter((o) => {
       const matchStatus = statusFilter === "all" || o.status === statusFilter;
+      const matchSector = sectorFilter === "all" || (o.creator_role || "operational") === sectorFilter;
+      const matchCreator = creatorFilter === "all" || o.operational_manager_id === creatorFilter;
       const matchTerm =
         !term ||
         o.store_id.toLowerCase().includes(term) ||
         o.description.toLowerCase().includes(term) ||
         o.operational_manager_name.toLowerCase().includes(term);
-      return matchStatus && matchTerm;
+      return matchStatus && matchSector && matchCreator && matchTerm;
     });
-  }, [items, statusFilter, search]);
+  }, [items, statusFilter, search, sectorFilter, creatorFilter]);
+
+  const creatorOptions = useMemo(() => {
+    const map = new Map<string, string>();
+    items.forEach((o) => {
+      if (!map.has(o.operational_manager_id)) {
+        map.set(o.operational_manager_id, o.operational_manager_name || "—");
+      }
+    });
+    return Array.from(map.entries()).map(([id, name]) => ({ id, name }));
+  }, [items]);
 
   if (loading) {
     return (
@@ -251,7 +284,7 @@ export default function Occurrences() {
       </div>
 
       <Card className="p-4">
-        <div className="grid gap-3 md:grid-cols-[2fr_1fr] md:items-end">
+        <div className={`grid gap-3 md:items-end ${canResolve ? "md:grid-cols-[2fr_1fr_1fr_1fr]" : "md:grid-cols-[2fr_1fr]"}`}>
           <div className="space-y-1.5">
             <Label>Buscar</Label>
             <Input
@@ -271,6 +304,35 @@ export default function Occurrences() {
               </SelectContent>
             </Select>
           </div>
+          {canResolve && (
+            <>
+              <div className="space-y-1.5">
+                <Label>Setor</Label>
+                <Select value={sectorFilter} onValueChange={setSectorFilter}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos</SelectItem>
+                    <SelectItem value="operational">Operacional</SelectItem>
+                    <SelectItem value="strategic">Estratégico</SelectItem>
+                    <SelectItem value="strategic_assistant">Auxiliar Estratégico</SelectItem>
+                    <SelectItem value="admin">Administrador</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label>Gestor</Label>
+                <Select value={creatorFilter} onValueChange={setCreatorFilter}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos</SelectItem>
+                    {creatorOptions.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>{shortName(c.name) || "—"}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </>
+          )}
         </div>
       </Card>
 
@@ -282,8 +344,13 @@ export default function Occurrences() {
         ) : (
           filtered.map((occ) => {
             const isOpen = occ.status === "open";
+            const isExpanded = expanded.has(occ.id);
             return (
-              <Card key={occ.id} className="p-4 space-y-3">
+              <Card
+                key={occ.id}
+                className="p-4 space-y-3 cursor-pointer hover:bg-accent/30 transition-colors"
+                onClick={() => toggleExpanded(occ.id)}
+              >
                 <div className="flex items-start justify-between gap-3 flex-wrap">
                   <div className="flex items-center gap-2 flex-wrap">
                     <Badge variant="outline" className="font-mono">
@@ -303,6 +370,9 @@ export default function Occurrences() {
                         <><CheckCircle2 className="h-3 w-3 mr-1" /> Resolvida</>
                       )}
                     </Badge>
+                    <Badge variant="outline" className="text-[10px]">
+                      {ROLE_LABELS[occ.creator_role] || "Operacional"}
+                    </Badge>
                     <span className="text-xs text-muted-foreground">
                       {(() => {
                         try {
@@ -313,7 +383,7 @@ export default function Occurrences() {
                       })()} às {occ.occurrence_time}
                     </span>
                   </div>
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
                     {canResolve && isOpen && (
                       <Button size="sm" onClick={() => { setResolveTarget(occ); setResolution(""); }}>
                         Responder
@@ -339,7 +409,7 @@ export default function Occurrences() {
                   Gestor: {shortName(occ.operational_manager_name) || "—"}
                 </div>
 
-                {!isOpen && (
+                {!isOpen && isExpanded && (
                   <div className="rounded-md border border-emerald-500/30 bg-emerald-500/5 p-3 space-y-1">
                     <div className="text-xs font-medium text-emerald-700 dark:text-emerald-400 flex items-center gap-1">
                       <CheckCircle2 className="h-3.5 w-3.5" />
@@ -352,6 +422,9 @@ export default function Occurrences() {
                     </div>
                     <p className="text-sm text-foreground whitespace-pre-wrap">{occ.resolution}</p>
                   </div>
+                )}
+                {!isOpen && !isExpanded && (
+                  <p className="text-[11px] text-primary">Clique para ver a resposta</p>
                 )}
               </Card>
             );
