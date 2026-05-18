@@ -57,7 +57,7 @@ export default function Occurrences() {
   const [occDate, setOccDate] = useState(format(new Date(), "yyyy-MM-dd"));
   const [occTime, setOccTime] = useState(format(new Date(), "HH:mm"));
   const [description, setDescription] = useState("");
-  const [sector, setSector] = useState<string>("Operacional");
+  const [sector, setSector] = useState<string>("99");
 
   // resolve dialog
   const [resolveTarget, setResolveTarget] = useState<Occurrence | null>(null);
@@ -111,7 +111,7 @@ export default function Occurrences() {
     setOccDate(format(new Date(), "yyyy-MM-dd"));
     setOccTime(format(new Date(), "HH:mm"));
     setDescription("");
-    setSector("Operacional");
+    setSector("99");
   };
 
   const handleCreate = async () => {
