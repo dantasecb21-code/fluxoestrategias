@@ -92,6 +92,7 @@ export type Database = {
       occurrences: {
         Row: {
           created_at: string
+          creator_role: string
           description: string
           id: string
           occurrence_date: string
@@ -108,6 +109,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          creator_role?: string
           description?: string
           id?: string
           occurrence_date?: string
@@ -124,6 +126,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          creator_role?: string
           description?: string
           id?: string
           occurrence_date?: string
