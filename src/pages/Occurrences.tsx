@@ -497,6 +497,13 @@ export default function Occurrences() {
 
                 <p className="text-sm text-foreground whitespace-pre-wrap">{occ.description}</p>
 
+                {occ.possible_solution && (
+                  <div className="rounded-md border border-border bg-muted/40 p-2.5">
+                    <div className="text-[11px] font-medium text-muted-foreground mb-0.5">Possível solução (sugestão do gestor)</div>
+                    <p className="text-sm text-foreground whitespace-pre-wrap">{occ.possible_solution}</p>
+                  </div>
+                )}
+
                 <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                   <User className="h-3 w-3" />
                   Gestor: {shortName(occ.operational_manager_name) || "—"}
