@@ -384,6 +384,7 @@ export type Database = {
           operational_manager: string
           planned_start_date: string
           platform: string
+          replaces_strategy_id: string | null
           returned: boolean
           started_at: string | null
           status: string
@@ -415,6 +416,7 @@ export type Database = {
           operational_manager?: string
           planned_start_date?: string
           platform?: string
+          replaces_strategy_id?: string | null
           returned?: boolean
           started_at?: string | null
           status?: string
@@ -446,6 +448,7 @@ export type Database = {
           operational_manager?: string
           planned_start_date?: string
           platform?: string
+          replaces_strategy_id?: string | null
           returned?: boolean
           started_at?: string | null
           status?: string

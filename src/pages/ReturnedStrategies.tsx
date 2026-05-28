@@ -5,13 +5,14 @@ import { useAuth } from "@/hooks/useAuth";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { RotateCcw, Send, AlertTriangle, ExternalLink } from "lucide-react";
+import { RotateCcw, AlertTriangle, ExternalLink, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 
 interface Item {
   id: string;
   store_name: string;
   platform: string;
+  manager_name: string;
   algorithm_return_reason: string;
   algorithm_adaptation_started_at: string | null;
   updated_at: string;
@@ -30,7 +31,7 @@ export default function ReturnedStrategies() {
     setLoading(true);
     const { data } = await supabase
       .from("strategies")
-      .select("id, store_name, platform, algorithm_return_reason, algorithm_adaptation_started_at, updated_at")
+      .select("id, store_name, platform, manager_name, algorithm_return_reason, algorithm_adaptation_started_at, updated_at")
       .eq("algorithm_adaptation_status", "returned")
       .or(`user_id.eq.${user.id},assigned_to.eq.${user.id}`)
       .is("deleted_at", null)
@@ -49,16 +50,15 @@ export default function ReturnedStrategies() {
     return () => { supabase.removeChannel(ch); };
   }, [user]);
 
-  const resend = async (item: Item) => {
-    const { error } = await supabase.from("strategies").update({
-      algorithm_adaptation_status: "pending",
-      algorithm_adaptation_deadline: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString(),
-      algorithm_return_reason: "",
-      returned: false,
-    } as any).eq("id", item.id);
-    if (error) { toast.error("Erro ao reenviar"); return; }
-    toast.success("Reenviada para o braço direito");
-    fetchItems();
+  const createRealignment = (item: Item) => {
+    const params = new URLSearchParams({
+      store: item.store_name,
+      manager: item.manager_name || "",
+      platform: item.platform,
+      type: "alignment",
+      replaces: item.id,
+    });
+    navigate(`/nova?${params.toString()}`);
   };
 
   return (
@@ -113,8 +113,8 @@ export default function ReturnedStrategies() {
                 <Button size="sm" variant="outline" onClick={() => navigate(`/estrategia/${item.id}`)}>
                   <ExternalLink className="h-4 w-4 mr-1" /> Abrir estratégia
                 </Button>
-                <Button size="sm" onClick={() => resend(item)}>
-                  <Send className="h-4 w-4 mr-1" /> Reenviar para aprovação
+                <Button size="sm" onClick={() => createRealignment(item)}>
+                  <Sparkles className="h-4 w-4 mr-1" /> Criar estratégia de realinhamento
                 </Button>
               </div>
             </Card>

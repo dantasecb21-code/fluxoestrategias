@@ -92,6 +92,8 @@ export default function StrategyBuilderPage() {
   const prefillManager = searchParams.get("manager") || "";
   const storeRequestId = searchParams.get("store_request_id") || "";
   const prefillPlatform = searchParams.get("platform") || "";
+  const prefillType = searchParams.get("type") || "";
+  const replacesStrategyId = searchParams.get("replaces") || "";
 
   const [meta, setMeta] = useState<StrategyMeta>(() => {
     if (existing) {
@@ -107,7 +109,10 @@ export default function StrategyBuilderPage() {
     existing?.categories?.length ? existing.categories : initCategories()
   );
   const [assignedTo, setAssignedTo] = useState<string>(existing?.assigned_to || "");
-  const [strategyType, setStrategyType] = useState<StrategyType>((existing?.strategy_type as StrategyType) || "initial");
+  const [strategyType, setStrategyType] = useState<StrategyType>(
+    (existing?.strategy_type as StrategyType) ||
+      (prefillType === "alignment" || prefillType === "retention" ? (prefillType as StrategyType) : "initial")
+  );
   const [platform, setPlatform] = useState<string>(existing?.platform || prefillPlatform || "99food");
   const [observation, setObservation] = useState<string>(existing?.observation || "");
   const [showReport, setShowReport] = useState(false);
@@ -296,6 +301,22 @@ export default function StrategyBuilderPage() {
       if (created) {
         setSavedId(created.id);
         clearDraft();
+        // If this is a realignment replacing a returned strategy, archive the original
+        // and persist the lineage link.
+        if (replacesStrategyId) {
+          try {
+            await supabase
+              .from("strategies")
+              .update({ replaces_strategy_id: replacesStrategyId } as any)
+              .eq("id", created.id);
+            await supabase
+              .from("strategies")
+              .update({ deleted_at: new Date().toISOString() } as any)
+              .eq("id", replacesStrategyId);
+          } catch (e) {
+            console.warn("Failed to archive replaced strategy", e);
+          }
+        }
         // Auto-complete store request if coming from store request flow
         if (storeRequestId) {
           const storeRequestUpdate: Record<string, string> = {
