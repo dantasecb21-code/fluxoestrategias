@@ -92,6 +92,8 @@ export default function StrategyBuilderPage() {
   const prefillManager = searchParams.get("manager") || "";
   const storeRequestId = searchParams.get("store_request_id") || "";
   const prefillPlatform = searchParams.get("platform") || "";
+  const prefillType = searchParams.get("type") || "";
+  const replacesStrategyId = searchParams.get("replaces") || "";
 
   const [meta, setMeta] = useState<StrategyMeta>(() => {
     if (existing) {
@@ -107,7 +109,10 @@ export default function StrategyBuilderPage() {
     existing?.categories?.length ? existing.categories : initCategories()
   );
   const [assignedTo, setAssignedTo] = useState<string>(existing?.assigned_to || "");
-  const [strategyType, setStrategyType] = useState<StrategyType>((existing?.strategy_type as StrategyType) || "initial");
+  const [strategyType, setStrategyType] = useState<StrategyType>(
+    (existing?.strategy_type as StrategyType) ||
+      (prefillType === "alignment" || prefillType === "retention" ? (prefillType as StrategyType) : "initial")
+  );
   const [platform, setPlatform] = useState<string>(existing?.platform || prefillPlatform || "99food");
   const [observation, setObservation] = useState<string>(existing?.observation || "");
   const [showReport, setShowReport] = useState(false);
