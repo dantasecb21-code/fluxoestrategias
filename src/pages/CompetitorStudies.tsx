@@ -105,7 +105,10 @@ export default function CompetitorStudies() {
   const [strategistNames, setStrategistNames] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    const ids = [...new Set(studies.map((s) => s.strategic_user_id).filter(Boolean))];
+    const ids = [...new Set([
+      ...studies.map((s) => s.strategic_user_id),
+      ...studies.map((s) => s.completed_by),
+    ].filter(Boolean) as string[])];
     const missing = ids.filter((id) => !(id in strategistNames));
     if (missing.length === 0) return;
     supabase
@@ -192,8 +195,11 @@ export default function CompetitorStudies() {
           </Button>
         )}
         {s.status === "completed" && s.completed_at && (
-          <span className="text-xs text-muted-foreground">
+          <span className="text-xs text-muted-foreground text-right">
             Concluído em {new Date(s.completed_at).toLocaleDateString("pt-BR")}
+            {s.completed_by && strategistNames[s.completed_by] && (
+              <> por {strategistNames[s.completed_by]}</>
+            )}
           </span>
         )}
       </div>
