@@ -12,6 +12,26 @@ import { toast } from "sonner";
 
 const PLATFORM_LABELS: Record<string, string> = { ifood: "iFood", "99food": "99", keeta: "Keeta" };
 
+function getDeadlineInfo(createdAt: string, completedAt: string | null) {
+  const created = new Date(createdAt);
+  const deadline = new Date(created.getTime() + 3 * 24 * 60 * 60 * 1000);
+  const ref = completedAt ? new Date(completedAt) : new Date();
+  const diffMs = deadline.getTime() - ref.getTime();
+  const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+  const deadlineLabel = deadline.toLocaleDateString("pt-BR");
+  if (completedAt) {
+    return { label: `Prazo: ${deadlineLabel} (entregue ${diffMs >= 0 ? "no prazo" : "atrasado"})`, className: diffMs >= 0 ? "text-success" : "text-destructive" };
+  }
+  if (diffMs < 0) {
+    const daysLate = Math.abs(diffDays);
+    return { label: `Atrasado ${daysLate}d (prazo ${deadlineLabel})`, className: "text-destructive font-medium" };
+  }
+  if (diffDays <= 1) {
+    return { label: `Vence hoje (prazo ${deadlineLabel})`, className: "text-warning font-medium" };
+  }
+  return { label: `Prazo: ${deadlineLabel} (${diffDays}d restantes)`, className: "text-muted-foreground" };
+}
+
 export default function CompetitorStudies() {
   const { studies, loading, startStudy, completeStudy } = useCompetitorStudies();
   const [completing, setCompleting] = useState<CompetitorStudy | null>(null);
@@ -70,6 +90,15 @@ export default function CompetitorStudies() {
               Estrategista: {strategistNames[s.strategic_user_id]}
             </p>
           )}
+          {(() => {
+            const info = getDeadlineInfo(s.created_at, s.completed_at);
+            return (
+              <p className={`text-xs flex items-center gap-1 mt-1 ${info.className}`}>
+                <Clock className="h-3 w-3" />
+                {info.label}
+              </p>
+            );
+          })()}
           {s.notes && (
             <p className="text-xs text-muted-foreground mt-2 line-clamp-3 whitespace-pre-wrap">{s.notes}</p>
           )}
