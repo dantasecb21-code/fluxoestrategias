@@ -113,11 +113,9 @@ export default function UserApproval() {
   };
 
   const handleReject = async (userId: string) => {
-    await supabase.from("user_roles").delete().eq("user_id", userId);
-    const { error } = await supabase.from("profiles").delete().eq("user_id", userId);
-
+    const { error } = await supabase.functions.invoke("delete-user", { body: { user_id: userId } });
     if (error) { toast.error("Erro ao recusar usuário"); return; }
-    toast.success("Usuário recusado e removido");
+    toast.success("Usuário removido — pode se cadastrar de novo");
     setUsers((prev) => prev.filter((u) => u.user_id !== userId));
   };
 
