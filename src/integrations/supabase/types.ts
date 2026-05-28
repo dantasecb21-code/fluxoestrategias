@@ -89,6 +89,51 @@ export type Database = {
         }
         Relationships: []
       }
+      competitor_studies: {
+        Row: {
+          assigned_to: string | null
+          completed_at: string | null
+          created_at: string
+          id: string
+          notes: string
+          platform: string
+          started_at: string | null
+          status: string
+          store_name: string
+          strategic_user_id: string
+          strategy_id: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          notes?: string
+          platform?: string
+          started_at?: string | null
+          status?: string
+          store_name?: string
+          strategic_user_id: string
+          strategy_id: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          notes?: string
+          platform?: string
+          started_at?: string | null
+          status?: string
+          store_name?: string
+          strategic_user_id?: string
+          strategy_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       occurrences: {
         Row: {
           created_at: string
@@ -321,6 +366,12 @@ export type Database = {
         Row: {
           admin_approved: boolean
           admin_return_reason: string
+          algorithm_adaptation_deadline: string | null
+          algorithm_adaptation_started_at: string | null
+          algorithm_adaptation_status: string
+          algorithm_approved_at: string | null
+          algorithm_approved_by: string | null
+          algorithm_return_reason: string
           assigned_to: string | null
           categories: Json
           completed_at: string | null
@@ -346,6 +397,12 @@ export type Database = {
         Insert: {
           admin_approved?: boolean
           admin_return_reason?: string
+          algorithm_adaptation_deadline?: string | null
+          algorithm_adaptation_started_at?: string | null
+          algorithm_adaptation_status?: string
+          algorithm_approved_at?: string | null
+          algorithm_approved_by?: string | null
+          algorithm_return_reason?: string
           assigned_to?: string | null
           categories?: Json
           completed_at?: string | null
@@ -371,6 +428,12 @@ export type Database = {
         Update: {
           admin_approved?: boolean
           admin_return_reason?: string
+          algorithm_adaptation_deadline?: string | null
+          algorithm_adaptation_started_at?: string | null
+          algorithm_adaptation_status?: string
+          algorithm_approved_at?: string | null
+          algorithm_approved_by?: string | null
+          algorithm_return_reason?: string
           assigned_to?: string | null
           categories?: Json
           completed_at?: string | null
