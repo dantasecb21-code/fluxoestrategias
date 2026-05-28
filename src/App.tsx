@@ -28,6 +28,7 @@ import StrategyCalendar from "./pages/StrategyCalendar";
 import CompetitorStudies from "./pages/CompetitorStudies";
 import AlgorithmAdaptation from "./pages/AlgorithmAdaptation";
 import StrategistRanking from "./pages/StrategistRanking";
+import ReturnedStrategies from "./pages/ReturnedStrategies";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -105,6 +106,7 @@ const App = () => (
             <Route path="/estudo-concorrencia" element={<ProtectedRoute allowedRoles={["admin", "strategic", "strategic_assistant", "competitor_analyst"]}><CompetitorStudies /></ProtectedRoute>} />
             <Route path="/adaptacao-algoritmo" element={<ProtectedRoute allowedRoles={["admin", "strategic_assistant"]}><AlgorithmAdaptation /></ProtectedRoute>} />
             <Route path="/ranking-estrategistas" element={<ProtectedRoute allowedRoles={["admin", "strategic", "strategic_assistant"]}><StrategistRanking /></ProtectedRoute>} />
+            <Route path="/devolvidas" element={<ProtectedRoute allowedRoles={["admin", "strategic"]}><ReturnedStrategies /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>

@@ -13,7 +13,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { NavLink } from "@/components/NavLink";
-import { Home, Plus, LogOut, Zap, ClipboardList, Users, AlertTriangle, ShieldCheck, MessageCircleQuestion, BookOpen, Store, Trophy, ListChecks, Calculator, FileText, CalendarDays, AlertCircle, Search, Cpu } from "lucide-react";
+import { Home, Plus, LogOut, Zap, ClipboardList, Users, AlertTriangle, ShieldCheck, MessageCircleQuestion, BookOpen, Store, Trophy, ListChecks, Calculator, FileText, CalendarDays, AlertCircle, Search, Cpu, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -33,6 +33,15 @@ export function AppSidebar() {
       strategies.filter((s) => {
         if (s.status !== "pending_admin_approval") return false;
         if (role === "strategic" && s.user_id !== user?.id) return false;
+        return true;
+      }).length,
+    [strategies, role, user?.id]
+  );
+  const returnedCount = useMemo(
+    () =>
+      strategies.filter((s: any) => {
+        if (s.algorithm_adaptation_status !== "returned") return false;
+        if (role === "strategic" && s.user_id !== user?.id && s.assigned_to !== user?.id) return false;
         return true;
       }).length,
     [strategies, role, user?.id]
@@ -233,6 +242,32 @@ export function AppSidebar() {
                     >
                       <AlertTriangle className="mr-2 h-4 w-4" />
                       {!collapsed && <span>Pendentes</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
+
+              {/* Devolvidas pelo Braço Direito */}
+              {canManage && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild>
+                    <NavLink
+                      to="/devolvidas"
+                      onClick={() => handleNav("/devolvidas")}
+                      className="hover:bg-sidebar-accent/50"
+                      activeClassName="bg-sidebar-accent text-primary font-medium"
+                    >
+                      <RotateCcw className="mr-2 h-4 w-4" />
+                      {!collapsed && (
+                        <span className="flex items-center justify-between w-full">
+                          <span>Devolvidas</span>
+                          {returnedCount > 0 && (
+                            <span className="ml-2 inline-flex items-center justify-center h-5 min-w-5 px-1.5 rounded-full bg-destructive/20 text-destructive text-[10px] font-semibold border border-destructive/40">
+                              {returnedCount}
+                            </span>
+                          )}
+                        </span>
+                      )}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
