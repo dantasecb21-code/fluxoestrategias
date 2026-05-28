@@ -12,55 +12,27 @@ import { toast } from "sonner";
 
 const PLATFORM_LABELS: Record<string, string> = { ifood: "iFood", "99food": "99", keeta: "Keeta" };
 
-// Adds N business days, always skipping the creation day AND the next business day (start day).
-// The "start day" is the first business day after creation and does not count toward the deadline.
-function addBusinessDays(date: Date, days: number) {
+// Adds N calendar days
+function addDays(date: Date, days: number) {
   const result = new Date(date);
-  // 1) Skip the creation day
-  result.setDate(result.getDate() + 1);
-  // 2) Skip weekends after creation day
-  while (result.getDay() === 0 || result.getDay() === 6) {
-    result.setDate(result.getDate() + 1);
-  }
-  // 3) Skip the first business day (start day) — it does not count as a deadline day
-  result.setDate(result.getDate() + 1);
-  while (result.getDay() === 0 || result.getDay() === 6) {
-    result.setDate(result.getDate() + 1);
-  }
-  // 4) Now add the requested business days
-  let added = 0;
-  while (added < days) {
-    result.setDate(result.getDate() + 1);
-    const d = result.getDay();
-    if (d !== 0 && d !== 6) added++;
-  }
+  result.setDate(result.getDate() + days);
   return result;
 }
 
-// Counts business days between two dates (sign preserved; today counts as 0)
-function businessDaysBetween(from: Date, to: Date) {
-  const sign = to.getTime() >= from.getTime() ? 1 : -1;
-  const start = new Date(sign === 1 ? from : to);
-  const end = new Date(sign === 1 ? to : from);
-  start.setHours(0, 0, 0, 0);
-  end.setHours(0, 0, 0, 0);
-  let count = 0;
-  const cur = new Date(start);
-  while (cur < end) {
-    cur.setDate(cur.getDate() + 1);
-    const d = cur.getDay();
-    if (d !== 0 && d !== 6) count++;
-  }
-  return sign * count;
+// Counts calendar days between two dates (sign preserved; same day = 0)
+function daysBetween(from: Date, to: Date) {
+  const a = new Date(from); a.setHours(0, 0, 0, 0);
+  const b = new Date(to); b.setHours(0, 0, 0, 0);
+  return Math.round((b.getTime() - a.getTime()) / 86400000);
 }
 
 type Priority = "overdue" | "high" | "medium" | "low" | "done_on_time" | "done_late";
 
 function getDeadlineInfo(createdAt: string, completedAt: string | null) {
   const created = new Date(createdAt);
-  const deadline = addBusinessDays(created, 3);
+  const deadline = addDays(created, 3);
   const ref = completedAt ? new Date(completedAt) : new Date();
-  const diffBd = businessDaysBetween(ref, deadline);
+  const diffBd = daysBetween(ref, deadline);
   const deadlineLabel = deadline.toLocaleDateString("pt-BR");
 
   if (completedAt) {
@@ -79,7 +51,7 @@ function getDeadlineInfo(createdAt: string, completedAt: string | null) {
   if (ref.getTime() > deadline.getTime()) {
     const daysLate = Math.abs(diffBd);
     return {
-      label: `Atrasado ${daysLate} dia útil${daysLate === 1 ? "" : "s"} (prazo ${deadlineLabel})`,
+      label: `Atrasado ${daysLate} dia${daysLate === 1 ? "" : "s"} (prazo ${deadlineLabel})`,
       className: "text-destructive font-medium",
       priority: "overdue" as Priority,
       priorityLabel: "Atrasado",
@@ -97,7 +69,7 @@ function getDeadlineInfo(createdAt: string, completedAt: string | null) {
   }
   if (diffBd === 1) {
     return {
-      label: `Prazo: ${deadlineLabel} (1 dia útil restante)`,
+      label: `Prazo: ${deadlineLabel} (1 dia restante)`,
       className: "text-warning",
       priority: "high" as Priority,
       priorityLabel: "Alta",
@@ -106,7 +78,7 @@ function getDeadlineInfo(createdAt: string, completedAt: string | null) {
   }
   if (diffBd === 2) {
     return {
-      label: `Prazo: ${deadlineLabel} (2 dias úteis restantes)`,
+      label: `Prazo: ${deadlineLabel} (2 dias restantes)`,
       className: "text-muted-foreground",
       priority: "medium" as Priority,
       priorityLabel: "Média",
@@ -114,7 +86,7 @@ function getDeadlineInfo(createdAt: string, completedAt: string | null) {
     };
   }
   return {
-    label: `Prazo: ${deadlineLabel} (${diffBd} dias úteis restantes)`,
+    label: `Prazo: ${deadlineLabel} (${diffBd} dias restantes)`,
     className: "text-muted-foreground",
     priority: "low" as Priority,
     priorityLabel: "Baixa",
