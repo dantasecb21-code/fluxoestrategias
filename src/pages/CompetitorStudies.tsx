@@ -12,25 +12,106 @@ import { toast } from "sonner";
 
 const PLATFORM_LABELS: Record<string, string> = { ifood: "iFood", "99food": "99", keeta: "Keeta" };
 
+// Adds N business days (skipping Saturdays and Sundays) to a date
+function addBusinessDays(date: Date, days: number) {
+  const result = new Date(date);
+  let added = 0;
+  while (added < days) {
+    result.setDate(result.getDate() + 1);
+    const d = result.getDay();
+    if (d !== 0 && d !== 6) added++;
+  }
+  return result;
+}
+
+// Counts business days between two dates (sign preserved; today counts as 0)
+function businessDaysBetween(from: Date, to: Date) {
+  const sign = to.getTime() >= from.getTime() ? 1 : -1;
+  const start = new Date(sign === 1 ? from : to);
+  const end = new Date(sign === 1 ? to : from);
+  start.setHours(0, 0, 0, 0);
+  end.setHours(0, 0, 0, 0);
+  let count = 0;
+  const cur = new Date(start);
+  while (cur < end) {
+    cur.setDate(cur.getDate() + 1);
+    const d = cur.getDay();
+    if (d !== 0 && d !== 6) count++;
+  }
+  return sign * count;
+}
+
+type Priority = "overdue" | "high" | "medium" | "low" | "done_on_time" | "done_late";
+
 function getDeadlineInfo(createdAt: string, completedAt: string | null) {
   const created = new Date(createdAt);
-  const deadline = new Date(created.getTime() + 3 * 24 * 60 * 60 * 1000);
+  const deadline = addBusinessDays(created, 3);
   const ref = completedAt ? new Date(completedAt) : new Date();
-  const diffMs = deadline.getTime() - ref.getTime();
-  const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+  const diffBd = businessDaysBetween(ref, deadline);
   const deadlineLabel = deadline.toLocaleDateString("pt-BR");
+
   if (completedAt) {
-    return { label: `Prazo: ${deadlineLabel} (entregue ${diffMs >= 0 ? "no prazo" : "atrasado"})`, className: diffMs >= 0 ? "text-success" : "text-destructive" };
+    const onTime = ref.getTime() <= deadline.getTime();
+    return {
+      label: `Prazo: ${deadlineLabel} (entregue ${onTime ? "no prazo" : "atrasado"})`,
+      className: onTime ? "text-success" : "text-destructive",
+      priority: (onTime ? "done_on_time" : "done_late") as Priority,
+      priorityLabel: onTime ? "Entregue no prazo" : "Entregue atrasado",
+      priorityClass: onTime
+        ? "bg-success/20 text-success border-success/30"
+        : "bg-destructive/20 text-destructive border-destructive/30",
+    };
   }
-  if (diffMs < 0) {
-    const daysLate = Math.abs(diffDays);
-    return { label: `Atrasado ${daysLate}d (prazo ${deadlineLabel})`, className: "text-destructive font-medium" };
+
+  if (ref.getTime() > deadline.getTime()) {
+    const daysLate = Math.abs(diffBd);
+    return {
+      label: `Atrasado ${daysLate} dia útil${daysLate === 1 ? "" : "s"} (prazo ${deadlineLabel})`,
+      className: "text-destructive font-medium",
+      priority: "overdue" as Priority,
+      priorityLabel: "Atrasado",
+      priorityClass: "bg-destructive/20 text-destructive border-destructive/40",
+    };
   }
-  if (diffDays <= 1) {
-    return { label: `Vence hoje (prazo ${deadlineLabel})`, className: "text-warning font-medium" };
+  if (diffBd <= 0) {
+    return {
+      label: `Vence hoje (prazo ${deadlineLabel})`,
+      className: "text-warning font-medium",
+      priority: "high" as Priority,
+      priorityLabel: "Alta",
+      priorityClass: "bg-warning/20 text-warning border-warning/40",
+    };
   }
-  return { label: `Prazo: ${deadlineLabel} (${diffDays}d restantes)`, className: "text-muted-foreground" };
+  if (diffBd === 1) {
+    return {
+      label: `Prazo: ${deadlineLabel} (1 dia útil restante)`,
+      className: "text-warning",
+      priority: "high" as Priority,
+      priorityLabel: "Alta",
+      priorityClass: "bg-warning/20 text-warning border-warning/40",
+    };
+  }
+  if (diffBd === 2) {
+    return {
+      label: `Prazo: ${deadlineLabel} (2 dias úteis restantes)`,
+      className: "text-muted-foreground",
+      priority: "medium" as Priority,
+      priorityLabel: "Média",
+      priorityClass: "bg-info/20 text-info border-info/40",
+    };
+  }
+  return {
+    label: `Prazo: ${deadlineLabel} (${diffBd} dias úteis restantes)`,
+    className: "text-muted-foreground",
+    priority: "low" as Priority,
+    priorityLabel: "Baixa",
+    priorityClass: "bg-muted text-muted-foreground border-border",
+  };
 }
+
+const PRIORITY_ORDER: Record<Priority, number> = {
+  overdue: 0, high: 1, medium: 2, low: 3, done_on_time: 4, done_late: 5,
+};
 
 export default function CompetitorStudies() {
   const { studies, loading, startStudy, completeStudy } = useCompetitorStudies();
@@ -56,8 +137,14 @@ export default function CompetitorStudies() {
   }, [studies, strategistNames]);
 
   const grouped = useMemo(() => ({
-    pending: studies.filter((s) => s.status === "pending"),
-    in_progress: studies.filter((s) => s.status === "in_progress"),
+    pending: [...studies.filter((s) => s.status === "pending")].sort(
+      (a, b) => PRIORITY_ORDER[getDeadlineInfo(a.created_at, a.completed_at).priority]
+              - PRIORITY_ORDER[getDeadlineInfo(b.created_at, b.completed_at).priority]
+    ),
+    in_progress: [...studies.filter((s) => s.status === "in_progress")].sort(
+      (a, b) => PRIORITY_ORDER[getDeadlineInfo(a.created_at, a.completed_at).priority]
+              - PRIORITY_ORDER[getDeadlineInfo(b.created_at, b.completed_at).priority]
+    ),
     completed: studies.filter((s) => s.status === "completed"),
   }), [studies]);
 
@@ -73,7 +160,9 @@ export default function CompetitorStudies() {
     else toast.error("Erro ao concluir");
   };
 
-  const StudyCard = ({ s }: { s: CompetitorStudy }) => (
+  const StudyCard = ({ s }: { s: CompetitorStudy }) => {
+    const info = getDeadlineInfo(s.created_at, s.completed_at);
+    return (
     <Card className="p-4 flex flex-col gap-3">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
@@ -90,20 +179,20 @@ export default function CompetitorStudies() {
               Estrategista: {strategistNames[s.strategic_user_id]}
             </p>
           )}
-          {(() => {
-            const info = getDeadlineInfo(s.created_at, s.completed_at);
-            return (
-              <p className={`text-xs flex items-center gap-1 mt-1 ${info.className}`}>
-                <Clock className="h-3 w-3" />
-                {info.label}
-              </p>
-            );
-          })()}
+          <p className={`text-xs flex items-center gap-1 mt-1 ${info.className}`}>
+            <Clock className="h-3 w-3" />
+            {info.label}
+          </p>
           {s.notes && (
             <p className="text-xs text-muted-foreground mt-2 line-clamp-3 whitespace-pre-wrap">{s.notes}</p>
           )}
         </div>
-        <Badge variant="outline">{PLATFORM_LABELS[s.platform] || s.platform}</Badge>
+        <div className="flex flex-col items-end gap-1 shrink-0">
+          <Badge variant="outline" className={info.priorityClass}>
+            Prioridade: {info.priorityLabel}
+          </Badge>
+          <Badge variant="outline">{PLATFORM_LABELS[s.platform] || s.platform}</Badge>
+        </div>
       </div>
       <div className="flex gap-2 justify-end">
         {s.status === "pending" && (
@@ -124,7 +213,8 @@ export default function CompetitorStudies() {
         )}
       </div>
     </Card>
-  );
+    );
+  };
 
   const Empty = ({ msg }: { msg: string }) => (
     <Card className="p-8 text-center border-dashed">
