@@ -238,7 +238,7 @@ export default function UserApproval() {
       <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
         <div className="flex items-center gap-2 flex-wrap">
           <span className="text-xs text-muted-foreground">Cargos:</span>
-          {(["admin", "strategic", "strategic_assistant", "operational"] as const).map((userRole) => {
+          {(["admin", "strategic", "strategic_assistant", "operational", "competitor_analyst"] as const).map((userRole) => {
             const active = u.roles.includes(userRole);
             return (
               <button
