@@ -100,8 +100,9 @@ export type Database = {
           started_at: string | null
           status: string
           store_name: string
+          store_request_id: string | null
           strategic_user_id: string
-          strategy_id: string
+          strategy_id: string | null
           updated_at: string
         }
         Insert: {
@@ -114,8 +115,9 @@ export type Database = {
           started_at?: string | null
           status?: string
           store_name?: string
+          store_request_id?: string | null
           strategic_user_id: string
-          strategy_id: string
+          strategy_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -128,8 +130,9 @@ export type Database = {
           started_at?: string | null
           status?: string
           store_name?: string
+          store_request_id?: string | null
           strategic_user_id?: string
-          strategy_id?: string
+          strategy_id?: string | null
           updated_at?: string
         }
         Relationships: []
