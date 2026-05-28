@@ -301,6 +301,22 @@ export default function StrategyBuilderPage() {
       if (created) {
         setSavedId(created.id);
         clearDraft();
+        // If this is a realignment replacing a returned strategy, archive the original
+        // and persist the lineage link.
+        if (replacesStrategyId) {
+          try {
+            await supabase
+              .from("strategies")
+              .update({ replaces_strategy_id: replacesStrategyId } as any)
+              .eq("id", created.id);
+            await supabase
+              .from("strategies")
+              .update({ deleted_at: new Date().toISOString() } as any)
+              .eq("id", replacesStrategyId);
+          } catch (e) {
+            console.warn("Failed to archive replaced strategy", e);
+          }
+        }
         // Auto-complete store request if coming from store request flow
         if (storeRequestId) {
           const storeRequestUpdate: Record<string, string> = {
