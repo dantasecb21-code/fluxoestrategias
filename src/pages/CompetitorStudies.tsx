@@ -1,11 +1,12 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Search, Play, CheckCircle2, Clock, Store } from "lucide-react";
+import { Search, Play, CheckCircle2, Clock, Store, User } from "lucide-react";
 import { useCompetitorStudies, CompetitorStudy } from "@/hooks/useCompetitorStudies";
 import { toast } from "sonner";
 
@@ -15,6 +16,24 @@ export default function CompetitorStudies() {
   const { studies, loading, startStudy, completeStudy } = useCompetitorStudies();
   const [completing, setCompleting] = useState<CompetitorStudy | null>(null);
   const [notes, setNotes] = useState("");
+  const [strategistNames, setStrategistNames] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    const ids = [...new Set(studies.map((s) => s.strategic_user_id).filter(Boolean))];
+    const missing = ids.filter((id) => !(id in strategistNames));
+    if (missing.length === 0) return;
+    supabase
+      .from("profiles")
+      .select("user_id, display_name")
+      .in("user_id", missing)
+      .then(({ data }) => {
+        if (!data) return;
+        setStrategistNames((prev) => ({
+          ...prev,
+          ...Object.fromEntries(data.map((p: any) => [p.user_id, p.display_name])),
+        }));
+      });
+  }, [studies, strategistNames]);
 
   const grouped = useMemo(() => ({
     pending: studies.filter((s) => s.status === "pending"),
@@ -45,6 +64,12 @@ export default function CompetitorStudies() {
           <p className="text-xs text-muted-foreground">
             Criado em {new Date(s.created_at).toLocaleDateString("pt-BR")}
           </p>
+          {strategistNames[s.strategic_user_id] && (
+            <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
+              <User className="h-3 w-3" />
+              Estrategista: {strategistNames[s.strategic_user_id]}
+            </p>
+          )}
           {s.notes && (
             <p className="text-xs text-muted-foreground mt-2 line-clamp-3 whitespace-pre-wrap">{s.notes}</p>
           )}
