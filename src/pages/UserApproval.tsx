@@ -204,6 +204,7 @@ export default function UserApproval() {
     if (role === "strategic") return "Gestor Estratégico";
     if (role === "strategic_assistant") return "Auxiliar Estratégico";
     if (role === "operational") return "Gestor Operacional";
+    if (role === "competitor_analyst") return "Analista de Concorrência";
     return role;
   };
 

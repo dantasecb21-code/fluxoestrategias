@@ -25,6 +25,9 @@ import PendingActivities from "./pages/PendingActivities";
 import Occurrences from "./pages/Occurrences";
 import PricingCalculator from "./pages/PricingCalculator";
 import StrategyCalendar from "./pages/StrategyCalendar";
+import CompetitorStudies from "./pages/CompetitorStudies";
+import AlgorithmAdaptation from "./pages/AlgorithmAdaptation";
+import StrategistRanking from "./pages/StrategistRanking";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -67,6 +70,7 @@ function HomeRedirect() {
   const { role, loading } = useAuth();
   if (loading) return <div className="flex items-center justify-center min-h-screen text-muted-foreground">Carregando...</div>;
   if (role === "operational") return <OperationalDashboard />;
+  if (role === "competitor_analyst") return <CompetitorStudies />;
   return <Dashboard />;
 }
 
@@ -98,6 +102,9 @@ const App = () => (
             <Route path="/ocorrencias" element={<ProtectedRoute><Occurrences /></ProtectedRoute>} />
             <Route path="/precificacao" element={<ProtectedRoute><PricingCalculator /></ProtectedRoute>} />
             <Route path="/calendario" element={<ProtectedRoute><StrategyCalendar /></ProtectedRoute>} />
+            <Route path="/estudo-concorrencia" element={<ProtectedRoute allowedRoles={["admin", "strategic", "strategic_assistant", "competitor_analyst"]}><CompetitorStudies /></ProtectedRoute>} />
+            <Route path="/adaptacao-algoritmo" element={<ProtectedRoute allowedRoles={["admin", "strategic_assistant"]}><AlgorithmAdaptation /></ProtectedRoute>} />
+            <Route path="/ranking-estrategistas" element={<ProtectedRoute allowedRoles={["admin", "strategic", "strategic_assistant"]}><StrategistRanking /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>

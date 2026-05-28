@@ -13,7 +13,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { NavLink } from "@/components/NavLink";
-import { Home, Plus, LogOut, Zap, ClipboardList, Users, AlertTriangle, ShieldCheck, MessageCircleQuestion, BookOpen, Store, Trophy, ListChecks, Calculator, FileText, CalendarDays, AlertCircle } from "lucide-react";
+import { Home, Plus, LogOut, Zap, ClipboardList, Users, AlertTriangle, ShieldCheck, MessageCircleQuestion, BookOpen, Store, Trophy, ListChecks, Calculator, FileText, CalendarDays, AlertCircle, Search, Cpu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -51,12 +51,14 @@ export function AppSidebar() {
   const isStrategic = role === "strategic";
   const isStrategicAssistant = role === "strategic_assistant";
   const isOperational = role === "operational";
+  const isCompetitorAnalyst = role === "competitor_analyst";
   const canManage = isAdmin || isStrategic;
 
   const roleLabel = (value: string | null) => {
     if (value === "admin") return "Administrador";
     if (value === "strategic") return "Gestor Estratégico";
     if (value === "strategic_assistant") return "Auxiliar Estratégico";
+    if (value === "competitor_analyst") return "Analista de Concorrência";
     return "Gestor Operacional";
   };
 
@@ -118,6 +120,48 @@ export function AppSidebar() {
                   </NavLink>
                 </SidebarMenuButton>
               </SidebarMenuItem>
+
+              {/* Estudo de Concorrência */}
+              {(canManage || isStrategicAssistant || isCompetitorAnalyst) && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild>
+                    <NavLink to="/estudo-concorrencia" onClick={() => handleNav("/estudo-concorrencia")}
+                      className="hover:bg-sidebar-accent/50"
+                      activeClassName="bg-sidebar-accent text-primary font-medium">
+                      <Search className="mr-2 h-4 w-4" />
+                      {!collapsed && <span>Estudo Concorrência</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
+
+              {/* Adaptação do Algoritmo - braço direito + admin */}
+              {(isAdmin || isStrategicAssistant) && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild>
+                    <NavLink to="/adaptacao-algoritmo" onClick={() => handleNav("/adaptacao-algoritmo")}
+                      className="hover:bg-sidebar-accent/50"
+                      activeClassName="bg-sidebar-accent text-primary font-medium">
+                      <Cpu className="mr-2 h-4 w-4" />
+                      {!collapsed && <span>Adaptação Algoritmo</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
+
+              {/* Ranking Estrategistas */}
+              {(canManage || isStrategicAssistant) && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild>
+                    <NavLink to="/ranking-estrategistas" onClick={() => handleNav("/ranking-estrategistas")}
+                      className="hover:bg-sidebar-accent/50"
+                      activeClassName="bg-sidebar-accent text-primary font-medium">
+                      <Trophy className="mr-2 h-4 w-4" />
+                      {!collapsed && <span>Ranking Estrategistas</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
 
               {/* Lojas Novas */}
               {canManage && (
