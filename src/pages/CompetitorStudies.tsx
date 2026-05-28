@@ -12,9 +12,22 @@ import { toast } from "sonner";
 
 const PLATFORM_LABELS: Record<string, string> = { ifood: "iFood", "99food": "99", keeta: "Keeta" };
 
-// Adds N business days (skipping Saturdays and Sundays) to a date
+// Adds N business days, always skipping the creation day AND the next business day (start day).
+// The "start day" is the first business day after creation and does not count toward the deadline.
 function addBusinessDays(date: Date, days: number) {
   const result = new Date(date);
+  // 1) Skip the creation day
+  result.setDate(result.getDate() + 1);
+  // 2) Skip weekends after creation day
+  while (result.getDay() === 0 || result.getDay() === 6) {
+    result.setDate(result.getDate() + 1);
+  }
+  // 3) Skip the first business day (start day) — it does not count as a deadline day
+  result.setDate(result.getDate() + 1);
+  while (result.getDay() === 0 || result.getDay() === 6) {
+    result.setDate(result.getDate() + 1);
+  }
+  // 4) Now add the requested business days
   let added = 0;
   while (added < days) {
     result.setDate(result.getDate() + 1);
