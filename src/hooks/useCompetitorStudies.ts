@@ -15,6 +15,7 @@ export interface CompetitorStudy {
   notes: string;
   started_at: string | null;
   completed_at: string | null;
+  completed_by: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -55,7 +56,12 @@ export function useCompetitorStudies() {
     updateStudy(id, { status: "in_progress", started_at: new Date().toISOString() } as any);
 
   const completeStudy = (id: string, notes?: string) =>
-    updateStudy(id, { status: "completed", completed_at: new Date().toISOString(), ...(notes !== undefined ? { notes } : {}) } as any);
+    updateStudy(id, {
+      status: "completed",
+      completed_at: new Date().toISOString(),
+      completed_by: user?.id ?? null,
+      ...(notes !== undefined ? { notes } : {}),
+    } as any);
 
   return { studies, loading, refetch: fetchStudies, updateStudy, startStudy, completeStudy };
 }

@@ -1,0 +1,1 @@
+ALTER TABLE public.competitor_studies ADD COLUMN IF NOT EXISTS completed_by uuid;
