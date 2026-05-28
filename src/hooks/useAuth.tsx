@@ -2,7 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useState, ReactNode 
 import { supabase } from "@/integrations/supabase/client";
 import type { User } from "@supabase/supabase-js";
 
-type AppRole = "admin" | "strategic" | "strategic_assistant" | "operational";
+type AppRole = "admin" | "strategic" | "strategic_assistant" | "operational" | "competitor_analyst";
 
 interface AuthContextType {
   user: User | null;
@@ -32,7 +32,7 @@ const AuthContext = createContext<AuthContextType>({
   signOut: async () => {},
 });
 
-const rolePriority: AppRole[] = ["admin", "strategic", "strategic_assistant", "operational"];
+const rolePriority: AppRole[] = ["admin", "strategic", "strategic_assistant", "operational", "competitor_analyst"];
 const getStoredRoleKey = (userId: string) => `active-role:${userId}`;
 
 export function AuthProvider({ children }: { children: ReactNode }) {
