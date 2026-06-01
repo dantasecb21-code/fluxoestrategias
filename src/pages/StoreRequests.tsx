@@ -717,6 +717,15 @@ export default function StoreRequests() {
                     rows={3}
                   />
                 </div>
+                <div>
+                  <Label className="flex items-center gap-1"><Search className="h-3.5 w-3.5" /> Concorrentes</Label>
+                  <Textarea
+                    value={competitors}
+                    onChange={(e) => setCompetitors(e.target.value)}
+                    placeholder="Liste os concorrentes desta loja (um por linha ou separados por vírgula)"
+                    rows={3}
+                  />
+                </div>
                 <Button
                   className="w-full"
                   onClick={handleSubmit}
