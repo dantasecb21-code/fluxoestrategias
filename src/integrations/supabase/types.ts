@@ -92,6 +92,7 @@ export type Database = {
       competitor_studies: {
         Row: {
           assigned_to: string | null
+          competitors: string
           completed_at: string | null
           completed_by: string | null
           created_at: string
@@ -108,6 +109,7 @@ export type Database = {
         }
         Insert: {
           assigned_to?: string | null
+          competitors?: string
           completed_at?: string | null
           completed_by?: string | null
           created_at?: string
@@ -124,6 +126,7 @@ export type Database = {
         }
         Update: {
           assigned_to?: string | null
+          competitors?: string
           completed_at?: string | null
           completed_by?: string | null
           created_at?: string
@@ -297,6 +300,7 @@ export type Database = {
         Row: {
           assigned_to: string | null
           client_name: string
+          competitors: string
           created_at: string
           created_by: string
           id: string
@@ -313,6 +317,7 @@ export type Database = {
         Insert: {
           assigned_to?: string | null
           client_name?: string
+          competitors?: string
           created_at?: string
           created_by: string
           id?: string
@@ -329,6 +334,7 @@ export type Database = {
         Update: {
           assigned_to?: string | null
           client_name?: string
+          competitors?: string
           created_at?: string
           created_by?: string
           id?: string
