@@ -19,6 +19,15 @@ function addDays(date: Date, days: number) {
   return result;
 }
 
+// Pushes weekend deadlines to the next Monday
+function adjustWeekendToMonday(date: Date) {
+  const d = new Date(date);
+  const day = d.getDay(); // 0 = Sun, 6 = Sat
+  if (day === 6) d.setDate(d.getDate() + 2); // Sat -> Mon
+  else if (day === 0) d.setDate(d.getDate() + 1); // Sun -> Mon
+  return d;
+}
+
 // Counts calendar days between two dates (sign preserved; same day = 0)
 function daysBetween(from: Date, to: Date) {
   const a = new Date(from); a.setHours(0, 0, 0, 0);
@@ -30,7 +39,7 @@ type Priority = "overdue" | "high" | "medium" | "low" | "done_on_time" | "done_l
 
 function getDeadlineInfo(createdAt: string, completedAt: string | null) {
   const created = new Date(createdAt);
-  const deadline = addDays(created, 3);
+  const deadline = adjustWeekendToMonday(addDays(created, 3));
   const ref = completedAt ? new Date(completedAt) : new Date();
   const diffBd = daysBetween(ref, deadline);
   const deadlineLabel = deadline.toLocaleDateString("pt-BR");
