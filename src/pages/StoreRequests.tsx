@@ -45,6 +45,7 @@ interface StoreRequest {
   updated_at: string;
   platform: string;
   store_created_at: string | null;
+  competitors?: string;
 }
 
 interface StrategicUser {
@@ -95,6 +96,7 @@ export default function StoreRequests() {
   const [platformAccess, setPlatformAccess] = useState(false);
   const [meetingDate, setMeetingDate] = useState("");
   const [observation, setObservation] = useState("");
+  const [competitors, setCompetitors] = useState("");
   const [assignedTo, setAssignedTo] = useState("");
   const [editStatus, setEditStatus] = useState("pending");
   const [submitting, setSubmitting] = useState(false);
@@ -204,6 +206,7 @@ export default function StoreRequests() {
     setPlatformAccess(false);
     setMeetingDate("");
     setObservation("");
+    setCompetitors("");
     setAssignedTo("");
     setEditStatus("pending");
     setEditingId(null);
@@ -221,6 +224,7 @@ export default function StoreRequests() {
     setPlatformAccess(req.platform_access_confirmed);
     setMeetingDate(req.meeting_date);
     setObservation(req.observation);
+    setCompetitors((req as any).competitors || "");
     setAssignedTo(req.assigned_to || "");
     setEditStatus(req.status);
     setEditingId(req.id);
@@ -291,6 +295,7 @@ export default function StoreRequests() {
         platform_access_confirmed: platformAccess,
         meeting_date: meetingDate,
         observation: observation.trim(),
+        competitors: competitors.trim(),
         assigned_to: assignedTo,
         status: editStatus,
         platform: platformField,
@@ -317,6 +322,7 @@ export default function StoreRequests() {
         platform_access_confirmed: platformAccess,
         meeting_date: meetingDate,
         observation: observation.trim(),
+        competitors: competitors.trim(),
         assigned_to: assignedTo,
         created_by: user.id,
         platform: platformField,
@@ -452,6 +458,13 @@ export default function StoreRequests() {
           <p className="text-sm text-muted-foreground bg-muted/50 p-2 rounded">
             {req.observation}
           </p>
+        )}
+
+        {(req as any).competitors && (
+          <div className="text-xs text-muted-foreground bg-muted/30 p-2 rounded">
+            <span className="font-semibold text-foreground">Concorrentes: </span>
+            <span className="whitespace-pre-wrap">{(req as any).competitors}</span>
+          </div>
         )}
 
         <div className="text-xs text-muted-foreground">
@@ -701,6 +714,15 @@ export default function StoreRequests() {
                     value={observation}
                     onChange={(e) => setObservation(e.target.value)}
                     placeholder="Informações adicionais sobre a loja..."
+                    rows={3}
+                  />
+                </div>
+                <div>
+                  <Label className="flex items-center gap-1"><Search className="h-3.5 w-3.5" /> Concorrentes</Label>
+                  <Textarea
+                    value={competitors}
+                    onChange={(e) => setCompetitors(e.target.value)}
+                    placeholder="Liste os concorrentes desta loja (um por linha ou separados por vírgula)"
                     rows={3}
                   />
                 </div>

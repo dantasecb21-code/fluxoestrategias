@@ -174,6 +174,12 @@ export default function CompetitorStudies() {
           {s.notes && (
             <p className="text-xs text-muted-foreground mt-2 line-clamp-3 whitespace-pre-wrap">{s.notes}</p>
           )}
+          {s.competitors && (
+            <div className="mt-2 text-xs bg-muted/40 border border-border rounded p-2">
+              <p className="font-semibold text-foreground mb-1">Concorrentes informados:</p>
+              <p className="text-muted-foreground whitespace-pre-wrap">{s.competitors}</p>
+            </div>
+          )}
         </div>
         <div className="flex flex-col items-end gap-1 shrink-0">
           <Badge variant="outline" className={info.priorityClass}>

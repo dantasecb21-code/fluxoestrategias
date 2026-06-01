@@ -13,6 +13,7 @@ export interface CompetitorStudy {
   assigned_to: string | null;
   status: CompetitorStudyStatus;
   notes: string;
+  competitors: string;
   started_at: string | null;
   completed_at: string | null;
   completed_by: string | null;
