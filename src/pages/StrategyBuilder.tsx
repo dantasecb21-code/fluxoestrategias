@@ -103,18 +103,54 @@ export default function StrategyBuilderPage() {
     if (prefillStore) {
       return { storeName: prefillStore, managerName: prefillManager, operationalManager: "", deadline: "", plannedStartDate: "" };
     }
+    if (!id) {
+      const draft = loadDraft();
+      if (draft?.meta) return draft.meta;
+    }
     return { storeName: "", managerName: "", operationalManager: "", deadline: "", plannedStartDate: "" };
   });
-  const [categories, setCategories] = useState<StrategyCategory[]>(
-    existing?.categories?.length ? existing.categories : initCategories()
-  );
-  const [assignedTo, setAssignedTo] = useState<string>(existing?.assigned_to || "");
-  const [strategyType, setStrategyType] = useState<StrategyType>(
-    (existing?.strategy_type as StrategyType) ||
-      (prefillType === "alignment" || prefillType === "retention" ? (prefillType as StrategyType) : "initial")
-  );
-  const [platform, setPlatform] = useState<string>(existing?.platform || prefillPlatform || "99food");
-  const [observation, setObservation] = useState<string>(existing?.observation || "");
+  const [categories, setCategories] = useState<StrategyCategory[]>(() => {
+    if (existing?.categories?.length) return existing.categories;
+    if (!id && !prefillStore) {
+      const draft = loadDraft();
+      if (draft?.categories?.length) return draft.categories;
+    }
+    return initCategories();
+  });
+  const [assignedTo, setAssignedTo] = useState<string>(() => {
+    if (existing) return existing.assigned_to || "";
+    if (!id && !prefillStore) {
+      const draft = loadDraft();
+      if (draft?.assignedTo) return draft.assignedTo;
+    }
+    return "";
+  });
+  const [strategyType, setStrategyType] = useState<StrategyType>(() => {
+    if (existing) return (existing.strategy_type as StrategyType) || "initial";
+    if (prefillType === "alignment" || prefillType === "retention") return prefillType as StrategyType;
+    if (!id && !prefillStore) {
+      const draft = loadDraft();
+      if (draft?.strategyType) return draft.strategyType;
+    }
+    return "initial";
+  });
+  const [platform, setPlatform] = useState<string>(() => {
+    if (existing) return existing.platform || "99food";
+    if (prefillPlatform) return prefillPlatform;
+    if (!id && !prefillStore) {
+      const draft = loadDraft();
+      if (draft?.platform) return draft.platform;
+    }
+    return "99food";
+  });
+  const [observation, setObservation] = useState<string>(() => {
+    if (existing) return existing.observation || "";
+    if (!id && !prefillStore) {
+      const draft = loadDraft();
+      if (draft?.observation) return draft.observation;
+    }
+    return "";
+  });
   const [showReport, setShowReport] = useState(false);
   const [showDetailedProgress, setShowDetailedProgress] = useState(false);
   const [expandedCats, setExpandedCats] = useState<Record<string, boolean>>({});
@@ -149,10 +185,18 @@ export default function StrategyBuilderPage() {
       .then(({ data }) => { if (data) setHistory(data as any); });
   }, [id, strategyStatus]);
 
-  // Garante que rascunhos antigos sejam descartados ao abrir nova estratégia
+  // Autosave draft while creating a new strategy (sobrevive a troca de abas)
   useEffect(() => {
-    if (!id) clearDraft();
-  }, [id]);
+    if (id) return;
+    const t = setTimeout(() => {
+      try {
+        localStorage.setItem(DRAFT_KEY, JSON.stringify({
+          meta, categories, assignedTo, strategyType, platform, observation,
+        }));
+      } catch {}
+    }, 300);
+    return () => clearTimeout(t);
+  }, [id, meta, categories, assignedTo, strategyType, platform, observation]);
 
   useEffect(() => {
     if (existing) {
