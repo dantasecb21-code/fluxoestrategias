@@ -164,6 +164,8 @@ export default function StrategyBuilderPage() {
   const [savedId, setSavedId] = useState<string | null>(id || null);
   const [managers, setManagers] = useState<Manager[]>([]);
   const [saving, setSaving] = useState(false);
+  const [strategists, setStrategists] = useState<Manager[]>([]);
+  const [strategicOwnerId, setStrategicOwnerId] = useState<string>(existing?.user_id || "");
 
   const [storeAccess, setStoreAccess] = useState(existing?.store_access_confirmed || false);
 
@@ -213,6 +215,7 @@ export default function StrategyBuilderPage() {
       setPlatform(existing.platform || "99food");
       setObservation(existing.observation || "");
       setSavedId(existing.id);
+      setStrategicOwnerId(existing.user_id);
     }
   }, [existing?.id]);
 
