@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Cpu, CheckCircle2, RotateCcw, Clock, AlertTriangle } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 
 interface AdaptationItem {
@@ -31,6 +32,8 @@ export default function AlgorithmAdaptation() {
   const [loading, setLoading] = useState(true);
   const [returning, setReturning] = useState<AdaptationItem | null>(null);
   const [reason, setReason] = useState("");
+  const [strategistFilter, setStrategistFilter] = useState<string>("all");
+  const [priorityFilter, setPriorityFilter] = useState<string>("all");
 
   const fetchItems = async () => {
     setLoading(true);
@@ -70,6 +73,29 @@ export default function AlgorithmAdaptation() {
     approved: items.filter((i) => i.algorithm_adaptation_status === "approved"),
     returned: items.filter((i) => i.algorithm_adaptation_status === "returned"),
   }), [items]);
+
+  const strategistOptions = useMemo(() => {
+    const map = new Map<string, string>();
+    items.forEach((i) => { if (i.user_id) map.set(i.user_id, i.strategist_name); });
+    return Array.from(map.entries()).sort((a, b) => a[1].localeCompare(b[1]));
+  }, [items]);
+
+  const priorityOf = (deadline: string | null, status: string) => {
+    if (status !== "pending") return "none";
+    if (!deadline) return "low";
+    const ms = new Date(deadline).getTime() - Date.now();
+    if (ms < 0) return "overdue";
+    const days = Math.ceil(ms / (1000 * 60 * 60 * 24));
+    if (days <= 2) return "high";
+    if (days <= 5) return "medium";
+    return "low";
+  };
+
+  const applyFilters = (list: AdaptationItem[]) => list.filter((i) => {
+    if (strategistFilter !== "all" && i.user_id !== strategistFilter) return false;
+    if (priorityFilter !== "all" && priorityOf(i.algorithm_adaptation_deadline, i.algorithm_adaptation_status) !== priorityFilter) return false;
+    return true;
+  });
 
   const approve = async (item: AdaptationItem) => {
     const { error } = await supabase.from("strategies").update({
@@ -173,6 +199,28 @@ export default function AlgorithmAdaptation() {
       {loading ? (
         <p className="text-center text-muted-foreground">Carregando...</p>
       ) : (
+        <>
+        <div className="flex flex-col sm:flex-row gap-2">
+          <Select value={strategistFilter} onValueChange={setStrategistFilter}>
+            <SelectTrigger className="sm:w-64"><SelectValue placeholder="Estrategista" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos os estrategistas</SelectItem>
+              {strategistOptions.map(([id, name]) => (
+                <SelectItem key={id} value={id}>{name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={priorityFilter} onValueChange={setPriorityFilter}>
+            <SelectTrigger className="sm:w-56"><SelectValue placeholder="Prioridade" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas as prioridades</SelectItem>
+              <SelectItem value="overdue">Atrasadas</SelectItem>
+              <SelectItem value="high">Alta (≤ 2 dias)</SelectItem>
+              <SelectItem value="medium">Média (3-5 dias)</SelectItem>
+              <SelectItem value="low">Baixa ({'>'} 5 dias)</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
         <Tabs defaultValue="pending">
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="pending"><Clock className="h-4 w-4 mr-1" /> Pendentes ({grouped.pending.length})</TabsTrigger>
@@ -180,15 +228,16 @@ export default function AlgorithmAdaptation() {
             <TabsTrigger value="approved"><CheckCircle2 className="h-4 w-4 mr-1" /> Aprovadas ({grouped.approved.length})</TabsTrigger>
           </TabsList>
           <TabsContent value="pending" className="space-y-3 mt-4">
-            {grouped.pending.length === 0 ? <Empty msg="Nada para revisar." /> : grouped.pending.map((i) => <ItemCard key={i.id} item={i} />)}
+            {applyFilters(grouped.pending).length === 0 ? <Empty msg="Nada para revisar." /> : applyFilters(grouped.pending).map((i) => <ItemCard key={i.id} item={i} />)}
           </TabsContent>
           <TabsContent value="returned" className="space-y-3 mt-4">
-            {grouped.returned.length === 0 ? <Empty msg="Nenhuma devolvida." /> : grouped.returned.map((i) => <ItemCard key={i.id} item={i} />)}
+            {applyFilters(grouped.returned).length === 0 ? <Empty msg="Nenhuma devolvida." /> : applyFilters(grouped.returned).map((i) => <ItemCard key={i.id} item={i} />)}
           </TabsContent>
           <TabsContent value="approved" className="space-y-3 mt-4">
-            {grouped.approved.length === 0 ? <Empty msg="Nenhuma aprovada." /> : grouped.approved.map((i) => <ItemCard key={i.id} item={i} />)}
+            {applyFilters(grouped.approved).length === 0 ? <Empty msg="Nenhuma aprovada." /> : applyFilters(grouped.approved).map((i) => <ItemCard key={i.id} item={i} />)}
           </TabsContent>
         </Tabs>
+        </>
       )}
 
       <Dialog open={!!returning} onOpenChange={(o) => { if (!o) { setReturning(null); setReason(""); } }}>
