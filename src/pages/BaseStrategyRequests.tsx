@@ -33,6 +33,7 @@ interface BaseRequest {
 }
 
 interface StrategicUser { user_id: string; display_name: string; }
+interface OperationalUser { user_id: string; display_name: string; }
 
 const STATUS_LABELS: Record<string, string> = {
   pending: "Pendente",
@@ -64,6 +65,7 @@ export default function BaseStrategyRequests() {
 
   const [requests, setRequests] = useState<BaseRequest[]>([]);
   const [strategicUsers, setStrategicUsers] = useState<StrategicUser[]>([]);
+  const [operationalUsers, setOperationalUsers] = useState<OperationalUser[]>([]);
   const [creatorNames, setCreatorNames] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -110,10 +112,24 @@ export default function BaseStrategyRequests() {
     setStrategicUsers((profs ?? []) as StrategicUser[]);
   }, []);
 
+  const fetchOperationalUsers = useCallback(async () => {
+    const { data: roles } = await supabase.from("user_roles").select("user_id").eq("role", "operational");
+    const ids = [...new Set((roles ?? []).map((r) => r.user_id))];
+    if (!ids.length) return setOperationalUsers([]);
+    const { data: profs } = await supabase
+      .from("profiles").select("user_id, display_name")
+      .in("user_id", ids).eq("approved", true)
+      .order("display_name", { ascending: true });
+    setOperationalUsers((profs ?? []) as OperationalUser[]);
+  }, []);
+
   useEffect(() => {
     fetchAll();
-    if (isAssistant || isAdmin) fetchStrategicUsers();
-  }, [fetchAll, fetchStrategicUsers, isAssistant, isAdmin]);
+    if (isAssistant || isAdmin) {
+      fetchStrategicUsers();
+      fetchOperationalUsers();
+    }
+  }, [fetchAll, fetchStrategicUsers, fetchOperationalUsers, isAssistant, isAdmin]);
 
   const resetForm = () => {
     setStoreName(""); setOperationalManager(""); setPlatform("99food");
@@ -219,7 +235,14 @@ export default function BaseStrategyRequests() {
                 </div>
                 <div>
                   <Label>Gestor operacional</Label>
-                  <Input value={operationalManager} onChange={(e) => setOperationalManager(e.target.value)} />
+                  <Select value={operationalManager} onValueChange={setOperationalManager}>
+                    <SelectTrigger><SelectValue placeholder="Selecione o gestor" /></SelectTrigger>
+                    <SelectContent>
+                      {operationalUsers.map((u) => (
+                        <SelectItem key={u.user_id} value={u.display_name}>{u.display_name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
