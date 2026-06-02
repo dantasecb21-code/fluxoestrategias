@@ -19,6 +19,7 @@ import UserApproval from "./pages/UserApproval";
 import HelpCenter from "./pages/HelpCenter";
 import TrainingCourses from "./pages/TrainingCourses";
 import StoreRequests from "./pages/StoreRequests";
+import BaseStrategyRequests from "./pages/BaseStrategyRequests";
 import ResetPassword from "./pages/ResetPassword";
 import OperationalRanking from "./pages/OperationalRanking";
 import PendingActivities from "./pages/PendingActivities";
@@ -99,6 +100,7 @@ const App = () => (
             <Route path="/ajuda" element={<ProtectedRoute><HelpCenter /></ProtectedRoute>} />
             <Route path="/treinamentos" element={<ProtectedRoute allowedRoles={["admin", "strategic", "operational"]}><TrainingCourses /></ProtectedRoute>} />
             <Route path="/lojas-novas" element={<ProtectedRoute allowedRoles={["admin", "strategic"]}><StoreRequests /></ProtectedRoute>} />
+            <Route path="/solicitacoes-base" element={<ProtectedRoute allowedRoles={["admin", "strategic", "strategic_assistant"]}><BaseStrategyRequests /></ProtectedRoute>} />
             <Route path="/atividades" element={<ProtectedRoute><PendingActivities /></ProtectedRoute>} />
             <Route path="/ocorrencias" element={<ProtectedRoute><Occurrences /></ProtectedRoute>} />
             <Route path="/precificacao" element={<ProtectedRoute><PricingCalculator /></ProtectedRoute>} />

@@ -189,6 +189,23 @@ export function AppSidebar() {
                 </SidebarMenuItem>
               )}
 
+              {/* Solicitações da Base */}
+              {(canManage || isStrategicAssistant) && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild>
+                    <NavLink
+                      to="/solicitacoes-base"
+                      onClick={() => handleNav("/solicitacoes-base")}
+                      className="hover:bg-sidebar-accent/50"
+                      activeClassName="bg-sidebar-accent text-primary font-medium"
+                    >
+                      <Store className="mr-2 h-4 w-4" />
+                      {!collapsed && <span>Solicitações da Base</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
+
               {/* Nova Estratégia */}
               {canManage && (
                 <SidebarMenuItem>
