@@ -361,10 +361,10 @@ export default function StrategyBuilderPage() {
         observation,
         platform,
         store_request_id: storeRequestId || undefined,
-        // Estrategista: vai direto pro admin validar antes do gestor.
-        // Admin: já cria validada (pula a etapa de validação).
-        status: isAdmin ? "in_progress" : "pending_admin_approval",
-        admin_approved: isAdmin ? true : false,
+        // Só 99Food precisa de validação do admin. iFood/Keeta vão direto pro gestor.
+        // Admin sempre cria já validada.
+        status: isAdmin || platform !== "99food" ? "in_progress" : "pending_admin_approval",
+        admin_approved: isAdmin || platform !== "99food" ? true : false,
       });
       if (created) {
         setSavedId(created.id);
@@ -700,8 +700,8 @@ export default function StrategyBuilderPage() {
         </Card>
       )}
 
-      {/* Botão "Encaminhar pro admin" — estrategista, antes da primeira aprovação */}
-      {id && existing && !isStrategicAssistant && !existing.admin_approved && strategyStatus === "in_progress" && (
+      {/* Botão "Encaminhar pro admin" — estrategista, antes da primeira aprovação (só 99Food) */}
+      {id && existing && !isStrategicAssistant && !existing.admin_approved && strategyStatus === "in_progress" && existing.platform === "99food" && (
         <Card className="p-4 border-primary/30 bg-primary/5 space-y-3">
           <div className="flex items-center gap-2 text-sm">
             <UserCheck className="h-4 w-4 text-primary" />
