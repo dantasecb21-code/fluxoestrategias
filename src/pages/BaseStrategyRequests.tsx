@@ -14,7 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Store, Plus, User, ArrowRight, Pencil, Trash2, Clock, CheckCircle2, Flame } from "lucide-react";
 import { toast } from "sonner";
-import { PlatformBadge, PLATFORM_OPTIONS } from "@/components/PlatformBadge";
+import { PlatformBadge, PLATFORM_OPTIONS, PLATFORM_LABELS } from "@/components/PlatformBadge";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -228,7 +228,7 @@ export default function BaseStrategyRequests() {
                       <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
                         {PLATFORM_OPTIONS.map((p) => (
-                          <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
+                          <SelectItem key={p} value={p}>{PLATFORM_LABELS[p]}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
