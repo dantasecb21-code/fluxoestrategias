@@ -214,6 +214,7 @@ export function useDbStrategies() {
     planned_start_date?: string;
     categories?: StrategyCategory[];
     assigned_to?: string | null;
+    user_id?: string;
     status?: string;
     strategy_type?: string;
     observation?: string;
@@ -224,6 +225,22 @@ export function useDbStrategies() {
     completed_at?: string;
     admin_approved?: boolean;
   }) => {
+    // Track owner / assignee changes in history (so the new gestor sees the swap)
+    if (user && (params.user_id !== undefined || params.assigned_to !== undefined)) {
+      const old = strategies.find((s) => s.id === id);
+      const { data: profile } = await supabase
+        .from("profiles").select("display_name").eq("user_id", user.id).single();
+      const actor = profile?.display_name || user.email || "";
+      const entries: any[] = [];
+      if (params.user_id !== undefined && old && params.user_id !== old.user_id) {
+        entries.push({ strategy_id: id, user_id: user.id, user_name: actor, action: "reassign", field_changed: "strategic_manager", old_value: old.user_id, new_value: params.user_id });
+      }
+      if (params.assigned_to !== undefined && old && (params.assigned_to || "") !== (old.assigned_to || "")) {
+        entries.push({ strategy_id: id, user_id: user.id, user_name: actor, action: "reassign", field_changed: "operational_manager", old_value: old.assigned_to || "", new_value: params.assigned_to || "" });
+      }
+      if (entries.length) await supabase.from("strategy_history").insert(entries);
+    }
+
     // Track status change in history
     if (params.status && user) {
       const oldStrategy = strategies.find((s) => s.id === id);
