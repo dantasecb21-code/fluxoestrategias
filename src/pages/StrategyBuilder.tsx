@@ -239,6 +239,25 @@ export default function StrategyBuilderPage() {
     fetchManagers();
   }, []);
 
+  // Load strategic users (admin can reassign the strategic owner)
+  useEffect(() => {
+    if (!isAdmin) return;
+    async function fetchStrategists() {
+      const { data: roles } = await supabase
+        .from("user_roles")
+        .select("user_id")
+        .eq("role", "strategic");
+      if (!roles || roles.length === 0) return;
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("user_id, display_name, avatar_url, email")
+        .in("user_id", roles.map((r) => r.user_id))
+        .eq("approved", true);
+      if (profiles) setStrategists(profiles as any[]);
+    }
+    fetchStrategists();
+  }, [isAdmin]);
+
   // Filter managers by selected platform
   useEffect(() => {
     const filtered = allOperationalManagers.filter((m) => {
