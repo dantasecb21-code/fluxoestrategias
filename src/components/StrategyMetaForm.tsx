@@ -7,6 +7,12 @@ import { Store, User, CalendarDays, Tag, Globe } from "lucide-react";
 import { StrategyType, STRATEGY_TYPE_LABELS } from "@/hooks/useDbStrategies";
 import { Platform, PLATFORM_LABELS, PLATFORM_OPTIONS } from "@/components/PlatformBadge";
 
+interface Strategist {
+  user_id: string;
+  display_name: string;
+  avatar_url?: string;
+}
+
 interface StrategyMetaFormProps {
   meta: StrategyMeta;
   onChange: (meta: StrategyMeta) => void;
@@ -14,9 +20,14 @@ interface StrategyMetaFormProps {
   onTypeChange: (type: StrategyType) => void;
   platform: Platform;
   onPlatformChange: (platform: Platform) => void;
+  strategists?: Strategist[];
+  strategicOwnerId?: string;
+  onStrategicOwnerChange?: (userId: string) => void;
+  originalStrategicOwnerId?: string;
 }
 
-export function StrategyMetaForm({ meta, onChange, strategyType, onTypeChange, platform, onPlatformChange }: StrategyMetaFormProps) {
+export function StrategyMetaForm({ meta, onChange, strategyType, onTypeChange, platform, onPlatformChange, strategists, strategicOwnerId, onStrategicOwnerChange, originalStrategicOwnerId }: StrategyMetaFormProps) {
+  const canPickStrategist = !!(strategists && strategists.length > 0 && onStrategicOwnerChange);
   const update = (key: keyof StrategyMeta, value: string) => {
     onChange({ ...meta, [key]: value });
   };
@@ -71,9 +82,36 @@ export function StrategyMetaForm({ meta, onChange, strategyType, onTypeChange, p
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-1.5">
           <Label className="text-muted-foreground text-xs flex items-center gap-1">
-            <User className="h-3 w-3" /> Administrador
+            <User className="h-3 w-3" /> Gestor Estratégico
           </Label>
-          <Input value={meta.managerName} onChange={(e) => update("managerName", e.target.value)} placeholder="Seu nome" className="bg-background" />
+          {canPickStrategist ? (
+            <>
+              <Select
+                value={strategicOwnerId || ""}
+                onValueChange={(v) => {
+                  onStrategicOwnerChange?.(v);
+                  const found = strategists?.find((s) => s.user_id === v);
+                  if (found) update("managerName", found.display_name);
+                }}
+              >
+                <SelectTrigger className="bg-background">
+                  <SelectValue placeholder="Selecione o gestor estratégico..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {strategists!.map((s) => (
+                    <SelectItem key={s.user_id} value={s.user_id}>
+                      {s.display_name || "Sem nome"}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {originalStrategicOwnerId && strategicOwnerId && strategicOwnerId !== originalStrategicOwnerId && (
+                <p className="text-xs text-warning">A estratégia (com todo o histórico) será transferida ao salvar.</p>
+              )}
+            </>
+          ) : (
+            <Input value={meta.managerName} onChange={(e) => update("managerName", e.target.value)} placeholder="Seu nome" className="bg-background" />
+          )}
         </div>
         <div className="space-y-1.5">
           <Label className="text-muted-foreground text-xs flex items-center gap-1">
