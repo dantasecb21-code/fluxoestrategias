@@ -17,6 +17,7 @@ import { Card } from "@/components/ui/card";
 import { FileText, Plus, Save, Check, X, UserCheck, Loader2, Mail, ChevronDown, ChevronRight, CheckCircle2, ShieldCheck, History } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "sonner";
 import { StrategyMeta } from "@/types/strategy";
 import { supabase } from "@/integrations/supabase/client";
@@ -532,6 +533,26 @@ export default function StrategyBuilderPage() {
                   {STATUS_BADGE_MAP[strategyStatus]?.label || "Em andamento"}
                 </Badge>
               )}
+              {id && existing?.admin_approved && (() => {
+                const approval = history.find(
+                  (h) => h.action === "status_change" && h.old_value === "pending_admin_approval" && h.new_value === "in_progress"
+                );
+                if (!approval) return null;
+                return (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Badge className="text-[10px] py-0 px-1.5 h-4 leading-none bg-destructive text-destructive-foreground border-destructive cursor-help">
+                          Validada por {approval.user_name?.split(" ")[0] || "admin"}
+                        </Badge>
+                      </TooltipTrigger>
+                      <TooltipContent className="bg-destructive text-destructive-foreground border-destructive">
+                        <p className="text-xs">Aprovada por {approval.user_name || "admin"} em {formatDateBR(approval.created_at)}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                );
+              })()}
             </div>
           </div>
           <Button size="sm" onClick={handleSave} disabled={saving} className="bg-primary text-primary-foreground hover:bg-primary/90 shrink-0">
