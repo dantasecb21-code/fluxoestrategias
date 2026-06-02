@@ -89,6 +89,48 @@ export type Database = {
         }
         Relationships: []
       }
+      base_strategy_requests: {
+        Row: {
+          assigned_to: string
+          created_at: string
+          created_by: string
+          id: string
+          observation: string
+          operational_manager: string
+          platform: string
+          priority: string
+          status: string
+          store_name: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_to: string
+          created_at?: string
+          created_by: string
+          id?: string
+          observation?: string
+          operational_manager?: string
+          platform?: string
+          priority?: string
+          status?: string
+          store_name?: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          observation?: string
+          operational_manager?: string
+          platform?: string
+          priority?: string
+          status?: string
+          store_name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       competitor_studies: {
         Row: {
           assigned_to: string | null
