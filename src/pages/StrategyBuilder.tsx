@@ -342,6 +342,7 @@ export default function StrategyBuilderPage() {
         strategy_type: strategyType,
         observation,
         platform,
+        ...(isAdmin && strategicOwnerId && existing && strategicOwnerId !== existing.user_id ? { user_id: strategicOwnerId } : {}),
       });
       clearDraft();
       toast.success("Estratégia atualizada!");
