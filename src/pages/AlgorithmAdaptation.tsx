@@ -34,6 +34,7 @@ export default function AlgorithmAdaptation() {
   const [reason, setReason] = useState("");
   const [strategistFilter, setStrategistFilter] = useState<string>("all");
   const [priorityFilter, setPriorityFilter] = useState<string>("all");
+  const [platformFilter, setPlatformFilter] = useState<string>("all");
 
   const fetchItems = async () => {
     setLoading(true);
@@ -94,6 +95,7 @@ export default function AlgorithmAdaptation() {
   const applyFilters = (list: AdaptationItem[]) => list.filter((i) => {
     if (strategistFilter !== "all" && i.user_id !== strategistFilter) return false;
     if (priorityFilter !== "all" && priorityOf(i.algorithm_adaptation_deadline, i.algorithm_adaptation_status) !== priorityFilter) return false;
+    if (platformFilter !== "all" && i.platform !== platformFilter) return false;
     return true;
   });
 
@@ -218,6 +220,15 @@ export default function AlgorithmAdaptation() {
               <SelectItem value="high">Alta (≤ 2 dias)</SelectItem>
               <SelectItem value="medium">Média (3-5 dias)</SelectItem>
               <SelectItem value="low">Baixa ({'>'} 5 dias)</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={platformFilter} onValueChange={setPlatformFilter}>
+            <SelectTrigger className="sm:w-48"><SelectValue placeholder="Plataforma" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas as plataformas</SelectItem>
+              <SelectItem value="ifood">iFood</SelectItem>
+              <SelectItem value="99food">99</SelectItem>
+              <SelectItem value="keeta">Keeta</SelectItem>
             </SelectContent>
           </Select>
         </div>
