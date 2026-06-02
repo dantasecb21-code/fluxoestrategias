@@ -91,6 +91,7 @@ export default function StrategyBuilderPage() {
   // Pre-fill from query params (store request flow)
   const prefillStore = searchParams.get("store") || "";
   const prefillManager = searchParams.get("manager") || "";
+  const prefillOperationalManager = searchParams.get("operational_manager") || "";
   const storeRequestId = searchParams.get("store_request_id") || "";
   const prefillPlatform = searchParams.get("platform") || "";
   const prefillType = searchParams.get("type") || "";
@@ -102,7 +103,7 @@ export default function StrategyBuilderPage() {
     }
     // Query params take priority over draft
     if (prefillStore) {
-      return { storeName: prefillStore, managerName: prefillManager, operationalManager: "", deadline: "", plannedStartDate: "" };
+      return { storeName: prefillStore, managerName: prefillManager, operationalManager: prefillOperationalManager, deadline: "", plannedStartDate: "" };
     }
     if (!id) {
       const draft = loadDraft();
