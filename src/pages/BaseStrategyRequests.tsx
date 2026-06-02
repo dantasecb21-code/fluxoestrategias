@@ -203,7 +203,7 @@ export default function BaseStrategyRequests() {
             Pedidos de estratégia para lojas já existentes na base.
           </p>
         </div>
-        {isAssistant && (
+        {(isAssistant || isAdmin) && (
           <Dialog open={dialogOpen} onOpenChange={(o) => { setDialogOpen(o); if (!o) resetForm(); }}>
             <DialogTrigger asChild>
               <Button><Plus className="h-4 w-4 mr-1" /> Nova solicitação</Button>
