@@ -193,7 +193,7 @@ export default function BaseStrategyRequests() {
     }
     const params = new URLSearchParams();
     params.set("store", r.store_name);
-    params.set("manager", r.operational_manager || "");
+    params.set("operational_manager", r.operational_manager || "");
     params.set("platform", r.platform || "99food");
     navigate(`/nova?${params.toString()}`);
   };
