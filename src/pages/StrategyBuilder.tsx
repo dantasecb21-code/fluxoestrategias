@@ -852,6 +852,39 @@ export default function StrategyBuilderPage() {
             )}
           </Card>
 
+          {/* Reatribuir Gestor Estratégico (admin only, somente em estratégia existente) */}
+          {isAdmin && existing && strategists.length > 0 && (
+            <Card className="p-4 border-border bg-card space-y-2">
+              <Label className="text-muted-foreground text-xs flex items-center gap-1">
+                <UserCheck className="h-3 w-3" /> Gestor Estratégico
+              </Label>
+              <Select value={strategicOwnerId} onValueChange={setStrategicOwnerId}>
+                <SelectTrigger className="bg-background">
+                  <SelectValue placeholder="Selecione o gestor estratégico..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {strategists.map((s) => (
+                    <SelectItem key={s.user_id} value={s.user_id}>
+                      <div className="flex items-center gap-2">
+                        <div className="h-5 w-5 rounded-full bg-muted flex items-center justify-center overflow-hidden shrink-0">
+                          {s.avatar_url ? (
+                            <img src={s.avatar_url} alt="" className="h-full w-full object-cover" />
+                          ) : (
+                            <span className="text-[10px] font-bold text-muted-foreground">{s.display_name?.charAt(0)?.toUpperCase()}</span>
+                          )}
+                        </div>
+                        <span>{s.display_name || "Sem nome"}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {strategicOwnerId !== existing.user_id && (
+                <p className="text-xs text-warning">A estratégia (com todo o histórico) será transferida ao salvar.</p>
+              )}
+            </Card>
+          )}
+
           {/* Observação para o gestor */}
           <Card className="p-4 border-warning/30 bg-warning/5 space-y-2">
             <Label className="text-foreground font-heading font-semibold text-sm flex items-center gap-2">
