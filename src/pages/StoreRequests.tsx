@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState, useMemo } from "react";
-import { shortName } from "@/lib/utils";
+import { shortName, formatDateBR } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -446,7 +446,7 @@ export default function StoreRequests() {
           {req.meeting_date && (
             <span className="flex items-center gap-1">
               <Clock className="h-3.5 w-3.5" />
-              Reunião: {format(new Date(req.meeting_date), "dd/MM/yyyy")}
+              Reunião: {formatDateBR(req.meeting_date)}
             </span>
           )}
           {isAdmin && (
