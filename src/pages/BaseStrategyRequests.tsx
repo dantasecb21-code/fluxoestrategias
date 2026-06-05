@@ -35,6 +35,12 @@ interface BaseRequest {
 interface StrategicUser { user_id: string; display_name: string; }
 interface OperationalUser { user_id: string; display_name: string; }
 
+const COMPETITION_STUDY_OPTIONS = [
+  { value: "all", label: "Todos os estudos" },
+  { value: "yes", label: "Com estudo" },
+  { value: "no", label: "Sem estudo" },
+];
+
 const STATUS_LABELS: Record<string, string> = {
   pending: "Pendente",
   in_progress: "Em andamento",
@@ -79,6 +85,7 @@ export default function BaseStrategyRequests() {
   const [assignedTo, setAssignedTo] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [platformFilter, setPlatformFilter] = useState<string>("all");
+  const [competitionFilter, setCompetitionFilter] = useState<string>("all");
 
   const fetchAll = useCallback(async () => {
     const { data } = await supabase
@@ -308,6 +315,19 @@ export default function BaseStrategyRequests() {
             </SelectContent>
           </Select>
         </div>
+        <div className="w-full max-w-[200px]">
+          <Label className="text-xs mb-1 block">Estudo de concorrência</Label>
+          <Select value={competitionFilter} onValueChange={setCompetitionFilter}>
+            <SelectTrigger className="h-9 bg-background">
+              <SelectValue placeholder="Filtrar estudo" />
+            </SelectTrigger>
+            <SelectContent>
+              {COMPETITION_STUDY_OPTIONS.map((opt) => (
+                <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {requests.length === 0 ? (
@@ -318,6 +338,11 @@ export default function BaseStrategyRequests() {
         <div className="space-y-3">
           {requests
             .filter((r) => platformFilter === "all" || r.platform === platformFilter)
+            .filter((r) => {
+              if (competitionFilter === "all") return true;
+              const hasStudy = r.observation?.toLowerCase().includes("estudo de concorrência") || false;
+              return competitionFilter === "yes" ? hasStudy : !hasStudy;
+            })
             .map((r) => {
             const canStart = isStrategic && r.assigned_to === user?.id && r.status !== "completed";
             return (
