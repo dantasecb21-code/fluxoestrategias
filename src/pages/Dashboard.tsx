@@ -40,6 +40,7 @@ export default function Dashboard() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterManager, setFilterManager] = useState("all");
   const [filterPlatform, setFilterPlatform] = useState("all");
+  const [filterCompetition, setFilterCompetition] = useState("all");
 
   const operationalManagers = useMemo(() => {
     const names = [...new Set(strategies.map((s) => s.operational_manager).filter(Boolean))];
@@ -51,7 +52,10 @@ export default function Dashboard() {
       const matchSearch = !searchTerm || s.store_name.toLowerCase().includes(searchTerm.toLowerCase());
       const matchManager = filterManager === "all" || s.operational_manager === filterManager;
       const matchPlatform = filterPlatform === "all" || s.platform === filterPlatform;
-      return matchSearch && matchManager && matchPlatform;
+      const hasStudy = s.observation?.toLowerCase().includes("estudo de concorrência") || false;
+      const matchCompetition = filterCompetition === "all" || 
+                              (filterCompetition === "yes" ? hasStudy : !hasStudy);
+      return matchSearch && matchManager && matchPlatform && matchCompetition;
     });
   };
 
@@ -243,6 +247,16 @@ export default function Dashboard() {
               <SelectItem value="99food">99Food</SelectItem>
               <SelectItem value="ifood">iFood</SelectItem>
               <SelectItem value="keeta">Keeta</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={filterCompetition} onValueChange={setFilterCompetition}>
+            <SelectTrigger className="w-full sm:w-[180px]">
+              <SelectValue placeholder="Estudo de concorrência" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos os estudos</SelectItem>
+              <SelectItem value="yes">Com estudo</SelectItem>
+              <SelectItem value="no">Sem estudo</SelectItem>
             </SelectContent>
           </Select>
         </div>
