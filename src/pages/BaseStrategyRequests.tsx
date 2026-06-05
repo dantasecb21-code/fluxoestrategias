@@ -78,6 +78,7 @@ export default function BaseStrategyRequests() {
   const [observation, setObservation] = useState("");
   const [assignedTo, setAssignedTo] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [platformFilter, setPlatformFilter] = useState<string>("all");
 
   const fetchAll = useCallback(async () => {
     const { data } = await supabase
@@ -292,13 +293,32 @@ export default function BaseStrategyRequests() {
         )}
       </div>
 
+      <div className="flex items-center gap-3 bg-muted/30 p-3 rounded-lg border border-border">
+        <div className="w-full max-w-[200px]">
+          <Label className="text-xs mb-1 block">Filtrar por plataforma</Label>
+          <Select value={platformFilter} onValueChange={setPlatformFilter}>
+            <SelectTrigger className="h-9 bg-background">
+              <SelectValue placeholder="Todas" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas as plataformas</SelectItem>
+              {PLATFORM_OPTIONS.map((p) => (
+                <SelectItem key={p} value={p}>{PLATFORM_LABELS[p]}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
       {requests.length === 0 ? (
         <Card className="p-10 text-center text-muted-foreground">
           Nenhuma solicitação por aqui ainda.
         </Card>
       ) : (
         <div className="space-y-3">
-          {requests.map((r) => {
+          {requests
+            .filter((r) => platformFilter === "all" || r.platform === platformFilter)
+            .map((r) => {
             const canStart = isStrategic && r.assigned_to === user?.id && r.status !== "completed";
             return (
               <Card key={r.id} className={`p-4 space-y-3 ${canStart ? "cursor-pointer hover:border-primary/50 transition-colors" : ""}`}
