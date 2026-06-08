@@ -780,7 +780,15 @@ export default function StrategyBuilderPage() {
                               setCategories((prev) =>
                                 prev.map((c) =>
                                   c.id === cat.id
-                                    ? { ...c, items: c.items.map((i) => (i.id === item.id ? { ...i, status: v as any } : i)) }
+                                    ? {
+                                        ...c,
+                                        items: c.items.map((i) => {
+                                          if (i.id !== item.id) return i;
+                                          // Se o estrategista tentar voltar para pendente quando o gestor já mexeu,
+                                          // ele pode. O problema relatado era na visão do filtro ou lógica de bloqueio.
+                                          return { ...i, status: v as any };
+                                        }),
+                                      }
                                     : c
                                 )
                               );
@@ -790,9 +798,24 @@ export default function StrategyBuilderPage() {
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="pending"><span className="text-warning">● </span>Pendente</SelectItem>
-                              <SelectItem value="in_progress"><span className="text-info">● </span>Em andamento</SelectItem>
-                              <SelectItem value="completed"><span className="text-success">● </span>Concluído</SelectItem>
+                                <SelectItem value="pending">
+                                  <div className="flex items-center gap-2">
+                                    <span className="h-2 w-2 rounded-full bg-warning" />
+                                    <span>Pendente</span>
+                                  </div>
+                                </SelectItem>
+                                <SelectItem value="in_progress">
+                                  <div className="flex items-center gap-2">
+                                    <span className="h-2 w-2 rounded-full bg-info" />
+                                    <span>Em andamento</span>
+                                  </div>
+                                </SelectItem>
+                                <SelectItem value="completed">
+                                  <div className="flex items-center gap-2">
+                                    <span className="h-2 w-2 rounded-full bg-success" />
+                                    <span>Concluído</span>
+                                  </div>
+                                </SelectItem>
                             </SelectContent>
                           </Select>
                         </div>

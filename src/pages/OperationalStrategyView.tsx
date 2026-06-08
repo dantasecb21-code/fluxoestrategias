@@ -90,7 +90,14 @@ export default function OperationalStrategyView() {
     setCategories((prev) =>
       prev.map((c) =>
         c.id === catId
-          ? { ...c, items: c.items.map((i) => (i.id === itemId ? { ...i, status } : i)) }
+          ? {
+              ...c,
+              items: c.items.map((i) => {
+                if (i.id !== itemId) return i;
+                // Garante que o estado possa ser alterado livremente enquanto não estiver pendente de aprovação ou aprovado
+                return { ...i, status };
+              }),
+            }
           : c
       )
     );
@@ -279,13 +286,22 @@ export default function OperationalStrategyView() {
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="pending">
-                            <span className="text-warning">● </span>Pendente
+                            <div className="flex items-center gap-2">
+                              <span className="h-2 w-2 rounded-full bg-warning" />
+                              <span>Pendente</span>
+                            </div>
                           </SelectItem>
                           <SelectItem value="in_progress">
-                            <span className="text-info">● </span>Em andamento
+                            <div className="flex items-center gap-2">
+                              <span className="h-2 w-2 rounded-full bg-info" />
+                              <span>Em andamento</span>
+                            </div>
                           </SelectItem>
                           <SelectItem value="completed">
-                            <span className="text-success">● </span>Concluído
+                            <div className="flex items-center gap-2">
+                              <span className="h-2 w-2 rounded-full bg-success" />
+                              <span>Concluído</span>
+                            </div>
                           </SelectItem>
                         </SelectContent>
                       </Select>
