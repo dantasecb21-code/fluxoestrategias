@@ -279,13 +279,22 @@ export default function OperationalStrategyView() {
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="pending">
-                            <span className="text-warning">● </span>Pendente
+                            <div className="flex items-center gap-2">
+                              <span className="h-2 w-2 rounded-full bg-warning" />
+                              <span>Pendente</span>
+                            </div>
                           </SelectItem>
                           <SelectItem value="in_progress">
-                            <span className="text-info">● </span>Em andamento
+                            <div className="flex items-center gap-2">
+                              <span className="h-2 w-2 rounded-full bg-info" />
+                              <span>Em andamento</span>
+                            </div>
                           </SelectItem>
                           <SelectItem value="completed">
-                            <span className="text-success">● </span>Concluído
+                            <div className="flex items-center gap-2">
+                              <span className="h-2 w-2 rounded-full bg-success" />
+                              <span>Concluído</span>
+                            </div>
                           </SelectItem>
                         </SelectContent>
                       </Select>
