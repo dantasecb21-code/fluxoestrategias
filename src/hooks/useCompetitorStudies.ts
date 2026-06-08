@@ -64,5 +64,13 @@ export function useCompetitorStudies() {
       ...(notes !== undefined ? { notes } : {}),
     } as any);
 
-  return { studies, loading, refetch: fetchStudies, updateStudy, startStudy, completeStudy };
+  const resetToPending = (id: string) =>
+    updateStudy(id, {
+      status: "pending",
+      started_at: null,
+      completed_at: null,
+      completed_by: null,
+    } as any);
+
+  return { studies, loading, refetch: fetchStudies, updateStudy, startStudy, completeStudy, resetToPending };
 }
