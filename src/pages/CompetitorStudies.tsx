@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Search, Play, CheckCircle2, Clock, Store, User } from "lucide-react";
+import { Search, Play, CheckCircle2, Clock, Store, User, RotateCcw } from "lucide-react";
 import { useCompetitorStudies, CompetitorStudy } from "@/hooks/useCompetitorStudies";
 import { toast } from "sonner";
 
@@ -108,7 +108,7 @@ const PRIORITY_ORDER: Record<Priority, number> = {
 };
 
 export default function CompetitorStudies() {
-  const { studies, loading, startStudy, completeStudy } = useCompetitorStudies();
+  const { studies, loading, startStudy, completeStudy, resetToPending } = useCompetitorStudies();
   const [completing, setCompleting] = useState<CompetitorStudy | null>(null);
   const [notes, setNotes] = useState("");
   const [strategistNames, setStrategistNames] = useState<Record<string, string>>({});
@@ -155,6 +155,11 @@ export default function CompetitorStudies() {
     const ok = await completeStudy(completing.id, notes);
     if (ok) { toast.success("Estudo concluído"); setCompleting(null); setNotes(""); }
     else toast.error("Erro ao concluir");
+  };
+  
+  const handleResetToPending = async (s: CompetitorStudy) => {
+    const ok = await resetToPending(s.id);
+    ok ? toast.success("Estudo retornado para pendente") : toast.error("Erro ao retornar para pendente");
   };
 
   const StudyCard = ({ s }: { s: CompetitorStudy }) => {
@@ -204,10 +209,16 @@ export default function CompetitorStudies() {
           </Button>
         )}
         {s.status === "in_progress" && (
-          <Button size="sm" onClick={() => { setCompleting(s); setNotes(s.notes || ""); }}
-            className="bg-success hover:bg-success/90 text-success-foreground">
-            <CheckCircle2 className="h-4 w-4 mr-1" /> Marcar como feito
-          </Button>
+          <div className="flex gap-2">
+            <Button size="sm" variant="outline" onClick={() => handleResetToPending(s)}
+              title="Voltar para pendente">
+              <RotateCcw className="h-4 w-4 mr-1" /> Voltar
+            </Button>
+            <Button size="sm" onClick={() => { setCompleting(s); setNotes(s.notes || ""); }}
+              className="bg-success hover:bg-success/90 text-success-foreground">
+              <CheckCircle2 className="h-4 w-4 mr-1" /> Marcar como feito
+            </Button>
+          </div>
         )}
         {s.status === "completed" && s.completed_at && (
           <span className="text-xs text-muted-foreground text-right">
