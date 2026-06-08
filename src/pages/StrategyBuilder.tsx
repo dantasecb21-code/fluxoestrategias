@@ -780,7 +780,15 @@ export default function StrategyBuilderPage() {
                               setCategories((prev) =>
                                 prev.map((c) =>
                                   c.id === cat.id
-                                    ? { ...c, items: c.items.map((i) => (i.id === item.id ? { ...i, status: v as any } : i)) }
+                                    ? {
+                                        ...c,
+                                        items: c.items.map((i) => {
+                                          if (i.id !== item.id) return i;
+                                          // Se o estrategista tentar voltar para pendente quando o gestor já mexeu,
+                                          // ele pode. O problema relatado era na visão do filtro ou lógica de bloqueio.
+                                          return { ...i, status: v as any };
+                                        }),
+                                      }
                                     : c
                                 )
                               );
