@@ -90,7 +90,14 @@ export default function OperationalStrategyView() {
     setCategories((prev) =>
       prev.map((c) =>
         c.id === catId
-          ? { ...c, items: c.items.map((i) => (i.id === itemId ? { ...i, status } : i)) }
+          ? {
+              ...c,
+              items: c.items.map((i) => {
+                if (i.id !== itemId) return i;
+                // Garante que o estado possa ser alterado livremente enquanto não estiver pendente de aprovação ou aprovado
+                return { ...i, status };
+              }),
+            }
           : c
       )
     );
