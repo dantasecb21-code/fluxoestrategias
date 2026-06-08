@@ -790,9 +790,24 @@ export default function StrategyBuilderPage() {
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="pending"><span className="text-warning">● </span>Pendente</SelectItem>
-                              <SelectItem value="in_progress"><span className="text-info">● </span>Em andamento</SelectItem>
-                              <SelectItem value="completed"><span className="text-success">● </span>Concluído</SelectItem>
+                                <SelectItem value="pending">
+                                  <div className="flex items-center gap-2">
+                                    <span className="h-2 w-2 rounded-full bg-warning" />
+                                    <span>Pendente</span>
+                                  </div>
+                                </SelectItem>
+                                <SelectItem value="in_progress">
+                                  <div className="flex items-center gap-2">
+                                    <span className="h-2 w-2 rounded-full bg-info" />
+                                    <span>Em andamento</span>
+                                  </div>
+                                </SelectItem>
+                                <SelectItem value="completed">
+                                  <div className="flex items-center gap-2">
+                                    <span className="h-2 w-2 rounded-full bg-success" />
+                                    <span>Concluído</span>
+                                  </div>
+                                </SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
