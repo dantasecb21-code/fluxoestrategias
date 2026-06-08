@@ -86,14 +86,17 @@ export default function BaseStrategyRequests() {
   const [submitting, setSubmitting] = useState(false);
   const [platformFilter, setPlatformFilter] = useState<string>("all");
   const [competitionFilter, setCompetitionFilter] = useState<string>("all");
+  const [studies, setStudies] = useState<any[]>([]);
 
   const fetchAll = useCallback(async () => {
-    const { data } = await supabase
-      .from("base_strategy_requests" as any)
-      .select("*")
-      .order("created_at", { ascending: false });
-    const rows = (data as unknown as BaseRequest[]) ?? [];
+    const [reqRes, studiesRes] = await Promise.all([
+      supabase.from("base_strategy_requests" as any).select("*").order("created_at", { ascending: false }),
+      supabase.from("competitor_studies" as any).select("store_name, platform, status")
+    ]);
+
+    const rows = (reqRes.data as unknown as BaseRequest[]) ?? [];
     setRequests(rows);
+    setStudies(studiesRes.data || []);
 
     const userIds = [...new Set([
       ...rows.map((r) => r.assigned_to),
@@ -340,7 +343,12 @@ export default function BaseStrategyRequests() {
             .filter((r) => platformFilter === "all" || r.platform === platformFilter)
             .filter((r) => {
               if (competitionFilter === "all") return true;
-              const hasStudy = r.observation?.toLowerCase().includes("estudo de concorrência") || false;
+              
+              const hasStudy = studies.some(s => 
+                s.store_name?.toLowerCase().trim() === r.store_name?.toLowerCase().trim() && 
+                s.platform === r.platform
+              ) || r.observation?.toLowerCase().includes("estudo de concorrência");
+              
               return competitionFilter === "yes" ? hasStudy : !hasStudy;
             })
             .map((r) => {
