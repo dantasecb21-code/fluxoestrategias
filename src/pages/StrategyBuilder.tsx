@@ -363,7 +363,7 @@ export default function StrategyBuilderPage() {
         observation,
         platform,
         store_request_id: storeRequestId || undefined,
-        study_requested: studyRequested || undefined,
+        study_requested: studyRequested || false,
         // Só 99Food precisa de validação do admin. iFood/Keeta vão direto pro gestor.
         // Admin sempre cria já validada.
         status: isAdmin || platform !== "99food" ? "in_progress" : "pending_admin_approval",

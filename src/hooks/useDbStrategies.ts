@@ -41,6 +41,7 @@ export interface DbStrategy {
   deleted_at: string | null;
   started_at: string | null;
   completed_at: string | null;
+  study_requested: boolean;
 }
 
 function jsonToCategories(json: Json): StrategyCategory[] {
@@ -173,6 +174,7 @@ export function useDbStrategies() {
     platform?: string;
     status?: string;
     admin_approved?: boolean;
+    study_requested?: boolean;
   }): Promise<DbStrategy | null> => {
     if (!user) return null;
     const insertData: any = {
@@ -190,6 +192,7 @@ export function useDbStrategies() {
     };
     if (params.status) insertData.status = params.status;
     if (typeof params.admin_approved === "boolean") insertData.admin_approved = params.admin_approved;
+    if (typeof params.study_requested === "boolean") insertData.study_requested = params.study_requested;
     if (params.store_request_id) {
       insertData.store_request_id = params.store_request_id;
     }
