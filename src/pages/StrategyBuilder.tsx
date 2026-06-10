@@ -96,6 +96,7 @@ export default function StrategyBuilderPage() {
   const prefillPlatform = searchParams.get("platform") || "";
   const prefillType = searchParams.get("type") || "";
   const replacesStrategyId = searchParams.get("replaces") || "";
+  const studyRequested = searchParams.get("study_requested") === "true";
 
   const [meta, setMeta] = useState<StrategyMeta>(() => {
     if (existing) {
@@ -362,6 +363,7 @@ export default function StrategyBuilderPage() {
         observation,
         platform,
         store_request_id: storeRequestId || undefined,
+        study_requested: studyRequested || undefined,
         // Só 99Food precisa de validação do admin. iFood/Keeta vão direto pro gestor.
         // Admin sempre cria já validada.
         status: isAdmin || platform !== "99food" ? "in_progress" : "pending_admin_approval",
