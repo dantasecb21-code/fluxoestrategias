@@ -446,6 +446,7 @@ export type Database = {
           store_name: string
           store_request_id: string | null
           strategy_type: string
+          study_requested: boolean | null
           updated_at: string
           user_id: string
         }
@@ -478,6 +479,7 @@ export type Database = {
           store_name?: string
           store_request_id?: string | null
           strategy_type?: string
+          study_requested?: boolean | null
           updated_at?: string
           user_id: string
         }
@@ -510,6 +512,7 @@ export type Database = {
           store_name?: string
           store_request_id?: string | null
           strategy_type?: string
+          study_requested?: boolean | null
           updated_at?: string
           user_id?: string
         }
