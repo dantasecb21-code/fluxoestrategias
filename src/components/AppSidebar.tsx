@@ -13,7 +13,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { NavLink } from "@/components/NavLink";
-import { Home, Plus, LogOut, Zap, ClipboardList, Users, AlertTriangle, ShieldCheck, MessageCircleQuestion, BookOpen, Store, Trophy, ListChecks, Calculator, FileText, CalendarDays, AlertCircle, Search, Cpu, RotateCcw } from "lucide-react";
+import { Home, Plus, LogOut, Zap, ClipboardList, Users, AlertTriangle, ShieldCheck, MessageCircleQuestion, BookOpen, Store, Trophy, ListChecks, Calculator, FileText, CalendarDays, AlertCircle, Search, Cpu, RotateCcw, Palette } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -61,6 +61,8 @@ export function AppSidebar() {
   const isStrategicAssistant = role === "strategic_assistant";
   const isOperational = role === "operational";
   const isCompetitorAnalyst = role === "competitor_analyst";
+  const isUxLeader = role === "ux_leader";
+  const isUxCollaborator = role === "ux_collaborator";
   const canManage = isAdmin || isStrategic;
 
   const roleLabel = (value: string | null) => {
@@ -68,6 +70,8 @@ export function AppSidebar() {
     if (value === "strategic") return "Gestor Estratégico";
     if (value === "strategic_assistant") return "Auxiliar Estratégico";
     if (value === "competitor_analyst") return "Analista de Concorrência";
+    if (value === "ux_leader") return "Líder UX";
+    if (value === "ux_collaborator") return "Colaborador UX";
     return "Gestor Operacional";
   };
 
@@ -319,6 +323,23 @@ export function AppSidebar() {
                   </NavLink>
                 </SidebarMenuButton>
               </SidebarMenuItem>
+
+              {/* UX Comunicação */}
+              {(isUxLeader || isUxCollaborator) && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild>
+                    <NavLink
+                      to="/ux-comunicacao"
+                      onClick={() => handleNav("/ux-comunicacao")}
+                      className="hover:bg-sidebar-accent/50"
+                      activeClassName="bg-sidebar-accent text-primary font-medium"
+                    >
+                      <Palette className="mr-2 h-4 w-4" />
+                      {!collapsed && <span>{isUxLeader ? "Setor UX" : "Minhas Tarefas UX"}</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
 
               {/* Gestores */}
               {canManage && (

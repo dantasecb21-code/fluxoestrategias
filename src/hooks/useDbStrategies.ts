@@ -23,6 +23,7 @@ export interface DbStrategy {
   user_id: string;
   store_request_id?: string | null;
   assigned_to: string | null;
+  ux_assigned_to: string | null;
   store_name: string;
   manager_name: string;
   operational_manager: string;
@@ -122,10 +123,14 @@ export function useDbStrategies() {
       if (followedStrategicIds.length === 0) { setStrategies([]); setLoading(false); return; }
       const ids = followedStrategicIds.join(",");
       query = query.or(`user_id.in.(${ids}),assigned_to.in.(${ids})`);
+    } else if (role === "ux_leader") {
+      // ux_leader sees all strategies to detect approaching deadlines
+    } else if (role === "ux_collaborator") {
+      query = query.eq("ux_assigned_to", user.id);
     }
 
-    // Filter by user's platforms (admin sees all)
-    if (role !== "admin" && platforms.length > 0) {
+    // Filter by user's platforms (admin and ux roles see all)
+    if (role !== "admin" && role !== "ux_leader" && role !== "ux_collaborator" && platforms.length > 0) {
       query = query.in("platform", platforms);
     }
 
@@ -363,5 +368,18 @@ export function useDbStrategies() {
     });
   };
 
-  return { strategies, loading, createStrategy, updateStrategy, deleteStrategy, duplicateStrategy, restoreStrategy, fetchDeletedStrategies, permanentDeleteStrategy, refetch: fetchStrategies };
+  const assignUxCollaborator = async (strategyId: string, uxCollaboratorId: string | null) => {
+    const { error } = await supabase
+      .from("strategies")
+      .update({ ux_assigned_to: uxCollaboratorId } as any)
+      .eq("id", strategyId);
+    if (error) {
+      console.error("assignUxCollaborator error:", error);
+      return false;
+    }
+    fetchStrategies();
+    return true;
+  };
+
+  return { strategies, loading, createStrategy, updateStrategy, deleteStrategy, duplicateStrategy, restoreStrategy, fetchDeletedStrategies, permanentDeleteStrategy, refetch: fetchStrategies, assignUxCollaborator };
 }
