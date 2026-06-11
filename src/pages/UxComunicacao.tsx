@@ -440,7 +440,9 @@ export default function UxComunicacao() {
         </Card>
       ) : (
         <div className="space-y-4">
-          {strategies.map((s) => {
+          {strategies
+            .filter((s) => !(s.status === "approved" && !s.ux_completed_by))
+            .map((s) => {
             const progress = calcProgress(s.categories);
             const overdueFlag = isOverdue(s.deadline);
             const isCompleted = !!s.ux_completed_by;
