@@ -43,6 +43,8 @@ export interface DbStrategy {
   started_at: string | null;
   completed_at: string | null;
   study_requested: boolean;
+  ux_completed_by: string | null;
+  ux_completed_at: string | null;
 }
 
 function jsonToCategories(json: Json): StrategyCategory[] {
@@ -381,5 +383,18 @@ export function useDbStrategies() {
     return true;
   };
 
-  return { strategies, loading, createStrategy, updateStrategy, deleteStrategy, duplicateStrategy, restoreStrategy, fetchDeletedStrategies, permanentDeleteStrategy, refetch: fetchStrategies, assignUxCollaborator };
+  const completeUxStrategy = async (strategyId: string, userId: string) => {
+    const { error } = await supabase
+      .from("strategies")
+      .update({ ux_completed_by: userId, ux_completed_at: new Date().toISOString() } as any)
+      .eq("id", strategyId);
+    if (error) {
+      console.error("completeUxStrategy error:", error);
+      return false;
+    }
+    fetchStrategies();
+    return true;
+  };
+
+  return { strategies, loading, createStrategy, updateStrategy, deleteStrategy, duplicateStrategy, restoreStrategy, fetchDeletedStrategies, permanentDeleteStrategy, refetch: fetchStrategies, assignUxCollaborator, completeUxStrategy };
 }

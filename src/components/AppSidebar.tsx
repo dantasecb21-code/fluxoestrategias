@@ -325,7 +325,7 @@ export function AppSidebar() {
               </SidebarMenuItem>
 
               {/* UX Comunicação */}
-              {(isUxLeader || isUxCollaborator) && (
+              {(isUxLeader || isUxCollaborator || isAdmin) && (
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild>
                     <NavLink
@@ -335,7 +335,7 @@ export function AppSidebar() {
                       activeClassName="bg-sidebar-accent text-primary font-medium"
                     >
                       <Palette className="mr-2 h-4 w-4" />
-                      {!collapsed && <span>{isUxLeader ? "Setor UX" : "Minhas Tarefas UX"}</span>}
+                      {!collapsed && <span>{(isUxLeader || isAdmin) ? "Setor UX" : "Minhas Tarefas UX"}</span>}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
