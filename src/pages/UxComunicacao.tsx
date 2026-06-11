@@ -69,6 +69,7 @@ export default function UxComunicacao() {
   const [filterStatus, setFilterStatus] = useState<UxStatus>("todos");
   const [filterResponsavel, setFilterResponsavel] = useState<string>("todos");
   const [filterConcluiu, setFilterConcluiu] = useState<string>("todos");
+  const [filterPlatform, setFilterPlatform] = useState<string>("todos");
 
   const isLeader = role === "ux_leader";
   const isAdmin = role === "admin";
@@ -128,8 +129,9 @@ export default function UxComunicacao() {
     return uxStrategies
       .filter((s) => filterStatus === "todos" || getUxStatus(s) === filterStatus)
       .filter((s) => filterResponsavel === "todos" || s.ux_assigned_to === filterResponsavel)
-      .filter((s) => filterConcluiu === "todos" || s.ux_completed_by === filterConcluiu);
-  }, [uxStrategies, filterStatus, filterResponsavel, filterConcluiu]);
+      .filter((s) => filterConcluiu === "todos" || s.ux_completed_by === filterConcluiu)
+      .filter((s) => filterPlatform === "todos" || s.platform === filterPlatform);
+  }, [uxStrategies, filterStatus, filterResponsavel, filterConcluiu, filterPlatform]);
 
   // Per-person stats
   const personStats = useMemo(() => {
@@ -267,14 +269,30 @@ export default function UxComunicacao() {
                   </Select>
                 </div>
 
+                {/* Platform filter */}
+                <div className="flex-1 min-w-[160px]">
+                  <p className="text-xs text-muted-foreground mb-1">Plataforma</p>
+                  <Select value={filterPlatform} onValueChange={setFilterPlatform}>
+                    <SelectTrigger className="h-8 text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="todos">Todas</SelectItem>
+                      <SelectItem value="99food">99Food</SelectItem>
+                      <SelectItem value="ifood">iFood</SelectItem>
+                      <SelectItem value="keeta">Keeta</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
                 {/* Reset */}
-                {(filterStatus !== "todos" || filterResponsavel !== "todos" || filterConcluiu !== "todos") && (
+                {(filterStatus !== "todos" || filterResponsavel !== "todos" || filterConcluiu !== "todos" || filterPlatform !== "todos") && (
                   <div className="flex items-end">
                     <Button
                       variant="ghost"
                       size="sm"
                       className="h-8 text-xs text-muted-foreground"
-                      onClick={() => { setFilterStatus("todos"); setFilterResponsavel("todos"); setFilterConcluiu("todos"); }}
+                      onClick={() => { setFilterStatus("todos"); setFilterResponsavel("todos"); setFilterConcluiu("todos"); setFilterPlatform("todos"); }}
                     >
                       Limpar filtros
                     </Button>
@@ -330,7 +348,9 @@ export default function UxComunicacao() {
                               </Badge>
                             )}
                           </div>
-                          <p className="text-xs text-muted-foreground">Gestor operacional: {s.operational_manager || "—"}</p>
+                          <p className="text-xs text-muted-foreground">
+                            Gestor operacional: {s.operational_manager || "—"} · {s.platform === "99food" ? "99Food" : s.platform === "ifood" ? "iFood" : s.platform === "keeta" ? "Keeta" : s.platform || "—"}
+                          </p>
                         </div>
 
                         <div className="text-right shrink-0 space-y-1">
