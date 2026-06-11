@@ -14,6 +14,21 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
+const PLATFORM_LABEL: Record<string, { label: string; color: string }> = {
+  "99food": { label: "99Food",  color: "bg-yellow-500/15 text-yellow-500 border-yellow-500/30" },
+  ifood:   { label: "iFood",   color: "bg-red-500/15 text-red-500 border-red-500/30" },
+  keeta:   { label: "Keeta",   color: "bg-blue-500/15 text-blue-500 border-blue-500/30" },
+};
+function PlatformBadge({ platform }: { platform: string }) {
+  const cfg = PLATFORM_LABEL[platform];
+  if (!cfg) return null;
+  return (
+    <Badge variant="outline" className={`text-xs shrink-0 font-medium ${cfg.color}`}>
+      {cfg.label}
+    </Badge>
+  );
+}
+
 interface UxPerson {
   user_id: string;
   display_name: string;
@@ -328,6 +343,7 @@ export default function UxComunicacao() {
                         <div className="min-w-0">
                           <div className="flex items-center gap-2 flex-wrap mb-0.5">
                             <h3 className="font-heading font-semibold text-foreground">{s.store_name || "Sem nome"}</h3>
+                            <PlatformBadge platform={s.platform} />
                             <Badge
                               variant="outline"
                               className={`text-xs shrink-0 ${
@@ -348,9 +364,7 @@ export default function UxComunicacao() {
                               </Badge>
                             )}
                           </div>
-                          <p className="text-xs text-muted-foreground">
-                            Gestor operacional: {s.operational_manager || "—"} · {s.platform === "99food" ? "99Food" : s.platform === "ifood" ? "iFood" : s.platform === "keeta" ? "Keeta" : s.platform || "—"}
-                          </p>
+                          <p className="text-xs text-muted-foreground">Gestor operacional: {s.operational_manager || "—"}</p>
                         </div>
 
                         <div className="text-right shrink-0 space-y-1">
@@ -470,7 +484,10 @@ export default function UxComunicacao() {
               <Card key={s.id} className={`p-5 ${isCompleted ? "border-success/30 bg-success/5" : overdueFlag ? "border-destructive/30 bg-destructive/5" : ""}`}>
                 <div className="flex items-start justify-between mb-3">
                   <div>
-                    <h3 className="font-heading font-semibold text-foreground text-lg">{s.store_name || "Sem nome"}</h3>
+                    <div className="flex items-center gap-2 flex-wrap mb-0.5">
+                      <h3 className="font-heading font-semibold text-foreground text-lg">{s.store_name || "Sem nome"}</h3>
+                      <PlatformBadge platform={s.platform} />
+                    </div>
                     <p className="text-xs text-muted-foreground mt-0.5">Gestor Operacional: {s.operational_manager || "—"}</p>
                   </div>
                   <p className={`text-xs flex items-center gap-1 shrink-0 ml-3 ${overdueFlag && !isCompleted ? "text-destructive font-medium" : "text-muted-foreground"}`}>
