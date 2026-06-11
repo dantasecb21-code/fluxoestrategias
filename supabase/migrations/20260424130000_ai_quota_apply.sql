@@ -13,9 +13,11 @@ WHERE NOT EXISTS (SELECT 1 FROM public.ai_quota_settings);
 
 ALTER TABLE public.ai_quota_settings ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Anyone authenticated can view quota settings" ON public.ai_quota_settings;
 CREATE POLICY "Anyone authenticated can view quota settings"
   ON public.ai_quota_settings FOR SELECT TO authenticated USING (true);
 
+DROP POLICY IF EXISTS "Admins can update quota settings" ON public.ai_quota_settings;
 CREATE POLICY "Admins can update quota settings"
   ON public.ai_quota_settings FOR UPDATE TO authenticated
   USING (has_role(auth.uid(), 'admin'::app_role));
@@ -30,6 +32,7 @@ CREATE TABLE IF NOT EXISTS public.ai_usage (
 
 ALTER TABLE public.ai_usage ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Anyone authenticated can view ai_usage" ON public.ai_usage;
 CREATE POLICY "Anyone authenticated can view ai_usage"
   ON public.ai_usage FOR SELECT TO authenticated USING (true);
 
