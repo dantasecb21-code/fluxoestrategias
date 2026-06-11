@@ -21,7 +21,7 @@ interface Item {
 const PLATFORM_LABELS: Record<string, string> = { ifood: "iFood", "99food": "99", keeta: "Keeta" };
 
 export default function ReturnedStrategies() {
-  const { user } = useAuth();
+  const { user, roles } = useAuth();
   const navigate = useNavigate();
   const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(true);
@@ -29,18 +29,22 @@ export default function ReturnedStrategies() {
   const fetchItems = async () => {
     if (!user) return;
     setLoading(true);
-    const { data } = await supabase
+    const isAdmin = roles.includes("admin");
+    let query = supabase
       .from("strategies")
       .select("id, store_name, platform, manager_name, algorithm_return_reason, algorithm_adaptation_started_at, updated_at")
       .eq("algorithm_adaptation_status", "returned")
-      .or(`user_id.eq.${user.id},assigned_to.eq.${user.id}`)
       .is("deleted_at", null)
       .order("updated_at", { ascending: false });
+    if (!isAdmin) {
+      query = query.or(`user_id.eq.${user.id},assigned_to.eq.${user.id}`);
+    }
+    const { data } = await query;
     setItems((data as Item[]) || []);
     setLoading(false);
   };
 
-  useEffect(() => { fetchItems(); }, [user]);
+  useEffect(() => { fetchItems(); }, [user, roles]);
 
   useEffect(() => {
     if (!user) return;
