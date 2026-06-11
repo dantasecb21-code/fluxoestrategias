@@ -1,6 +1,6 @@
-import { createClient } from '@supabase/supabase-js';
-import * as fs from 'fs';
-import * as path from 'path';
+const { createClient } = require('@supabase/supabase-js');
+const fs = require('fs');
+const path = require('path');
 
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
