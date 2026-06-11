@@ -449,6 +449,7 @@ export type Database = {
           study_requested: boolean | null
           updated_at: string
           user_id: string
+          ux_assigned_to: string | null
         }
         Insert: {
           admin_approved?: boolean
@@ -482,6 +483,7 @@ export type Database = {
           study_requested?: boolean | null
           updated_at?: string
           user_id: string
+          ux_assigned_to?: string | null
         }
         Update: {
           admin_approved?: boolean
@@ -515,6 +517,7 @@ export type Database = {
           study_requested?: boolean | null
           updated_at?: string
           user_id?: string
+          ux_assigned_to?: string | null
         }
         Relationships: [
           {
