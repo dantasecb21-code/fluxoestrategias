@@ -112,7 +112,7 @@ export function useDbStrategies() {
   const fetchStrategies = useCallback(async () => {
     if (!user) { setStrategies([]); setLoading(false); return; }
 
-    let query = supabase.from("strategies").select("*").is("deleted_at", null);
+    let query = supabase.from("strategies").select("*").is("deleted_at", null) as any;
 
     if (role === "operational") {
       // Operacional só vê estratégias já validadas pelo admin
