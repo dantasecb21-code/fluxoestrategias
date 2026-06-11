@@ -44,7 +44,7 @@ export default function UxComunicacao() {
       const { data: roles } = await supabase
         .from("user_roles")
         .select("user_id")
-        .eq("role", "ux_collaborator");
+        .eq("role", "ux_collaborator" as any);
 
       if (!roles || roles.length === 0) { setCollaborators([]); return; }
 

@@ -126,7 +126,7 @@ export function useDbStrategies() {
     } else if (role === "ux_leader") {
       // ux_leader sees all strategies to detect approaching deadlines
     } else if (role === "ux_collaborator") {
-      query = query.eq("ux_assigned_to", user.id);
+      query = query.eq("ux_assigned_to" as any, user.id);
     }
 
     // Filter by user's platforms (admin and ux roles see all)
