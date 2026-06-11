@@ -43,7 +43,7 @@ function isUrgent(deadline: string | null) {
 
 function getUxStatus(s: DbStrategy): Exclude<UxStatus, "todos"> {
   if (s.ux_completed_by) return "concluida";
-  if (isOverdue(s.deadline) && !s.ux_completed_by) return "atrasada";
+  if (isOverdue(s.deadline) && !s.ux_completed_by && s.status !== "approved") return "atrasada";
   if (s.ux_assigned_to) return "andamento";
   if (s.returned) return "pausada";
   return "aguardando";
