@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useDbStrategies, DbStrategy } from "@/hooks/useDbStrategies";
 import { useAuth } from "@/hooks/useAuth";
@@ -74,6 +75,7 @@ const STATUS_CONFIG: Record<Exclude<UxStatus, "todos">, { label: string; color: 
 
 export default function UxComunicacao() {
   const { role, user } = useAuth();
+  const navigate = useNavigate();
   const { strategies, loading, assignUxCollaborator, completeUxStrategy } = useDbStrategies();
   const [uxPeople, setUxPeople] = useState<UxPerson[]>([]);
   const [selections, setSelections] = useState<Record<string, string>>({});
@@ -481,7 +483,7 @@ export default function UxComunicacao() {
             const overdueFlag = isOverdue(s.deadline);
             const isCompleted = !!s.ux_completed_by;
             return (
-              <Card key={s.id} className={`p-5 ${isCompleted ? "border-success/30 bg-success/5" : overdueFlag ? "border-destructive/30 bg-destructive/5" : ""}`}>
+              <Card key={s.id} onClick={() => navigate(`/operacional/${s.id}`)} className={`p-5 cursor-pointer hover:shadow-md transition-shadow ${isCompleted ? "border-success/30 bg-success/5" : overdueFlag ? "border-destructive/30 bg-destructive/5" : ""}`}>
                 <div className="flex items-start justify-between mb-3">
                   <div>
                     <div className="flex items-center gap-2 flex-wrap mb-0.5">
