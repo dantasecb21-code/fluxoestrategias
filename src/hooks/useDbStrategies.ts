@@ -384,9 +384,15 @@ export function useDbStrategies() {
   };
 
   const completeUxStrategy = async (strategyId: string, userId: string) => {
+    const now = new Date().toISOString();
     const { error } = await supabase
       .from("strategies")
-      .update({ ux_completed_by: userId, ux_completed_at: new Date().toISOString() } as any)
+      .update({
+        ux_completed_by: userId,
+        ux_completed_at: now,
+        status: "approved",
+        completed_at: now,
+      } as any)
       .eq("id", strategyId);
     if (error) {
       console.error("completeUxStrategy error:", error);

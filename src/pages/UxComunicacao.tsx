@@ -3,24 +3,17 @@ import { supabase } from "@/integrations/supabase/client";
 import { useDbStrategies, DbStrategy } from "@/hooks/useDbStrategies";
 import { useAuth } from "@/hooks/useAuth";
 import { formatDateBR } from "@/lib/utils";
-import { deriveStrategyDisplayStatus } from "@/lib/strategyStatus";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Palette, Clock, AlertCircle, ClipboardList, UserCheck, CheckCircle2 } from "lucide-react";
+import { Palette, Clock, AlertCircle, ClipboardList, UserCheck, CheckCircle2, Zap } from "lucide-react";
 import { toast } from "sonner";
 
-interface UxCollaborator {
+interface UxPerson {
   user_id: string;
   display_name: string;
-}
-
-function getTomorrow() {
-  const d = new Date();
-  d.setDate(d.getDate() + 1);
-  return d.toISOString().slice(0, 10);
 }
 
 function calcProgress(categories: any[]) {
@@ -30,10 +23,18 @@ function calcProgress(categories: any[]) {
   return { percent: Math.round((completed / allItems.length) * 100), completed, total: allItems.length };
 }
 
+function isUrgent(deadline: string | null) {
+  if (!deadline) return false;
+  const now = new Date();
+  const dl = new Date(deadline + "T23:59:59");
+  const diffDays = (dl.getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
+  return diffDays <= 1; // overdue OR due within 1 day
+}
+
 export default function UxComunicacao() {
   const { role, user } = useAuth();
   const { strategies, loading, assignUxCollaborator, completeUxStrategy } = useDbStrategies();
-  const [collaborators, setCollaborators] = useState<UxCollaborator[]>([]);
+  const [uxPeople, setUxPeople] = useState<UxPerson[]>([]);
   const [selections, setSelections] = useState<Record<string, string>>({});
   const [assigning, setAssigning] = useState<Record<string, boolean>>({});
   const [completing, setCompleting] = useState<Record<string, boolean>>({});
@@ -42,15 +43,16 @@ export default function UxComunicacao() {
   const isAdmin = role === "admin";
   const isManagerView = isLeader || isAdmin;
 
+  // Fetch UX people (collaborators + leader themselves for self-assignment)
   useEffect(() => {
     if (!isManagerView) return;
-    async function fetchCollaborators() {
+    async function fetchUxPeople() {
       const { data: roles } = await supabase
         .from("user_roles")
         .select("user_id")
-        .eq("role", "ux_collaborator" as any);
+        .in("role", ["ux_collaborator", "ux_leader"] as any);
 
-      if (!roles || roles.length === 0) { setCollaborators([]); return; }
+      if (!roles || roles.length === 0) { setUxPeople([]); return; }
 
       const ids = roles.map((r) => r.user_id);
       const { data: profiles } = await supabase
@@ -58,16 +60,16 @@ export default function UxComunicacao() {
         .select("user_id, display_name")
         .in("user_id", ids);
 
-      setCollaborators(profiles || []);
+      setUxPeople(profiles || []);
     }
-    fetchCollaborators();
+    fetchUxPeople();
   }, [isManagerView]);
 
   async function handleAssign(strategyId: string) {
-    const collaboratorId = selections[strategyId];
-    if (!collaboratorId) { toast.error("Selecione um colaborador"); return; }
+    const personId = selections[strategyId];
+    if (!personId) { toast.error("Selecione quem vai executar"); return; }
     setAssigning((prev) => ({ ...prev, [strategyId]: true }));
-    const ok = await assignUxCollaborator(strategyId, collaboratorId);
+    const ok = await assignUxCollaborator(strategyId, personId);
     setAssigning((prev) => ({ ...prev, [strategyId]: false }));
     if (ok) toast.success("Estratégia distribuída com sucesso");
     else toast.error("Erro ao distribuir estratégia");
@@ -78,19 +80,22 @@ export default function UxComunicacao() {
     setCompleting((prev) => ({ ...prev, [strategyId]: true }));
     const ok = await completeUxStrategy(strategyId, user.id);
     setCompleting((prev) => ({ ...prev, [strategyId]: false }));
-    if (ok) toast.success("Estratégia marcada como finalizada!");
-    else toast.error("Erro ao finalizar estratégia");
+    if (ok) toast.success("Estratégia concluída pelo Setor UX!");
+    else toast.error("Erro ao concluir estratégia");
   }
 
   // Leader / Admin view
   if (isManagerView) {
-    const tomorrow = getTomorrow();
-    const urgent = strategies.filter(
-      (s) => s.deadline?.slice(0, 10) === tomorrow && deriveStrategyDisplayStatus(s) !== "completed"
+    // Strategies that need UX attention: overdue OR ≤1 day left, not yet approved
+    const needsUx = strategies.filter(
+      (s) => isUrgent(s.deadline) && s.status !== "approved"
     );
-    const distributed = strategies.filter((s) => s.ux_assigned_to);
-    const completedByUx = distributed.filter((s) => s.ux_completed_by);
-    const inProgress = distributed.filter((s) => !s.ux_completed_by);
+    // Not yet assigned to UX
+    const toDistribute = needsUx.filter((s) => !s.ux_assigned_to);
+    // Assigned, in progress
+    const inProgress = strategies.filter((s) => s.ux_assigned_to && !s.ux_completed_by);
+    // Completed by UX
+    const completedByUx = strategies.filter((s) => !!s.ux_completed_by);
 
     return (
       <div className="max-w-4xl mx-auto space-y-8">
@@ -104,7 +109,9 @@ export default function UxComunicacao() {
             </h1>
           </div>
           <p className="text-muted-foreground">
-            {isAdmin ? "Visão geral do setor UX — distribuição e finalizações." : "Distribuição de estratégias urgentes para colaboradores UX."}
+            {isAdmin
+              ? "Visão geral do setor UX — atrasadas, em andamento e concluídas."
+              : "Estratégias urgentes para distribuição ao time UX."}
           </p>
         </div>
 
@@ -112,38 +119,38 @@ export default function UxComunicacao() {
           <p className="text-muted-foreground">Carregando...</p>
         ) : (
           <>
-            {/* Urgent section — only leader distributes */}
-            {isLeader && (
-              <div className="space-y-4">
-                <div className="flex items-center gap-2">
-                  <AlertCircle className="h-5 w-5 text-destructive" />
-                  <h2 className="font-heading font-semibold text-xl text-foreground">
-                    Entrega Amanhã — Não Concluídas
-                    <span className="ml-2 text-sm font-normal text-muted-foreground">({urgent.length})</span>
-                  </h2>
-                </div>
-                {urgent.length === 0 ? (
-                  <Card className="p-8 text-center border-dashed">
-                    <AlertCircle className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
-                    <p className="text-muted-foreground">Nenhuma estratégia com entrega amanhã.</p>
-                  </Card>
-                ) : (
-                  urgent.map((s) => (
-                    <UrgentCard
-                      key={s.id}
-                      strategy={s}
-                      collaborators={collaborators}
-                      selection={selections[s.id] || ""}
-                      onSelect={(v) => setSelections((prev) => ({ ...prev, [s.id]: v }))}
-                      onAssign={() => handleAssign(s.id)}
-                      assigning={!!assigning[s.id]}
-                    />
-                  ))
-                )}
+            {/* To distribute */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2">
+                <AlertCircle className="h-5 w-5 text-destructive" />
+                <h2 className="font-heading font-semibold text-xl text-foreground">
+                  Aguardando Distribuição
+                  <span className="ml-2 text-sm font-normal text-muted-foreground">({toDistribute.length})</span>
+                </h2>
               </div>
-            )}
 
-            {/* In Progress */}
+              {toDistribute.length === 0 ? (
+                <Card className="p-8 text-center border-dashed">
+                  <AlertCircle className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
+                  <p className="text-muted-foreground">Nenhuma estratégia aguardando distribuição.</p>
+                </Card>
+              ) : (
+                toDistribute.map((s) => (
+                  <DistributeCard
+                    key={s.id}
+                    strategy={s}
+                    uxPeople={uxPeople}
+                    selection={selections[s.id] || ""}
+                    onSelect={(v) => setSelections((prev) => ({ ...prev, [s.id]: v }))}
+                    onAssign={() => handleAssign(s.id)}
+                    assigning={!!assigning[s.id]}
+                    canAssign={isLeader}
+                  />
+                ))
+              )}
+            </div>
+
+            {/* In progress */}
             {inProgress.length > 0 && (
               <div className="space-y-4">
                 <div className="flex items-center gap-2">
@@ -154,22 +161,25 @@ export default function UxComunicacao() {
                   </h2>
                 </div>
                 {inProgress.map((s) => {
-                  const collab = collaborators.find((c) => c.user_id === s.ux_assigned_to);
+                  const person = uxPeople.find((p) => p.user_id === s.ux_assigned_to);
                   const progress = calcProgress(s.categories);
+                  const overdue = s.deadline && new Date(s.deadline + "T23:59:59") < new Date();
                   return (
                     <Card key={s.id} className="p-4 border-primary/20 bg-primary/5">
-                      <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-start justify-between mb-2">
                         <div>
                           <h3 className="font-heading font-semibold text-foreground">{s.store_name || "Sem nome"}</h3>
                           <p className="text-xs text-muted-foreground">Gestor: {s.operational_manager || "—"}</p>
                         </div>
-                        <div className="text-right">
-                          <p className="text-xs text-primary font-medium">
-                            <UserCheck className="inline h-3 w-3 mr-1" />
-                            {collab?.display_name || "Colaborador"}
+                        <div className="text-right space-y-1">
+                          <p className="text-xs text-primary font-medium flex items-center gap-1 justify-end">
+                            <UserCheck className="h-3 w-3" />
+                            {person?.display_name || "UX"}
                           </p>
-                          <p className="text-xs text-muted-foreground flex items-center gap-1 justify-end mt-0.5">
-                            <Clock className="h-3 w-3" /> {s.deadline ? formatDateBR(s.deadline) : "—"}
+                          <p className={`text-xs flex items-center gap-1 justify-end ${overdue ? "text-destructive font-medium" : "text-muted-foreground"}`}>
+                            <Clock className="h-3 w-3" />
+                            {s.deadline ? formatDateBR(s.deadline) : "—"}
+                            {overdue && " · Atrasada"}
                           </p>
                         </div>
                       </div>
@@ -190,15 +200,15 @@ export default function UxComunicacao() {
             {completedByUx.length > 0 && (
               <div className="space-y-4">
                 <div className="flex items-center gap-2">
-                  <CheckCircle2 className="h-5 w-5 text-success" />
+                  <Zap className="h-5 w-5 text-success" />
                   <h2 className="font-heading font-semibold text-xl text-foreground">
-                    Finalizadas pelo Setor UX
+                    Concluídas pelo Setor UX
                     <span className="ml-2 text-sm font-normal text-muted-foreground">({completedByUx.length})</span>
                   </h2>
                 </div>
                 {completedByUx.map((s) => {
-                  const collab = collaborators.find((c) => c.user_id === s.ux_completed_by);
-                  const assignedCollab = collaborators.find((c) => c.user_id === s.ux_assigned_to);
+                  const person = uxPeople.find((p) => p.user_id === s.ux_completed_by);
+                  const assignedPerson = uxPeople.find((p) => p.user_id === s.ux_assigned_to);
                   const progress = calcProgress(s.categories);
                   return (
                     <Card key={s.id} className="p-4 border-success/30 bg-success/5">
@@ -206,27 +216,23 @@ export default function UxComunicacao() {
                         <div>
                           <h3 className="font-heading font-semibold text-foreground">{s.store_name || "Sem nome"}</h3>
                           <p className="text-xs text-muted-foreground">Gestor: {s.operational_manager || "—"}</p>
-                          {assignedCollab && (
-                            <p className="text-xs text-muted-foreground mt-0.5">
-                              Atribuída a: {assignedCollab.display_name}
-                            </p>
+                          {assignedPerson && assignedPerson.user_id !== s.ux_completed_by && (
+                            <p className="text-xs text-muted-foreground">Atribuída a: {assignedPerson.display_name}</p>
                           )}
                         </div>
                         <div className="text-right space-y-1">
-                          <Badge className="bg-success/20 text-success border-success/30 text-xs font-medium">
-                            <CheckCircle2 className="h-3 w-3 mr-1" />
-                            Finalizado por {collab?.display_name || "UX"}
+                          <Badge className="bg-success/20 text-success border-success/30 text-xs font-semibold">
+                            <Zap className="h-3 w-3 mr-1" />
+                            Finalizado por {person?.display_name || "UX"}
                           </Badge>
                           {s.ux_completed_at && (
-                            <p className="text-xs text-muted-foreground">
-                              {formatDateBR(s.ux_completed_at)}
-                            </p>
+                            <p className="text-xs text-muted-foreground">{formatDateBR(s.ux_completed_at)}</p>
                           )}
                         </div>
                       </div>
                       <div className="space-y-1">
                         <div className="flex justify-between text-xs">
-                          <span className="text-muted-foreground">Progresso</span>
+                          <span className="text-muted-foreground">Progresso no momento da conclusão</span>
                           <span className="font-medium">{progress.percent}%</span>
                         </div>
                         <Progress value={progress.percent} className="h-1.5" />
@@ -235,14 +241,6 @@ export default function UxComunicacao() {
                   );
                 })}
               </div>
-            )}
-
-            {distributed.length === 0 && (
-              <Card className="p-12 text-center border-dashed">
-                <UserCheck className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <h2 className="font-heading font-semibold text-xl text-foreground mb-2">Nenhuma estratégia distribuída</h2>
-                <p className="text-muted-foreground">Ainda não há estratégias atribuídas ao setor UX.</p>
-              </Card>
             )}
           </>
         )}
@@ -277,18 +275,19 @@ export default function UxComunicacao() {
         <div className="space-y-4">
           {strategies.map((s) => {
             const progress = calcProgress(s.categories);
-            const isOverdue = s.deadline && new Date(s.deadline) < new Date();
+            const isOverdue = s.deadline && new Date(s.deadline + "T23:59:59") < new Date();
             const isCompleted = !!s.ux_completed_by;
             return (
-              <Card key={s.id} className={`p-5 ${isCompleted ? "border-success/30 bg-success/5" : ""}`}>
+              <Card key={s.id} className={`p-5 ${isCompleted ? "border-success/30 bg-success/5" : isOverdue ? "border-destructive/30 bg-destructive/5" : ""}`}>
                 <div className="flex items-start justify-between mb-3">
                   <div>
                     <h3 className="font-heading font-semibold text-foreground text-lg">{s.store_name || "Sem nome"}</h3>
                     <p className="text-xs text-muted-foreground mt-0.5">Gestor Operacional: {s.operational_manager || "—"}</p>
                   </div>
-                  <p className={`text-xs flex items-center gap-1 shrink-0 ml-3 ${isOverdue && !isCompleted ? "text-destructive" : "text-muted-foreground"}`}>
+                  <p className={`text-xs flex items-center gap-1 shrink-0 ml-3 ${isOverdue && !isCompleted ? "text-destructive font-medium" : "text-muted-foreground"}`}>
                     <Clock className="h-3 w-3" />
                     {s.deadline ? formatDateBR(s.deadline) : "Sem prazo"}
+                    {isOverdue && !isCompleted && " · Atrasada"}
                   </p>
                 </div>
 
@@ -301,20 +300,19 @@ export default function UxComunicacao() {
                 </div>
 
                 {isCompleted ? (
-                  <Badge className="bg-success/20 text-success border-success/30 text-xs">
-                    <CheckCircle2 className="h-3 w-3 mr-1" />
-                    Finalizado por você{s.ux_completed_at ? ` em ${formatDateBR(s.ux_completed_at)}` : ""}
+                  <Badge className="bg-success/20 text-success border-success/30 text-xs font-medium">
+                    <Zap className="h-3 w-3 mr-1" />
+                    Concluída pelo Setor UX{s.ux_completed_at ? ` — ${formatDateBR(s.ux_completed_at)}` : ""}
                   </Badge>
                 ) : (
                   <Button
                     size="sm"
-                    variant="outline"
-                    className="border-success/50 text-success hover:bg-success/10"
+                    className="bg-success hover:bg-success/90 text-white"
                     onClick={() => handleComplete(s.id)}
                     disabled={!!completing[s.id]}
                   >
                     <CheckCircle2 className="h-4 w-4 mr-2" />
-                    {completing[s.id] ? "Salvando..." : "Marcar como Finalizado"}
+                    {completing[s.id] ? "Concluindo..." : "Concluir pelo Setor UX"}
                   </Button>
                 )}
               </Card>
@@ -326,35 +324,39 @@ export default function UxComunicacao() {
   );
 }
 
-function UrgentCard({
+function DistributeCard({
   strategy,
-  collaborators,
+  uxPeople,
   selection,
   onSelect,
   onAssign,
   assigning,
+  canAssign,
 }: {
   strategy: DbStrategy;
-  collaborators: UxCollaborator[];
+  uxPeople: UxPerson[];
   selection: string;
   onSelect: (v: string) => void;
   onAssign: () => void;
   assigning: boolean;
+  canAssign: boolean;
 }) {
   const progress = calcProgress(strategy.categories);
   const alreadyAssigned = !!strategy.ux_assigned_to;
-  const assignedCollab = collaborators.find((c) => c.user_id === strategy.ux_assigned_to);
+  const assignedPerson = uxPeople.find((p) => p.user_id === strategy.ux_assigned_to);
+  const overdue = strategy.deadline && new Date(strategy.deadline + "T23:59:59") < new Date();
 
   return (
     <Card className="p-5 border-destructive/30 bg-destructive/5">
       <div className="flex items-start justify-between mb-3">
         <div>
           <h3 className="font-heading font-semibold text-foreground text-lg">{strategy.store_name || "Sem nome"}</h3>
-          <p className="text-xs text-muted-foreground mt-0.5">Gestor Operacional: {strategy.operational_manager || "—"}</p>
+          <p className="text-xs text-muted-foreground mt-0.5">Gestor: {strategy.operational_manager || "—"}</p>
         </div>
-        <p className="text-xs text-destructive flex items-center gap-1 shrink-0 ml-3">
+        <p className={`text-xs flex items-center gap-1 shrink-0 ml-3 font-medium ${overdue ? "text-destructive" : "text-warning"}`}>
           <Clock className="h-3 w-3" />
           {strategy.deadline ? formatDateBR(strategy.deadline) : "—"}
+          {overdue ? " · Atrasada" : " · Vence amanhã"}
         </p>
       </div>
 
@@ -366,41 +368,33 @@ function UrgentCard({
         <Progress value={progress.percent} className="h-2" />
       </div>
 
-      {alreadyAssigned ? (
-        <div className="flex items-center justify-between">
-          <p className="text-xs text-success flex items-center gap-1">
-            <UserCheck className="h-3 w-3" /> Atribuído a: {assignedCollab?.display_name || "Colaborador"}
-          </p>
-          <Select value={selection} onValueChange={onSelect}>
-            <SelectTrigger className="w-44 h-8 text-xs">
-              <SelectValue placeholder="Reatribuir..." />
-            </SelectTrigger>
-            <SelectContent>
-              {collaborators.map((c) => (
-                <SelectItem key={c.user_id} value={c.user_id}>{c.display_name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Button size="sm" variant="outline" onClick={onAssign} disabled={assigning || !selection} className="ml-2">
-            {assigning ? "Salvando..." : "Reatribuir"}
-          </Button>
-        </div>
-      ) : (
+      {canAssign && (
         <div className="flex items-center gap-2">
+          {alreadyAssigned && (
+            <p className="text-xs text-success flex items-center gap-1 mr-2 shrink-0">
+              <UserCheck className="h-3 w-3" /> {assignedPerson?.display_name || "UX"}
+            </p>
+          )}
           <Select value={selection} onValueChange={onSelect}>
             <SelectTrigger className="flex-1 h-8 text-xs">
-              <SelectValue placeholder={collaborators.length === 0 ? "Nenhum colaborador cadastrado" : "Selecionar colaborador UX..."} />
+              <SelectValue placeholder={uxPeople.length === 0 ? "Nenhum membro UX cadastrado" : alreadyAssigned ? "Reatribuir..." : "Quem vai executar?"} />
             </SelectTrigger>
             <SelectContent>
-              {collaborators.map((c) => (
-                <SelectItem key={c.user_id} value={c.user_id}>{c.display_name}</SelectItem>
+              {uxPeople.map((p) => (
+                <SelectItem key={p.user_id} value={p.user_id}>{p.display_name}</SelectItem>
               ))}
             </SelectContent>
           </Select>
-          <Button size="sm" onClick={onAssign} disabled={assigning || !selection || collaborators.length === 0}>
-            {assigning ? "Salvando..." : "Distribuir"}
+          <Button size="sm" onClick={onAssign} disabled={assigning || !selection || uxPeople.length === 0}>
+            {assigning ? "Salvando..." : alreadyAssigned ? "Reatribuir" : "Distribuir"}
           </Button>
         </div>
+      )}
+
+      {!canAssign && alreadyAssigned && (
+        <p className="text-xs text-primary flex items-center gap-1">
+          <UserCheck className="h-3 w-3" /> Atribuída a: {assignedPerson?.display_name || "UX"}
+        </p>
       )}
     </Card>
   );
