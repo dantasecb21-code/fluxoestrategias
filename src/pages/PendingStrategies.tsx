@@ -96,8 +96,12 @@ export default function PendingStrategies() {
       if (filterStrategist !== "all" && s.user_id !== filterStrategist) return false;
       if (filterPlatform !== "all" && s.platform !== filterPlatform) return false;
       if (filterStatus !== "all") {
-        const ds = deriveStrategyDisplayStatus(s);
-        if (filterStatus !== ds) return false;
+        if (filterStatus === "overdue") {
+          if (!s.deadline || new Date(s.deadline + "T23:59:59") >= new Date()) return false;
+        } else {
+          const ds = deriveStrategyDisplayStatus(s);
+          if (filterStatus !== ds) return false;
+        }
       }
       if (filterDate && s.deadline) {
         const deadlineDate = parseISO(s.deadline);
@@ -184,6 +188,7 @@ export default function PendingStrategies() {
                 <SelectItem value="pending">Pendente</SelectItem>
                 <SelectItem value="in_progress">Em andamento</SelectItem>
                 <SelectItem value="pending_approval">Aguardando aprovação</SelectItem>
+                <SelectItem value="overdue">Atrasada</SelectItem>
                 <SelectItem value="returned">Devolvida</SelectItem>
               </SelectContent>
             </Select>
