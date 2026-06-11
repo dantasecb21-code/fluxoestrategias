@@ -63,7 +63,7 @@ export default function UserApproval() {
       .select("assistant_user_id, strategic_user_id");
 
     const roleMap = new Map<string, string[]>();
-    const rolePriority: Record<string, number> = { admin: 0, strategic: 1, strategic_assistant: 2, operational: 3 };
+    const rolePriority: Record<string, number> = { admin: 0, strategic: 1, strategic_assistant: 2, operational: 3, ux_leader: 4, ux_collaborator: 5, competitor_analyst: 6 };
     roles?.forEach((r) => {
       roleMap.set(r.user_id, [...(roleMap.get(r.user_id) || []), r.role]);
     });
@@ -203,6 +203,8 @@ export default function UserApproval() {
     if (role === "strategic_assistant") return "Auxiliar Estratégico";
     if (role === "operational") return "Gestor Operacional";
     if (role === "competitor_analyst") return "Analista de Concorrência";
+    if (role === "ux_leader") return "Líder UX";
+    if (role === "ux_collaborator") return "Colaborador UX";
     return role;
   };
 
@@ -236,7 +238,7 @@ export default function UserApproval() {
       <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
         <div className="flex items-center gap-2 flex-wrap">
           <span className="text-xs text-muted-foreground">Cargos:</span>
-          {(["admin", "strategic", "strategic_assistant", "operational", "competitor_analyst"] as const).map((userRole) => {
+          {(["admin", "strategic", "strategic_assistant", "operational", "ux_leader", "ux_collaborator", "competitor_analyst"] as const).map((userRole) => {
             const active = u.roles.includes(userRole);
             return (
               <button
