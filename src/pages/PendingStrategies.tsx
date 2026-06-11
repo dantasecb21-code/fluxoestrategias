@@ -183,6 +183,7 @@ export default function PendingStrategies() {
                 <SelectItem value="all">Todos os status</SelectItem>
                 <SelectItem value="pending">Pendente</SelectItem>
                 <SelectItem value="in_progress">Em andamento</SelectItem>
+                <SelectItem value="pending_approval">Aguardando aprovação</SelectItem>
                 <SelectItem value="returned">Devolvida</SelectItem>
               </SelectContent>
             </Select>
