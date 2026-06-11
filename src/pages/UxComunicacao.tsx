@@ -42,7 +42,7 @@ function isUrgent(deadline: string | null) {
 }
 
 function getUxStatus(s: DbStrategy): Exclude<UxStatus, "todos"> {
-  if (s.ux_completed_by || s.status === "approved") return "concluida";
+  if (s.ux_completed_by) return "concluida";
   if (isOverdue(s.deadline) && !s.ux_completed_by) return "atrasada";
   if (s.ux_assigned_to) return "andamento";
   if (s.returned) return "pausada";
@@ -118,7 +118,9 @@ export default function UxComunicacao() {
   // ── Manager / Admin view ──
   const uxStrategies = useMemo(() => {
     return strategies.filter(
-      (s) => isUrgent(s.deadline) || s.ux_assigned_to || s.ux_completed_by || s.returned
+      (s) =>
+        (s.ux_completed_by || s.status !== "approved") &&
+        (isUrgent(s.deadline) || s.ux_assigned_to || s.ux_completed_by || s.returned)
     );
   }, [strategies]);
 
