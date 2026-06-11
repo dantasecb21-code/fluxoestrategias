@@ -31,7 +31,6 @@ export function useCompetitorStudies() {
     const { data, error } = await supabase
       .from("competitor_studies" as any)
       .select("*")
-      .neq("status", "completed")
       .order("created_at", { ascending: false });
     if (!error && data) setStudies(data as unknown as CompetitorStudy[]);
     setLoading(false);
