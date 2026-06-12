@@ -112,6 +112,8 @@ export default function CompetitorStudies() {
   const [completing, setCompleting] = useState<CompetitorStudy | null>(null);
   const [notes, setNotes] = useState("");
   const [strategistNames, setStrategistNames] = useState<Record<string, string>>({});
+  const [filtroPlatforma, setFiltroPlatforma] = useState<string>("all");
+  const [filtroAnalista, setFiltroAnalista] = useState<string>("all");
 
   useEffect(() => {
     const ids = [...new Set([
@@ -133,17 +135,32 @@ export default function CompetitorStudies() {
       });
   }, [studies, strategistNames]);
 
-  const grouped = useMemo(() => ({
-    pending: [...studies.filter((s) => s.status === "pending")].sort(
-      (a, b) => PRIORITY_ORDER[getDeadlineInfo(a.created_at, a.completed_at).priority]
-              - PRIORITY_ORDER[getDeadlineInfo(b.created_at, b.completed_at).priority]
-    ),
-    in_progress: [...studies.filter((s) => s.status === "in_progress")].sort(
-      (a, b) => PRIORITY_ORDER[getDeadlineInfo(a.created_at, a.completed_at).priority]
-              - PRIORITY_ORDER[getDeadlineInfo(b.created_at, b.completed_at).priority]
-    ),
-    completed: studies.filter((s) => s.status === "completed"),
-  }), [studies]);
+  const byPlatform = useMemo(
+    () => filtroPlatforma === "all" ? studies : studies.filter((s) => s.platform === filtroPlatforma),
+    [studies, filtroPlatforma]
+  );
+
+  const analistas = useMemo(() => {
+    const ids = [...new Set(studies.filter((s) => s.status === "completed" && s.completed_by).map((s) => s.completed_by as string))];
+    return ids.map((id) => ({ id, nome: strategistNames[id] || id })).sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
+  }, [studies, strategistNames]);
+
+  const grouped = useMemo(() => {
+    const completed = byPlatform.filter((s) => s.status === "completed");
+    const completedFiltrado = filtroAnalista === "all" ? completed : completed.filter((s) => s.completed_by === filtroAnalista);
+    return {
+      pending: [...byPlatform.filter((s) => s.status === "pending")].sort(
+        (a, b) => PRIORITY_ORDER[getDeadlineInfo(a.created_at, a.completed_at).priority]
+                - PRIORITY_ORDER[getDeadlineInfo(b.created_at, b.completed_at).priority]
+      ),
+      in_progress: [...byPlatform.filter((s) => s.status === "in_progress")].sort(
+        (a, b) => PRIORITY_ORDER[getDeadlineInfo(a.created_at, a.completed_at).priority]
+                - PRIORITY_ORDER[getDeadlineInfo(b.created_at, b.completed_at).priority]
+      ),
+      completed: completedFiltrado,
+      completedTotal: completed.length,
+    };
+  }, [byPlatform, filtroAnalista]);
 
   const handleStart = async (s: CompetitorStudy) => {
     const ok = await startStudy(s.id);
@@ -253,6 +270,24 @@ export default function CompetitorStudies() {
         </div>
       </div>
 
+      {/* Filtro de Plataforma */}
+      <div className="flex items-center gap-2 flex-wrap">
+        <span className="text-sm text-muted-foreground font-medium">Plataforma:</span>
+        {(["all", "ifood", "99food", "keeta"] as const).map((p) => (
+          <button
+            key={p}
+            onClick={() => setFiltroPlatforma(p)}
+            className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
+              filtroPlatforma === p
+                ? "bg-primary text-primary-foreground border-primary"
+                : "bg-background border-border text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            {p === "all" ? "Todas" : PLATFORM_LABELS[p]}
+          </button>
+        ))}
+      </div>
+
       {loading ? (
         <p className="text-center text-muted-foreground">Carregando...</p>
       ) : (
@@ -265,7 +300,7 @@ export default function CompetitorStudies() {
               <Play className="h-4 w-4 mr-1" /> Em andamento ({grouped.in_progress.length})
             </TabsTrigger>
             <TabsTrigger value="completed">
-              <CheckCircle2 className="h-4 w-4 mr-1" /> Concluídas ({grouped.completed.length})
+              <CheckCircle2 className="h-4 w-4 mr-1" /> Concluídas ({grouped.completed.length}{grouped.completedTotal !== grouped.completed.length ? `/${grouped.completedTotal}` : ""})
             </TabsTrigger>
           </TabsList>
 
@@ -276,7 +311,36 @@ export default function CompetitorStudies() {
             {grouped.in_progress.length === 0 ? <Empty msg="Nada em andamento." /> : grouped.in_progress.map((s) => <StudyCard key={s.id} s={s} />)}
           </TabsContent>
           <TabsContent value="completed" className="space-y-3 mt-4">
-            {grouped.completed.length === 0 ? <Empty msg="Nada concluído ainda." /> : grouped.completed.map((s) => <StudyCard key={s.id} s={s} />)}
+            {/* Filtro por Analista (só na aba Concluídas) */}
+            {analistas.length > 0 && (
+              <div className="flex items-center gap-2 flex-wrap pb-2">
+                <span className="text-sm text-muted-foreground font-medium">Analista:</span>
+                <button
+                  onClick={() => setFiltroAnalista("all")}
+                  className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
+                    filtroAnalista === "all"
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "bg-background border-border text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  Todos
+                </button>
+                {analistas.map((a) => (
+                  <button
+                    key={a.id}
+                    onClick={() => setFiltroAnalista(a.id)}
+                    className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
+                      filtroAnalista === a.id
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : "bg-background border-border text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    {a.nome}
+                  </button>
+                ))}
+              </div>
+            )}
+            {grouped.completed.length === 0 ? <Empty msg="Nenhum concluído com esse filtro." /> : grouped.completed.map((s) => <StudyCard key={s.id} s={s} />)}
           </TabsContent>
         </Tabs>
       )}
