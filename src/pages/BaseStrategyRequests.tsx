@@ -12,7 +12,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Store, Plus, User, ArrowRight, Pencil, Trash2, Clock, CheckCircle2, Flame } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Store, Plus, User, ArrowRight, Pencil, Trash2, Clock, CheckCircle2, Flame, ChevronDown, ChevronRight, Search } from "lucide-react";
 import { toast } from "sonner";
 import { PlatformBadge, PLATFORM_OPTIONS, PLATFORM_LABELS } from "@/components/PlatformBadge";
 import { format } from "date-fns";
@@ -86,6 +87,8 @@ export default function BaseStrategyRequests() {
   const [submitting, setSubmitting] = useState(false);
   const [platformFilter, setPlatformFilter] = useState<string>("all");
   const [competitionFilter, setCompetitionFilter] = useState<string>("all");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showCompleted, setShowCompleted] = useState(false);
   const [studies, setStudies] = useState<any[]>([]);
 
   const fetchAll = useCallback(async () => {
@@ -304,7 +307,19 @@ export default function BaseStrategyRequests() {
         )}
       </div>
 
-      <div className="flex items-center gap-3 bg-muted/30 p-3 rounded-lg border border-border">
+      <div className="flex flex-wrap items-end gap-3 bg-muted/30 p-3 rounded-lg border border-border">
+        <div className="flex-1 min-w-[200px] max-w-[280px]">
+          <Label className="text-xs mb-1 block">Buscar loja</Label>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Nome da loja ou gestor..."
+              className="h-9 pl-9 text-xs bg-background"
+            />
+          </div>
+        </div>
         <div className="w-full max-w-[200px]">
           <Label className="text-xs mb-1 block">Filtrar por plataforma</Label>
           <Select value={platformFilter} onValueChange={setPlatformFilter}>
@@ -332,103 +347,193 @@ export default function BaseStrategyRequests() {
             </SelectContent>
           </Select>
         </div>
+        {(platformFilter !== "all" || competitionFilter !== "all" || searchQuery.trim()) && (
+          <Button variant="ghost" size="sm" className="text-xs h-8" onClick={() => { setPlatformFilter("all"); setCompetitionFilter("all"); setSearchQuery(""); }}>
+            Limpar filtros
+          </Button>
+        )}
       </div>
 
-      {requests.length === 0 ? (
-        <Card className="p-10 text-center text-muted-foreground">
-          Nenhuma solicitação por aqui ainda.
-        </Card>
-      ) : (
-        <div className="space-y-3">
-          {requests
-            .filter((r) => platformFilter === "all" || r.platform === platformFilter)
-            .filter((r) => {
-              if (competitionFilter === "all") return true;
-              
-              const hasStudy = studies.some(s => 
-                s.store_name?.toLowerCase().trim() === r.store_name?.toLowerCase().trim() && 
-                s.platform === r.platform
-              ) || r.observation?.toLowerCase().includes("estudo de concorrência");
-              
-              return competitionFilter === "yes" ? hasStudy : !hasStudy;
-            })
-            .map((r) => {
-            const canStart = isStrategic && r.assigned_to === user?.id && r.status !== "completed";
-            return (
-              <Card key={r.id} className={`p-4 space-y-3 ${canStart ? "cursor-pointer hover:border-primary/50 transition-colors" : ""}`}
-                onClick={() => canStart && startStrategy(r)}>
-                <div className="flex items-start justify-between gap-3 flex-wrap">
-                  <div>
-                    <h3 className="font-semibold text-foreground text-lg flex items-center gap-2 flex-wrap">
-                      {r.store_name}
-                      <PlatformBadge platform={r.platform || "99food"} />
-                      <Badge className={PRIORITY_COLORS[r.priority] || ""}>
-                        <Flame className="h-3 w-3 mr-1" /> {PRIORITY_LABELS[r.priority] || r.priority}
-                      </Badge>
-                    </h3>
-                    {r.operational_manager && (
-                      <p className="text-sm text-muted-foreground flex items-center gap-1">
-                        <User className="h-3.5 w-3.5" /> Gestor: {r.operational_manager}
-                      </p>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Badge className={STATUS_COLORS[r.status] || ""}>{STATUS_LABELS[r.status] || r.status}</Badge>
-                    {canStart && <ArrowRight className="h-4 w-4 text-primary" />}
-                  </div>
-                </div>
+      {(() => {
+        const filtered = requests
+          .filter((r) => platformFilter === "all" || r.platform === platformFilter)
+          .filter((r) => {
+            if (competitionFilter === "all") return true;
+            const hasStudy = studies.some(s =>
+              s.store_name?.toLowerCase().trim() === r.store_name?.toLowerCase().trim() &&
+              s.platform === r.platform
+            ) || r.observation?.toLowerCase().includes("estudo de concorrência");
+            return competitionFilter === "yes" ? hasStudy : !hasStudy;
+          })
+          .filter((r) => {
+            const q = searchQuery.trim().toLowerCase();
+            if (!q) return true;
+            return [r.store_name, r.operational_manager, r.observation, nameOf(r.assigned_to), nameOf(r.created_by)]
+              .join(" ").toLowerCase().includes(q);
+          });
 
-                {r.observation && (
-                  <p className="text-sm text-muted-foreground bg-muted/50 p-2 rounded whitespace-pre-wrap">{r.observation}</p>
+        if (requests.length === 0) {
+          return (
+            <Card className="p-10 text-center text-muted-foreground">
+              Nenhuma solicitação por aqui ainda.
+            </Card>
+          );
+        }
+
+        if (filtered.length === 0) {
+          return (
+            <Card className="p-8 text-center text-muted-foreground">
+              Nenhuma solicitação encontrada com os filtros selecionados.
+            </Card>
+          );
+        }
+
+        const active = filtered.filter((r) => r.status !== "completed");
+        const completed = filtered.filter((r) => r.status === "completed")
+          .sort((a, b) => new Date(b.updated_at || b.created_at).getTime() - new Date(a.updated_at || a.created_at).getTime());
+
+        const renderCard = (r: BaseRequest) => {
+          const canStart = isStrategic && r.assigned_to === user?.id && r.status !== "completed";
+          return (
+            <Card key={r.id} className={`p-4 space-y-3 ${canStart ? "cursor-pointer hover:border-primary/50 transition-colors" : ""}`}
+              onClick={() => canStart && startStrategy(r)}>
+              <div className="flex items-start justify-between gap-3 flex-wrap">
+                <div>
+                  <h3 className="font-semibold text-foreground text-lg flex items-center gap-2 flex-wrap">
+                    {r.store_name}
+                    <PlatformBadge platform={r.platform || "99food"} />
+                    <Badge className={PRIORITY_COLORS[r.priority] || ""}>
+                      <Flame className="h-3 w-3 mr-1" /> {PRIORITY_LABELS[r.priority] || r.priority}
+                    </Badge>
+                  </h3>
+                  {r.operational_manager && (
+                    <p className="text-sm text-muted-foreground flex items-center gap-1">
+                      <User className="h-3.5 w-3.5" /> Gestor: {r.operational_manager}
+                    </p>
+                  )}
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge className={STATUS_COLORS[r.status] || ""}>{STATUS_LABELS[r.status] || r.status}</Badge>
+                  {canStart && <ArrowRight className="h-4 w-4 text-primary" />}
+                </div>
+              </div>
+
+              {r.observation && (
+                <p className="text-sm text-muted-foreground bg-muted/50 p-2 rounded whitespace-pre-wrap">{r.observation}</p>
+              )}
+
+              <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
+                <span>Criado em {format(new Date(r.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</span>
+                <span>Solicitado por: {nameOf(r.created_by)}</span>
+                {(isAdmin || isAssistant) && <span>Estrategista: {nameOf(r.assigned_to)}</span>}
+              </div>
+
+              <div className="flex items-center gap-2 pt-1 flex-wrap" onClick={(e) => e.stopPropagation()}>
+                {canStart && (
+                  <Button size="sm" onClick={() => startStrategy(r)}>
+                    Iniciar estratégia <ArrowRight className="h-3.5 w-3.5 ml-1" />
+                  </Button>
                 )}
-
-                <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
-                  <span>Criado em {format(new Date(r.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</span>
-                  <span>Solicitado por: {nameOf(r.created_by)}</span>
-                  {(isAdmin || isAssistant) && <span>Estrategista: {nameOf(r.assigned_to)}</span>}
-                </div>
-
-                <div className="flex items-center gap-2 pt-1 flex-wrap" onClick={(e) => e.stopPropagation()}>
-                  {canStart && (
-                    <Button size="sm" onClick={() => startStrategy(r)}>
-                      Iniciar estratégia <ArrowRight className="h-3.5 w-3.5 ml-1" />
+                {isStrategic && r.assigned_to === user?.id && r.status === "in_progress" && (
+                  <Button size="sm" variant="outline" onClick={() => markCompleted(r.id)}>
+                    <CheckCircle2 className="h-3.5 w-3.5 mr-1" /> Marcar como concluída
+                  </Button>
+                )}
+                {((isAssistant && r.created_by === user?.id) || isAdmin) && (
+                  <>
+                    <Button size="sm" variant="outline" onClick={() => openEdit(r)}>
+                      <Pencil className="h-3.5 w-3.5 mr-1" /> Editar
                     </Button>
-                  )}
-                  {isStrategic && r.assigned_to === user?.id && r.status === "in_progress" && (
-                    <Button size="sm" variant="outline" onClick={() => markCompleted(r.id)}>
-                      <CheckCircle2 className="h-3.5 w-3.5 mr-1" /> Marcar como concluída
-                    </Button>
-                  )}
-                  {((isAssistant && r.created_by === user?.id) || isAdmin) && (
-                    <>
-                      <Button size="sm" variant="outline" onClick={() => openEdit(r)}>
-                        <Pencil className="h-3.5 w-3.5 mr-1" /> Editar
-                      </Button>
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button size="sm" variant="outline" className="text-destructive">
-                            <Trash2 className="h-3.5 w-3.5 mr-1" /> Excluir
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Excluir solicitação?</AlertDialogTitle>
-                            <AlertDialogDescription>Essa ação não pode ser desfeita.</AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => handleDelete(r.id)}>Excluir</AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </>
-                  )}
-                </div>
-              </Card>
-            );
-          })}
-        </div>
-      )}
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button size="sm" variant="outline" className="text-destructive">
+                          <Trash2 className="h-3.5 w-3.5 mr-1" /> Excluir
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Excluir solicitação?</AlertDialogTitle>
+                          <AlertDialogDescription>Essa ação não pode ser desfeita.</AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => handleDelete(r.id)}>Excluir</AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </>
+                )}
+              </div>
+            </Card>
+          );
+        };
+
+        return (
+          <div className="space-y-8">
+            {active.length > 0 && (
+              <div className="space-y-3">
+                {active.map(renderCard)}
+              </div>
+            )}
+
+            {completed.length > 0 && (
+              <Collapsible open={showCompleted} onOpenChange={setShowCompleted}>
+                <CollapsibleTrigger asChild>
+                  <button className="flex items-center gap-2 font-heading font-semibold text-lg text-foreground hover:text-primary transition-colors w-full text-left">
+                    {showCompleted ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                    <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+                    Concluídas ({completed.length})
+                  </button>
+                </CollapsibleTrigger>
+                <CollapsibleContent className="mt-3">
+                  <div className="grid gap-2">
+                    {completed.map((r) => (
+                      <div key={r.id} className="flex items-center justify-between p-3 rounded-lg border border-border bg-card/50 hover:bg-accent/30 transition-colors">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
+                          <div className="min-w-0">
+                            <p className="text-sm font-medium text-foreground truncate flex items-center gap-2">
+                              {r.store_name}
+                              <PlatformBadge platform={r.platform || "99food"} />
+                            </p>
+                            {r.operational_manager && (
+                              <p className="text-xs text-muted-foreground truncate">Gestor: {r.operational_manager}</p>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0 ml-3">
+                          <span className="text-xs text-muted-foreground">
+                            {format(new Date(r.updated_at || r.created_at), "dd/MM/yyyy")}
+                          </span>
+                          {isAdmin && (
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button size="icon" variant="ghost" className="h-7 w-7 text-muted-foreground hover:text-destructive">
+                                  <Trash2 className="h-3.5 w-3.5" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Excluir solicitação?</AlertDialogTitle>
+                                  <AlertDialogDescription>Essa ação não pode ser desfeita.</AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => handleDelete(r.id)}>Excluir</AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
+            )}
+          </div>
+        );
+      })()}
     </div>
   );
 }
