@@ -87,6 +87,7 @@ export default function BaseStrategyRequests() {
   const [submitting, setSubmitting] = useState(false);
   const [platformFilter, setPlatformFilter] = useState<string>("all");
   const [competitionFilter, setCompetitionFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [showCompleted, setShowCompleted] = useState(false);
   const [studies, setStudies] = useState<any[]>([]);
@@ -307,48 +308,51 @@ export default function BaseStrategyRequests() {
         )}
       </div>
 
-      <div className="flex flex-wrap items-end gap-3 bg-muted/30 p-3 rounded-lg border border-border">
-        <div className="flex-1 min-w-[200px] max-w-[280px]">
-          <Label className="text-xs mb-1 block">Buscar loja</Label>
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Nome da loja ou gestor..."
-              className="h-9 pl-9 text-xs bg-background"
-            />
-          </div>
+      {/* Filters */}
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="relative w-full sm:w-[240px]">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Buscar loja ou gestor..."
+            className="h-9 pl-9 text-xs"
+          />
         </div>
-        <div className="w-full max-w-[200px]">
-          <Label className="text-xs mb-1 block">Filtrar por plataforma</Label>
-          <Select value={platformFilter} onValueChange={setPlatformFilter}>
-            <SelectTrigger className="h-9 bg-background">
-              <SelectValue placeholder="Todas" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todas as plataformas</SelectItem>
-              {PLATFORM_OPTIONS.map((p) => (
-                <SelectItem key={p} value={p}>{PLATFORM_LABELS[p]}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="w-full max-w-[200px]">
-          <Label className="text-xs mb-1 block">Estudo de concorrência</Label>
-          <Select value={competitionFilter} onValueChange={setCompetitionFilter}>
-            <SelectTrigger className="h-9 bg-background">
-              <SelectValue placeholder="Filtrar estudo" />
-            </SelectTrigger>
-            <SelectContent>
-              {COMPETITION_STUDY_OPTIONS.map((opt) => (
-                <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        {(platformFilter !== "all" || competitionFilter !== "all" || searchQuery.trim()) && (
-          <Button variant="ghost" size="sm" className="text-xs h-8" onClick={() => { setPlatformFilter("all"); setCompetitionFilter("all"); setSearchQuery(""); }}>
+        <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v); if (v === "completed") setShowCompleted(true); }}>
+          <SelectTrigger className="w-[160px] h-9 text-xs">
+            <SelectValue placeholder="Status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos os status</SelectItem>
+            <SelectItem value="pending">Pendente</SelectItem>
+            <SelectItem value="in_progress">Em andamento</SelectItem>
+            <SelectItem value="completed">Concluída</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={platformFilter} onValueChange={setPlatformFilter}>
+          <SelectTrigger className="w-[160px] h-9 text-xs">
+            <SelectValue placeholder="Plataforma" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todas as plataformas</SelectItem>
+            {PLATFORM_OPTIONS.map((p) => (
+              <SelectItem key={p} value={p}>{PLATFORM_LABELS[p]}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={competitionFilter} onValueChange={setCompetitionFilter}>
+          <SelectTrigger className="w-[180px] h-9 text-xs">
+            <SelectValue placeholder="Estudo de concorrência" />
+          </SelectTrigger>
+          <SelectContent>
+            {COMPETITION_STUDY_OPTIONS.map((opt) => (
+              <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        {(statusFilter !== "all" || platformFilter !== "all" || competitionFilter !== "all" || searchQuery.trim()) && (
+          <Button variant="ghost" size="sm" className="text-xs h-8" onClick={() => { setStatusFilter("all"); setPlatformFilter("all"); setCompetitionFilter("all"); setSearchQuery(""); }}>
             Limpar filtros
           </Button>
         )}
@@ -357,6 +361,7 @@ export default function BaseStrategyRequests() {
       {(() => {
         const filtered = requests
           .filter((r) => platformFilter === "all" || r.platform === platformFilter)
+          .filter((r) => statusFilter === "all" || r.status === statusFilter)
           .filter((r) => {
             if (competitionFilter === "all") return true;
             const hasStudy = studies.some(s =>
@@ -469,23 +474,24 @@ export default function BaseStrategyRequests() {
         };
 
         return (
-          <div className="space-y-8">
+          <div className="space-y-6">
+            {/* Active requests */}
             {active.length > 0 && (
               <div className="space-y-3">
                 {active.map(renderCard)}
               </div>
             )}
 
+            {/* Completed — collapsed by default */}
             {completed.length > 0 && (
               <Collapsible open={showCompleted} onOpenChange={setShowCompleted}>
-                <CollapsibleTrigger asChild>
-                  <button className="flex items-center gap-2 font-heading font-semibold text-lg text-foreground hover:text-primary transition-colors w-full text-left">
-                    {showCompleted ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-                    <CheckCircle2 className="h-5 w-5 text-emerald-500" />
-                    Concluídas ({completed.length})
-                  </button>
+                <CollapsibleTrigger className="flex w-full items-center gap-2 rounded-lg border border-border bg-muted/30 px-4 py-3 text-left hover:bg-muted/60 transition-colors">
+                  {showCompleted ? <ChevronDown className="h-4 w-4 shrink-0" /> : <ChevronRight className="h-4 w-4 shrink-0" />}
+                  <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
+                  <span className="font-semibold text-foreground">Concluídas</span>
+                  <Badge variant="outline" className="ml-1 text-xs">{completed.length}</Badge>
                 </CollapsibleTrigger>
-                <CollapsibleContent className="mt-3">
+                <CollapsibleContent className="mt-2">
                   <div className="grid gap-2">
                     {completed.map((r) => (
                       <div key={r.id} className="flex items-center justify-between p-3 rounded-lg border border-border bg-card/50 hover:bg-accent/30 transition-colors">
