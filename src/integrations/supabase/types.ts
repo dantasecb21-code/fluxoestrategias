@@ -450,8 +450,6 @@ export type Database = {
           updated_at: string
           user_id: string
           ux_assigned_to: string | null
-          ux_completed_by: string | null
-          ux_completed_at: string | null
         }
         Insert: {
           admin_approved?: boolean
@@ -486,8 +484,6 @@ export type Database = {
           updated_at?: string
           user_id: string
           ux_assigned_to?: string | null
-          ux_completed_by?: string | null
-          ux_completed_at?: string | null
         }
         Update: {
           admin_approved?: boolean
@@ -522,8 +518,6 @@ export type Database = {
           updated_at?: string
           user_id?: string
           ux_assigned_to?: string | null
-          ux_completed_by?: string | null
-          ux_completed_at?: string | null
         }
         Relationships: [
           {
