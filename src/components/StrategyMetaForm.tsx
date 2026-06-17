@@ -50,7 +50,7 @@ export function StrategyMetaForm({ meta, onChange, strategyType, onTypeChange, p
             <SelectContent>
               {PLATFORM_OPTIONS.map((key) => (
                 <SelectItem key={key} value={key}>
-                  <span className={key === "ifood" ? "text-red-400" : "text-yellow-400"}>●</span>{" "}
+                  <span className={key === "ifood" ? "text-red-400" : key === "keeta" ? "text-emerald-400" : "text-yellow-400"}>●</span>{" "}
                   {PLATFORM_LABELS[key]}
                 </SelectItem>
               ))}
