@@ -210,6 +210,8 @@ export default function BaseStrategyRequests() {
     params.set("store", r.store_name);
     params.set("operational_manager", r.operational_manager || "");
     params.set("platform", r.platform || "99food");
+    params.set("type", "alignment");
+    params.set("base_request_id", r.id);
     params.set("study_requested", "true");
     navigate(`/nova?${params.toString()}`);
   };

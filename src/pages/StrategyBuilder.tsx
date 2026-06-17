@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { useDbStrategies, StrategyType, STRATEGY_TYPE_LABELS } from "@/hooks/useDbStrategies";
 import { DEFAULT_CATEGORIES, FIXED_CATEGORIES, StrategyCategory } from "@/types/strategy";
@@ -97,6 +97,7 @@ export default function StrategyBuilderPage() {
   const prefillType = searchParams.get("type") || "";
   const replacesStrategyId = searchParams.get("replaces") || "";
   const studyRequested = searchParams.get("study_requested") === "true";
+  const baseRequestId = searchParams.get("base_request_id") || "";
 
   const [meta, setMeta] = useState<StrategyMeta>(() => {
     if (existing) {
@@ -172,6 +173,7 @@ export default function StrategyBuilderPage() {
 
   const [storeAccess, setStoreAccess] = useState(existing?.store_access_confirmed || false);
 
+  const prefillManagerAutoSelected = useRef(false);
 
   // History
   const [history, setHistory] = useState<{ id: string; user_name: string; action: string; field_changed: string; old_value: string; new_value: string; created_at: string }[]>([]);
@@ -274,6 +276,25 @@ export default function StrategyBuilderPage() {
       setMeta((prev) => ({ ...prev, operationalManager: "" }));
     }
   }, [platform, allOperationalManagers]);
+
+  // Auto-select operational manager when coming from a base request (matches by display name)
+  useEffect(() => {
+    if (!prefillOperationalManager || prefillManagerAutoSelected.current || !allOperationalManagers.length) return;
+    const match = allOperationalManagers.find(
+      (m) => m.display_name?.toLowerCase().trim() === prefillOperationalManager.toLowerCase().trim()
+    );
+    if (match) {
+      prefillManagerAutoSelected.current = true;
+      setAssignedTo(match.user_id);
+      setMeta((prev) => ({ ...prev, operationalManager: match.display_name }));
+    }
+  }, [prefillOperationalManager, allOperationalManagers]);
+
+  // Auto-fill strategist name when creating from a base request
+  useEffect(() => {
+    if (!prefillStore || meta.managerName || !displayName) return;
+    setMeta((prev) => ({ ...prev, managerName: displayName }));
+  }, [displayName]);
 
   const handleManagerSelect = (userId: string) => {
     setAssignedTo(userId);
@@ -413,6 +434,10 @@ export default function StrategyBuilderPage() {
           if (srError) {
             console.error("Failed to update store request:", srError);
           }
+        }
+        // Auto-complete base request if coming from base request flow
+        if (baseRequestId) {
+          await supabase.from("base_strategy_requests" as any).update({ status: "completed" }).eq("id", baseRequestId);
         }
         toast.success("Estratégia criada!");
         logAttempt("success", "created", { created_id: created.id });
