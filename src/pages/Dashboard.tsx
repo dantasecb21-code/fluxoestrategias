@@ -131,11 +131,11 @@ export default function Dashboard() {
     const badgeProps = getStatusBadgeProps(displayStatus);
     const isApproved = displayStatus === "completed";
     const isReturned = displayStatus === "returned";
-    const isAlgoAdapting = s.algorithm_adaptation_status === "pending";
+    const canPause = !isApproved;
     return (
       <Card
         key={s.id}
-        className={`p-5 hover:border-primary/30 transition-colors cursor-pointer ${isApproved ? "border-success/30 bg-success/5" : ""} ${isReturned ? "border-destructive/40 bg-destructive/5" : ""} ${isAlgoAdapting && s.algorithm_paused ? "opacity-70 border-dashed" : ""}`}
+        className={`p-5 hover:border-primary/30 transition-colors cursor-pointer ${isApproved ? "border-success/30 bg-success/5" : ""} ${isReturned ? "border-destructive/40 bg-destructive/5" : ""} ${canPause && s.algorithm_paused ? "opacity-70 border-dashed" : ""}`}
         onClick={() => navigate(`/estrategia/${s.id}`)}
       >
         <div className="flex items-start justify-between mb-3">
@@ -144,9 +144,9 @@ export default function Dashboard() {
               <span className="truncate">{s.store_name || "Sem nome"}</span>
               <Badge variant={badgeProps.variant} className={`text-[10px] py-0 px-1.5 h-4 leading-none shrink-0 ${badgeProps.className}`}>{statusLabel}</Badge>
               <PlatformBadge platform={s.platform} />
-              {isAlgoAdapting && (
-                <span className={`shrink-0 text-[10px] py-0 px-1.5 h-4 leading-none rounded-full flex items-center border ${s.algorithm_paused ? "bg-secondary/20 text-secondary-foreground border-secondary/30" : "bg-primary/10 text-primary border-primary/30"}`}>
-                  {s.algorithm_paused ? "Adaptação pausada" : "Em adaptação"}
+              {canPause && s.algorithm_paused && (
+                <span className="shrink-0 text-[10px] py-0 px-1.5 h-4 leading-none rounded-full flex items-center border bg-secondary/20 text-secondary-foreground border-secondary/30">
+                  Pausada
                 </span>
               )}
               {s.observation && (
@@ -168,10 +168,10 @@ export default function Dashboard() {
             </div>
           </div>
           <div className="flex items-center gap-1 ml-4 shrink-0" onClick={(e) => e.stopPropagation()}>
-            {isAlgoAdapting && isAdmin && (
+            {canPause && (
               <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-foreground"
                 onClick={(e) => togglePause(e, s)}
-                title={s.algorithm_paused ? "Retomar adaptação" : "Pausar adaptação"}>
+                title={s.algorithm_paused ? "Retomar" : "Pausar"}>
                 {s.algorithm_paused ? <Play className="h-4 w-4" /> : <Pause className="h-4 w-4" />}
               </Button>
             )}
