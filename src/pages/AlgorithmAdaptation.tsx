@@ -31,6 +31,7 @@ interface AdaptationItem {
   algorithm_return_reason: string;
   algorithm_return_priority: string;
   algorithm_paused: boolean;
+  algorithm_pause_reason: string;
   algorithm_approved_at: string | null;
 }
 
@@ -44,6 +45,8 @@ export default function AlgorithmAdaptation() {
   const [returning, setReturning] = useState<AdaptationItem | null>(null);
   const [reason, setReason] = useState("");
   const [returnPriority, setReturnPriority] = useState<string>("medium");
+  const [pausing, setPausing] = useState<AdaptationItem | null>(null);
+  const [pauseReason, setPauseReason] = useState("");
   const [strategistFilter, setStrategistFilter] = useState<string>("all");
   const [priorityFilter, setPriorityFilter] = useState<string>("all");
   const [platformFilter, setPlatformFilter] = useState<string>("all");
@@ -71,6 +74,7 @@ export default function AlgorithmAdaptation() {
       strategist_name: nameMap.get(s.user_id) || "—",
       algorithm_return_priority: s.algorithm_return_priority || "medium",
       algorithm_paused: s.algorithm_paused ?? false,
+      algorithm_pause_reason: s.algorithm_pause_reason || "",
     })));
     setLoading(false);
   };
@@ -133,12 +137,14 @@ export default function AlgorithmAdaptation() {
     fetchItems();
   };
 
-  const togglePause = async (item: AdaptationItem) => {
+  const togglePause = async (item: AdaptationItem, reason?: string) => {
+    const pausing = !item.algorithm_paused;
     const { error } = await supabase.from("strategies").update({
-      algorithm_paused: !item.algorithm_paused,
+      algorithm_paused: pausing,
+      algorithm_pause_reason: pausing ? (reason ?? "") : "",
     } as any).eq("id", item.id);
     if (error) { toast.error("Erro ao alterar pausa"); return; }
-    toast.success(item.algorithm_paused ? "Estratégia retomada" : "Estratégia pausada");
+    toast.success(pausing ? "Estratégia pausada" : "Estratégia retomada");
     fetchItems();
   };
 
@@ -230,6 +236,11 @@ export default function AlgorithmAdaptation() {
                 )}
               </p>
             )}
+            {item.algorithm_paused && item.algorithm_pause_reason && (
+              <p className="text-xs text-warning mt-1 whitespace-pre-wrap">
+                Motivo da pausa: {item.algorithm_pause_reason}
+              </p>
+            )}
             {item.algorithm_return_reason && item.algorithm_adaptation_status === "returned" && (
               <p className="text-xs text-destructive mt-2 whitespace-pre-wrap">
                 Motivo: {item.algorithm_return_reason}
@@ -260,7 +271,10 @@ export default function AlgorithmAdaptation() {
           </Button>
           {item.algorithm_adaptation_status === "pending" && (
             <>
-              <Button size="sm" variant="outline" onClick={() => togglePause(item)}>
+              <Button size="sm" variant="outline" onClick={() => {
+                if (item.algorithm_paused) { togglePause(item); }
+                else { setPausing(item); setPauseReason(""); }
+              }}>
                 {item.algorithm_paused
                   ? <><Play className="h-4 w-4 mr-1" /> Retomar</>
                   : <><Pause className="h-4 w-4 mr-1" /> Pausar</>}
@@ -380,6 +394,26 @@ export default function AlgorithmAdaptation() {
         </Tabs>
         </>
       )}
+
+      <Dialog open={!!pausing} onOpenChange={(o) => { if (!o) { setPausing(null); setPauseReason(""); } }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Pausar: {pausing?.store_name}</DialogTitle>
+          </DialogHeader>
+          <Textarea rows={3} value={pauseReason} onChange={(e) => setPauseReason(e.target.value)}
+            placeholder="Motivo da pausa (opcional)" />
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => { setPausing(null); setPauseReason(""); }}>Cancelar</Button>
+            <Button variant="outline" onClick={async () => {
+              if (!pausing) return;
+              await togglePause(pausing, pauseReason);
+              setPausing(null); setPauseReason("");
+            }}>
+              <Pause className="h-4 w-4 mr-1" /> Confirmar pausa
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={!!returning} onOpenChange={(o) => { if (!o) { setReturning(null); setReason(""); setReturnPriority("medium"); } }}>
         <DialogContent>

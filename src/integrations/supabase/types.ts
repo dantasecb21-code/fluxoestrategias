@@ -425,6 +425,7 @@ export type Database = {
           algorithm_adaptation_status: string
           algorithm_approved_at: string | null
           algorithm_approved_by: string | null
+          algorithm_pause_reason: string
           algorithm_paused: boolean
           algorithm_return_priority: string
           algorithm_return_reason: string
@@ -461,6 +462,7 @@ export type Database = {
           algorithm_adaptation_status?: string
           algorithm_approved_at?: string | null
           algorithm_approved_by?: string | null
+          algorithm_pause_reason?: string
           algorithm_paused?: boolean
           algorithm_return_priority?: string
           algorithm_return_reason?: string
@@ -497,6 +499,7 @@ export type Database = {
           algorithm_adaptation_status?: string
           algorithm_approved_at?: string | null
           algorithm_approved_by?: string | null
+          algorithm_pause_reason?: string
           algorithm_paused?: boolean
           algorithm_return_priority?: string
           algorithm_return_reason?: string
