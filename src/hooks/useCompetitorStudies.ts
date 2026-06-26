@@ -20,6 +20,7 @@ export interface CompetitorStudy {
   created_at: string;
   updated_at: string;
   paused: boolean;
+  pause_reason: string;
 }
 
 export function useCompetitorStudies() {
@@ -74,8 +75,8 @@ export function useCompetitorStudies() {
       completed_by: null,
     } as any);
 
-  const togglePauseStudy = (id: string, paused: boolean) =>
-    updateStudy(id, { paused } as any);
+  const togglePauseStudy = (id: string, paused: boolean, pause_reason?: string) =>
+    updateStudy(id, { paused, pause_reason: paused ? (pause_reason ?? "") : "" } as any);
 
   return { studies, loading, refetch: fetchStudies, updateStudy, startStudy, completeStudy, resetToPending, togglePauseStudy };
 }

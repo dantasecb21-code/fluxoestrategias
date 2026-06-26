@@ -111,6 +111,8 @@ export default function CompetitorStudies() {
   const { studies, loading, startStudy, completeStudy, resetToPending, togglePauseStudy } = useCompetitorStudies();
   const [completing, setCompleting] = useState<CompetitorStudy | null>(null);
   const [notes, setNotes] = useState("");
+  const [pausing, setPausing] = useState<CompetitorStudy | null>(null);
+  const [pauseReason, setPauseReason] = useState("");
   const [strategistNames, setStrategistNames] = useState<Record<string, string>>({});
   const [filtroPlatforma, setFiltroPlatforma] = useState<string>("all");
   const [filtroAnalista, setFiltroAnalista] = useState<string>("all");
@@ -204,6 +206,9 @@ export default function CompetitorStudies() {
             <Clock className="h-3 w-3" />
             {info.label}
           </p>
+          {s.paused && s.pause_reason && (
+            <p className="text-xs text-warning mt-2 whitespace-pre-wrap">Motivo da pausa: {s.pause_reason}</p>
+          )}
           {s.notes && (
             <p className="text-xs text-muted-foreground mt-2 line-clamp-3 whitespace-pre-wrap">{s.notes}</p>
           )}
@@ -223,7 +228,10 @@ export default function CompetitorStudies() {
       </div>
       <div className="flex gap-2 justify-end flex-wrap">
         {s.status !== "completed" && (
-          <Button size="sm" variant="outline" onClick={() => togglePauseStudy(s.id, !s.paused)}>
+          <Button size="sm" variant="outline" onClick={() => {
+            if (s.paused) { togglePauseStudy(s.id, false); }
+            else { setPausing(s); setPauseReason(""); }
+          }}>
             {s.paused
               ? <><Play className="h-4 w-4 mr-1" /> Retomar</>
               : <><Pause className="h-4 w-4 mr-1" /> Pausar</>}
@@ -353,6 +361,31 @@ export default function CompetitorStudies() {
           </TabsContent>
         </Tabs>
       )}
+
+      <Dialog open={!!pausing} onOpenChange={(o) => { if (!o) { setPausing(null); setPauseReason(""); } }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Pausar estudo: {pausing?.store_name}</DialogTitle>
+          </DialogHeader>
+          <Textarea
+            rows={3}
+            value={pauseReason}
+            onChange={(e) => setPauseReason(e.target.value)}
+            placeholder="Motivo da pausa (opcional)"
+          />
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => { setPausing(null); setPauseReason(""); }}>Cancelar</Button>
+            <Button variant="outline" onClick={async () => {
+              if (!pausing) return;
+              await togglePauseStudy(pausing.id, true, pauseReason);
+              toast.success("Estudo pausado");
+              setPausing(null); setPauseReason("");
+            }}>
+              <Pause className="h-4 w-4 mr-1" /> Confirmar pausa
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={!!completing} onOpenChange={(o) => { if (!o) { setCompleting(null); setNotes(""); } }}>
         <DialogContent>
