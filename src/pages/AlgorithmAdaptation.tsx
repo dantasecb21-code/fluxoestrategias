@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Cpu, CheckCircle2, RotateCcw, Clock, AlertTriangle, ExternalLink } from "lucide-react";
+import { Cpu, CheckCircle2, RotateCcw, Clock, AlertTriangle, ExternalLink, Pause, Play } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 
@@ -30,6 +30,7 @@ interface AdaptationItem {
   algorithm_adaptation_status: string;
   algorithm_return_reason: string;
   algorithm_return_priority: string;
+  algorithm_paused: boolean;
   algorithm_approved_at: string | null;
 }
 
@@ -46,12 +47,13 @@ export default function AlgorithmAdaptation() {
   const [strategistFilter, setStrategistFilter] = useState<string>("all");
   const [priorityFilter, setPriorityFilter] = useState<string>("all");
   const [platformFilter, setPlatformFilter] = useState<string>("all");
+  const [returnedPlatformFilter, setReturnedPlatformFilter] = useState<string>("all");
 
   const fetchItems = async () => {
     setLoading(true);
     const { data } = await supabase
       .from("strategies")
-      .select("id, store_name, platform, user_id, algorithm_adaptation_started_at, algorithm_adaptation_deadline, algorithm_adaptation_status, algorithm_return_reason, algorithm_return_priority, algorithm_approved_at")
+      .select("id, store_name, platform, user_id, algorithm_adaptation_started_at, algorithm_adaptation_deadline, algorithm_adaptation_status, algorithm_return_reason, algorithm_return_priority, algorithm_paused, algorithm_approved_at")
       .neq("algorithm_adaptation_status", "none")
       .is("deleted_at", null)
       .order("algorithm_adaptation_started_at", { ascending: false });
@@ -68,6 +70,7 @@ export default function AlgorithmAdaptation() {
       ...s,
       strategist_name: nameMap.get(s.user_id) || "—",
       algorithm_return_priority: s.algorithm_return_priority || "medium",
+      algorithm_paused: s.algorithm_paused ?? false,
     })));
     setLoading(false);
   };
@@ -93,8 +96,9 @@ export default function AlgorithmAdaptation() {
     return Array.from(map.entries()).sort((a, b) => a[1].localeCompare(b[1]));
   }, [items]);
 
-  const priorityOf = (deadline: string | null, status: string) => {
+  const priorityOf = (deadline: string | null, status: string, paused: boolean) => {
     if (status !== "pending") return "none";
+    if (paused) return "paused";
     if (!deadline) return "low";
     const ms = new Date(deadline).getTime() - Date.now();
     if (ms < 0) return "overdue";
@@ -106,8 +110,15 @@ export default function AlgorithmAdaptation() {
 
   const applyFilters = (list: AdaptationItem[]) => list.filter((i) => {
     if (strategistFilter !== "all" && i.user_id !== strategistFilter) return false;
-    if (priorityFilter !== "all" && priorityOf(i.algorithm_adaptation_deadline, i.algorithm_adaptation_status) !== priorityFilter) return false;
+    const prio = priorityOf(i.algorithm_adaptation_deadline, i.algorithm_adaptation_status, i.algorithm_paused);
+    if (priorityFilter !== "all" && i.algorithm_adaptation_status === "pending" && prio !== priorityFilter) return false;
     if (platformFilter !== "all" && i.platform !== platformFilter) return false;
+    return true;
+  });
+
+  const applyReturnedFilters = (list: AdaptationItem[]) => list.filter((i) => {
+    if (strategistFilter !== "all" && i.user_id !== strategistFilter) return false;
+    if (returnedPlatformFilter !== "all" && i.platform !== returnedPlatformFilter) return false;
     return true;
   });
 
@@ -122,24 +133,78 @@ export default function AlgorithmAdaptation() {
     fetchItems();
   };
 
+  const togglePause = async (item: AdaptationItem) => {
+    const { error } = await supabase.from("strategies").update({
+      algorithm_paused: !item.algorithm_paused,
+    } as any).eq("id", item.id);
+    if (error) { toast.error("Erro ao alterar pausa"); return; }
+    toast.success(item.algorithm_paused ? "Estratégia retomada" : "Estratégia pausada");
+    fetchItems();
+  };
+
   const doReturn = async () => {
     if (!returning || !reason.trim()) { toast.error("Informe o motivo"); return; }
+
+    // Fetch full strategy data to create a copy
+    const { data: full, error: fetchErr } = await supabase
+      .from("strategies")
+      .select("*")
+      .eq("id", returning.id)
+      .single();
+
+    if (fetchErr || !full) { toast.error("Erro ao buscar dados da estratégia"); return; }
+
+    // Mark original as returned
     const { error } = await supabase.from("strategies").update({
       algorithm_adaptation_status: "returned",
       algorithm_return_reason: reason.trim(),
       algorithm_return_priority: returnPriority,
-      status: "in_progress",
       admin_approved: false,
       returned: true,
     } as any).eq("id", returning.id);
     if (error) { toast.error("Erro ao devolver"); return; }
-    toast.success("Devolvido ao estrategista");
+
+    // Create a new copy for the strategist to rework
+    await supabase.from("strategies").insert({
+      user_id: full.user_id,
+      store_name: full.store_name,
+      platform: full.platform,
+      manager_name: full.manager_name,
+      operational_manager: full.operational_manager,
+      deadline: full.deadline,
+      categories: full.categories,
+      strategy_type: full.strategy_type,
+      observation: full.observation,
+      planned_start_date: full.planned_start_date,
+      store_request_id: full.store_request_id,
+      status: "in_progress",
+      admin_approved: false,
+      admin_return_reason: "",
+      algorithm_adaptation_status: "none",
+      algorithm_adaptation_started_at: null,
+      algorithm_adaptation_deadline: null,
+      algorithm_paused: false,
+      algorithm_return_reason: "",
+      algorithm_return_priority: "medium",
+      algorithm_approved_at: null,
+      algorithm_approved_by: null,
+      completed_at: null,
+      returned: true,
+      replaces_strategy_id: returning.id,
+      store_access_confirmed: false,
+      study_requested: null,
+      assigned_to: null,
+      ux_assigned_to: null,
+      deleted_at: null,
+    } as any);
+
+    toast.success("Devolvido ao estrategista — nova estratégia criada para retrabalho");
     setReturning(null); setReason(""); setReturnPriority("medium");
     fetchItems();
   };
 
-  const isOverdue = (deadline: string | null) =>
-    deadline ? new Date(deadline).getTime() < Date.now() : false;
+  const isOverdue = (deadline: string | null, paused: boolean) =>
+    !paused && deadline ? new Date(deadline).getTime() < Date.now() : false;
 
   const daysLeft = (deadline: string | null) => {
     if (!deadline) return null;
@@ -149,10 +214,10 @@ export default function AlgorithmAdaptation() {
 
   const ItemCard = ({ item }: { item: AdaptationItem }) => {
     const left = daysLeft(item.algorithm_adaptation_deadline);
-    const overdue = isOverdue(item.algorithm_adaptation_deadline) && item.algorithm_adaptation_status === "pending";
+    const overdue = isOverdue(item.algorithm_adaptation_deadline, item.algorithm_paused) && item.algorithm_adaptation_status === "pending";
     const retPriority = RETURN_PRIORITY_LABELS[item.algorithm_return_priority] || RETURN_PRIORITY_LABELS.medium;
     return (
-      <Card className="p-4 space-y-3">
+      <Card className={`p-4 space-y-3 ${item.algorithm_paused ? "opacity-70 border-dashed" : ""}`}>
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <p className="font-semibold text-foreground truncate">{item.store_name}</p>
@@ -173,10 +238,14 @@ export default function AlgorithmAdaptation() {
           </div>
           <div className="flex flex-col items-end gap-1">
             <Badge variant="outline">{PLATFORM_LABELS[item.platform] || item.platform}</Badge>
-            {item.algorithm_adaptation_status === "pending" && left !== null && (
-              <Badge variant={overdue ? "destructive" : left <= 2 ? "secondary" : "outline"}>
-                {overdue ? "Atrasada" : `${left}d restantes`}
-              </Badge>
+            {item.algorithm_adaptation_status === "pending" && (
+              item.algorithm_paused
+                ? <Badge variant="secondary">Pausada</Badge>
+                : left !== null && (
+                  <Badge variant={overdue ? "destructive" : left <= 2 ? "secondary" : "outline"}>
+                    {overdue ? "Atrasada" : `${left}d restantes`}
+                  </Badge>
+                )
             )}
             {item.algorithm_adaptation_status === "returned" && (
               <Badge variant={retPriority.color as any}>
@@ -185,12 +254,17 @@ export default function AlgorithmAdaptation() {
             )}
           </div>
         </div>
-        <div className="flex gap-2 justify-end">
+        <div className="flex gap-2 justify-end flex-wrap">
           <Button size="sm" variant="ghost" onClick={() => navigate(`/estrategia/${item.id}`)}>
             <ExternalLink className="h-4 w-4 mr-1" /> Ver estratégia
           </Button>
           {item.algorithm_adaptation_status === "pending" && (
             <>
+              <Button size="sm" variant="outline" onClick={() => togglePause(item)}>
+                {item.algorithm_paused
+                  ? <><Play className="h-4 w-4 mr-1" /> Retomar</>
+                  : <><Pause className="h-4 w-4 mr-1" /> Pausar</>}
+              </Button>
               <Button size="sm" variant="outline" onClick={() => { setReturning(item); setReason(""); setReturnPriority("medium"); }}>
                 <RotateCcw className="h-4 w-4 mr-1" /> Devolver
               </Button>
@@ -226,50 +300,82 @@ export default function AlgorithmAdaptation() {
         <p className="text-center text-muted-foreground">Carregando...</p>
       ) : (
         <>
-        <div className="flex flex-col sm:flex-row gap-2">
-          <Select value={strategistFilter} onValueChange={setStrategistFilter}>
-            <SelectTrigger className="sm:w-64"><SelectValue placeholder="Estrategista" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos os estrategistas</SelectItem>
-              {strategistOptions.map(([id, name]) => (
-                <SelectItem key={id} value={id}>{name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={priorityFilter} onValueChange={setPriorityFilter}>
-            <SelectTrigger className="sm:w-56"><SelectValue placeholder="Prioridade" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todas as prioridades</SelectItem>
-              <SelectItem value="overdue">Atrasadas</SelectItem>
-              <SelectItem value="high">Alta (≤ 2 dias)</SelectItem>
-              <SelectItem value="medium">Média (3-5 dias)</SelectItem>
-              <SelectItem value="low">Baixa ({'>'} 5 dias)</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select value={platformFilter} onValueChange={setPlatformFilter}>
-            <SelectTrigger className="sm:w-48"><SelectValue placeholder="Plataforma" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todas as plataformas</SelectItem>
-              <SelectItem value="ifood">iFood</SelectItem>
-              <SelectItem value="99food">99</SelectItem>
-              <SelectItem value="keeta">Keeta</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
         <Tabs defaultValue="pending">
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="pending"><Clock className="h-4 w-4 mr-1" /> Pendentes ({grouped.pending.length})</TabsTrigger>
             <TabsTrigger value="returned"><AlertTriangle className="h-4 w-4 mr-1" /> Devolvidas ({grouped.returned.length})</TabsTrigger>
             <TabsTrigger value="approved"><CheckCircle2 className="h-4 w-4 mr-1" /> Aprovadas ({grouped.approved.length})</TabsTrigger>
           </TabsList>
+
+          {/* PENDENTES */}
           <TabsContent value="pending" className="space-y-3 mt-4">
-            {applyFilters(grouped.pending).length === 0 ? <Empty msg="Nada para revisar." /> : applyFilters(grouped.pending).map((i) => <ItemCard key={i.id} item={i} />)}
+            <div className="flex flex-col sm:flex-row gap-2">
+              <Select value={strategistFilter} onValueChange={setStrategistFilter}>
+                <SelectTrigger className="sm:w-56"><SelectValue placeholder="Estrategista" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os estrategistas</SelectItem>
+                  {strategistOptions.map(([id, name]) => (
+                    <SelectItem key={id} value={id}>{name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={priorityFilter} onValueChange={setPriorityFilter}>
+                <SelectTrigger className="sm:w-48"><SelectValue placeholder="Prioridade" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas as prioridades</SelectItem>
+                  <SelectItem value="overdue">Atrasadas</SelectItem>
+                  <SelectItem value="high">Alta (≤ 2 dias)</SelectItem>
+                  <SelectItem value="medium">Média (3-5 dias)</SelectItem>
+                  <SelectItem value="low">Baixa ({'>'} 5 dias)</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={platformFilter} onValueChange={setPlatformFilter}>
+                <SelectTrigger className="sm:w-44"><SelectValue placeholder="Plataforma" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas as plataformas</SelectItem>
+                  <SelectItem value="ifood">iFood</SelectItem>
+                  <SelectItem value="99food">99</SelectItem>
+                  <SelectItem value="keeta">Keeta</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {applyFilters(grouped.pending).length === 0
+              ? <Empty msg="Nada para revisar." />
+              : applyFilters(grouped.pending).map((i) => <ItemCard key={i.id} item={i} />)}
           </TabsContent>
+
+          {/* DEVOLVIDAS */}
           <TabsContent value="returned" className="space-y-3 mt-4">
-            {applyFilters(grouped.returned).length === 0 ? <Empty msg="Nenhuma devolvida." /> : applyFilters(grouped.returned).map((i) => <ItemCard key={i.id} item={i} />)}
+            <div className="flex flex-col sm:flex-row gap-2">
+              <Select value={strategistFilter} onValueChange={setStrategistFilter}>
+                <SelectTrigger className="sm:w-56"><SelectValue placeholder="Estrategista" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os estrategistas</SelectItem>
+                  {strategistOptions.map(([id, name]) => (
+                    <SelectItem key={id} value={id}>{name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={returnedPlatformFilter} onValueChange={setReturnedPlatformFilter}>
+                <SelectTrigger className="sm:w-44"><SelectValue placeholder="Plataforma" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas as plataformas</SelectItem>
+                  <SelectItem value="ifood">iFood</SelectItem>
+                  <SelectItem value="99food">99</SelectItem>
+                  <SelectItem value="keeta">Keeta</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {applyReturnedFilters(grouped.returned).length === 0
+              ? <Empty msg="Nenhuma devolvida." />
+              : applyReturnedFilters(grouped.returned).map((i) => <ItemCard key={i.id} item={i} />)}
           </TabsContent>
+
+          {/* APROVADAS */}
           <TabsContent value="approved" className="space-y-3 mt-4">
-            {applyFilters(grouped.approved).length === 0 ? <Empty msg="Nenhuma aprovada." /> : applyFilters(grouped.approved).map((i) => <ItemCard key={i.id} item={i} />)}
+            {grouped.approved.length === 0
+              ? <Empty msg="Nenhuma aprovada." />
+              : grouped.approved.map((i) => <ItemCard key={i.id} item={i} />)}
           </TabsContent>
         </Tabs>
         </>
