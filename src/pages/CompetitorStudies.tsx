@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Search, Play, CheckCircle2, Clock, Store, User, RotateCcw } from "lucide-react";
+import { Search, Play, CheckCircle2, Clock, Store, User, RotateCcw, Pause } from "lucide-react";
 import { useCompetitorStudies, CompetitorStudy } from "@/hooks/useCompetitorStudies";
 import { toast } from "sonner";
 
@@ -108,7 +108,7 @@ const PRIORITY_ORDER: Record<Priority, number> = {
 };
 
 export default function CompetitorStudies() {
-  const { studies, loading, startStudy, completeStudy, resetToPending } = useCompetitorStudies();
+  const { studies, loading, startStudy, completeStudy, resetToPending, togglePauseStudy } = useCompetitorStudies();
   const [completing, setCompleting] = useState<CompetitorStudy | null>(null);
   const [notes, setNotes] = useState("");
   const [strategistNames, setStrategistNames] = useState<Record<string, string>>({});
@@ -145,18 +145,19 @@ export default function CompetitorStudies() {
     return ids.map((id) => ({ id, nome: strategistNames[id] || id })).sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
   }, [studies, strategistNames]);
 
+  const sortWithPaused = (list: typeof studies) =>
+    [...list].sort((a, b) => {
+      if (a.paused !== b.paused) return a.paused ? 1 : -1;
+      return PRIORITY_ORDER[getDeadlineInfo(a.created_at, a.completed_at).priority]
+           - PRIORITY_ORDER[getDeadlineInfo(b.created_at, b.completed_at).priority];
+    });
+
   const grouped = useMemo(() => {
     const completed = byPlatform.filter((s) => s.status === "completed");
     const completedFiltrado = filtroAnalista === "all" ? completed : completed.filter((s) => s.completed_by === filtroAnalista);
     return {
-      pending: [...byPlatform.filter((s) => s.status === "pending")].sort(
-        (a, b) => PRIORITY_ORDER[getDeadlineInfo(a.created_at, a.completed_at).priority]
-                - PRIORITY_ORDER[getDeadlineInfo(b.created_at, b.completed_at).priority]
-      ),
-      in_progress: [...byPlatform.filter((s) => s.status === "in_progress")].sort(
-        (a, b) => PRIORITY_ORDER[getDeadlineInfo(a.created_at, a.completed_at).priority]
-                - PRIORITY_ORDER[getDeadlineInfo(b.created_at, b.completed_at).priority]
-      ),
+      pending: sortWithPaused(byPlatform.filter((s) => s.status === "pending")),
+      in_progress: sortWithPaused(byPlatform.filter((s) => s.status === "in_progress")),
       completed: completedFiltrado,
       completedTotal: completed.length,
     };
@@ -182,12 +183,13 @@ export default function CompetitorStudies() {
   const StudyCard = ({ s }: { s: CompetitorStudy }) => {
     const info = getDeadlineInfo(s.created_at, s.completed_at);
     return (
-    <Card className="p-4 flex flex-col gap-3">
+    <Card className={`p-4 flex flex-col gap-3 ${s.paused ? "opacity-70 border-dashed" : ""}`}>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="flex items-center gap-2 mb-1">
             <Store className="h-4 w-4 text-primary shrink-0" />
             <p className="font-semibold text-foreground truncate">{s.store_name || "Sem nome"}</p>
+            {s.paused && <Badge variant="secondary" className="text-[10px] py-0 px-1.5 h-4">Pausado</Badge>}
           </div>
           <p className="text-xs text-muted-foreground">
             Criado em {new Date(s.created_at).toLocaleDateString("pt-BR")}
@@ -219,13 +221,20 @@ export default function CompetitorStudies() {
           <Badge variant="outline">{PLATFORM_LABELS[s.platform] || s.platform}</Badge>
         </div>
       </div>
-      <div className="flex gap-2 justify-end">
-        {s.status === "pending" && (
+      <div className="flex gap-2 justify-end flex-wrap">
+        {s.status !== "completed" && (
+          <Button size="sm" variant="outline" onClick={() => togglePauseStudy(s.id, !s.paused)}>
+            {s.paused
+              ? <><Play className="h-4 w-4 mr-1" /> Retomar</>
+              : <><Pause className="h-4 w-4 mr-1" /> Pausar</>}
+          </Button>
+        )}
+        {s.status === "pending" && !s.paused && (
           <Button size="sm" onClick={() => handleStart(s)}>
             <Play className="h-4 w-4 mr-1" /> Iniciar
           </Button>
         )}
-        {s.status === "in_progress" && (
+        {s.status === "in_progress" && !s.paused && (
           <div className="flex gap-2">
             <Button size="sm" variant="outline" onClick={() => handleResetToPending(s)}
               title="Voltar para pendente">

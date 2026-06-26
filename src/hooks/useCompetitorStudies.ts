@@ -19,6 +19,7 @@ export interface CompetitorStudy {
   completed_by: string | null;
   created_at: string;
   updated_at: string;
+  paused: boolean;
 }
 
 export function useCompetitorStudies() {
@@ -73,5 +74,8 @@ export function useCompetitorStudies() {
       completed_by: null,
     } as any);
 
-  return { studies, loading, refetch: fetchStudies, updateStudy, startStudy, completeStudy, resetToPending };
+  const togglePauseStudy = (id: string, paused: boolean) =>
+    updateStudy(id, { paused } as any);
+
+  return { studies, loading, refetch: fetchStudies, updateStudy, startStudy, completeStudy, resetToPending, togglePauseStudy };
 }
