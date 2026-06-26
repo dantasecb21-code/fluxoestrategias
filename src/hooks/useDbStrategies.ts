@@ -143,21 +143,37 @@ export function useDbStrategies() {
 
   useEffect(() => { fetchStrategies(); }, [fetchStrategies]);
 
-  // Real-time subscription
+  // Real-time subscription — update local state from payload instead of re-fetching
   useEffect(() => {
     if (!user) return;
 
     let cancelled = false;
     const channelId = `strategies-rt-${Math.random().toString(36).slice(2)}`;
     const channel = supabase.channel(channelId);
-    
+
     channel
-      .on("postgres_changes", {
-        event: "*",
-        schema: "public",
-        table: "strategies",
-      }, () => {
-        if (!cancelled) fetchStrategies();
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "strategies" }, (payload) => {
+        if (cancelled) return;
+        const row = mapRow(payload.new);
+        // Only add if not soft-deleted; full refetch handles role filtering on first load
+        if (!row.deleted_at) {
+          setStrategies((prev) => (prev.some((s) => s.id === row.id) ? prev : [row, ...prev]));
+        }
+      })
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "strategies" }, (payload) => {
+        if (cancelled) return;
+        const row = mapRow(payload.new);
+        setStrategies((prev) => {
+          const exists = prev.some((s) => s.id === row.id);
+          if (row.deleted_at) return prev.filter((s) => s.id !== row.id);
+          if (exists) return prev.map((s) => (s.id === row.id ? row : s));
+          // Strategy became visible (e.g., now assigned to this user)
+          return [row, ...prev];
+        });
+      })
+      .on("postgres_changes", { event: "DELETE", schema: "public", table: "strategies" }, (payload) => {
+        if (cancelled) return;
+        setStrategies((prev) => prev.filter((s) => s.id !== payload.old.id));
       })
       .subscribe();
 
@@ -165,7 +181,7 @@ export function useDbStrategies() {
       cancelled = true;
       supabase.removeChannel(channel);
     };
-  }, [user, fetchStrategies]);
+  }, [user]);
 
   const createStrategy = async (params: {
     store_name: string;

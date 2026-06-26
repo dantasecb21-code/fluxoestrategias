@@ -44,7 +44,7 @@ export function NotificationBell() {
   const isOperational = role === "operational";
   const isStrategicOrAdmin = role === "strategic" || role === "admin";
 
-  // Fetch pending store requests for strategic/admin users
+  // Fetch pending store requests via realtime instead of polling
   useEffect(() => {
     if (!isStrategicOrAdmin) return;
     const fetchStoreRequests = async () => {
@@ -55,8 +55,27 @@ export function NotificationBell() {
       setStoreRequests(data || []);
     };
     fetchStoreRequests();
-    const interval = setInterval(fetchStoreRequests, 30000);
-    return () => clearInterval(interval);
+
+    const channel = supabase
+      .channel("store-requests-bell")
+      .on("postgres_changes", { event: "*", schema: "public", table: "store_requests" }, (payload) => {
+        if (payload.eventType === "DELETE") {
+          setStoreRequests((prev) => prev.filter((r) => r.id !== payload.old.id));
+        } else {
+          const row = payload.new as any;
+          if (["pending", "in_progress"].includes(row.status)) {
+            setStoreRequests((prev) => {
+              const exists = prev.some((r) => r.id === row.id);
+              return exists ? prev.map((r) => (r.id === row.id ? row : r)) : [...prev, row];
+            });
+          } else {
+            setStoreRequests((prev) => prev.filter((r) => r.id !== row.id));
+          }
+        }
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
   }, [isStrategicOrAdmin]);
 
   useEffect(() => {
