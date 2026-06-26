@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDbStrategies, DbStrategy } from "@/hooks/useDbStrategies";
 import { Button } from "@/components/ui/button";
@@ -6,6 +6,8 @@ import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Plus, Copy, Pencil, Trash2, FileText, Zap, Clock, UserCheck, Undo2, ChevronDown, ChevronRight, CheckCircle2, X, Search, ShieldCheck, Pause, Play } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { formatDateBR, shortName } from "@/lib/utils";
@@ -42,6 +44,9 @@ export default function Dashboard() {
   const [filterManager, setFilterManager] = useState("all");
   const [filterPlatform, setFilterPlatform] = useState("all");
   const [filterCompetition, setFilterCompetition] = useState("all");
+  const [filterStatus, setFilterStatus] = useState("all");
+  const [pausing, setPausing] = useState<DbStrategy | null>(null);
+  const [pauseReason, setPauseReason] = useState("");
 
   const operationalManagers = useMemo(() => {
     const names = [...new Set(strategies.map((s) => s.operational_manager).filter(Boolean))];
@@ -54,9 +59,16 @@ export default function Dashboard() {
       const matchManager = filterManager === "all" || s.operational_manager === filterManager;
       const matchPlatform = filterPlatform === "all" || s.platform === filterPlatform;
       const hasStudy = s.observation?.toLowerCase().includes("estudo de concorrência") || false;
-      const matchCompetition = filterCompetition === "all" || 
+      const matchCompetition = filterCompetition === "all" ||
                               (filterCompetition === "yes" ? hasStudy : !hasStudy);
-      return matchSearch && matchManager && matchPlatform && matchCompetition;
+      const ds = deriveStrategyDisplayStatus(s);
+      const matchStatus = filterStatus === "all"
+        || (filterStatus === "paused" && s.algorithm_paused)
+        || (filterStatus === "returned" && ds === "returned")
+        || (filterStatus === "in_progress" && ds === "in_progress")
+        || (filterStatus === "pending_admin_approval" && ds === "pending_admin_approval")
+        || (filterStatus === "completed" && ds === "completed");
+      return matchSearch && matchManager && matchPlatform && matchCompetition && matchStatus;
     });
   };
 
@@ -117,11 +129,23 @@ export default function Dashboard() {
     setDeletedStrategies((prev) => prev.filter((s) => s.id !== id));
     toast.success("Estratégia excluída permanentemente!");
   };
-  const togglePause = async (e: React.MouseEvent, s: DbStrategy) => {
+  const doPause = async (s: DbStrategy, reason: string) => {
+    const { error } = await supabase.from("strategies").update({
+      algorithm_paused: true,
+      algorithm_pause_reason: reason,
+    } as any).eq("id", s.id);
+    if (error) { toast.error("Erro ao pausar"); return; }
+    toast.success("Estratégia pausada");
+  };
+
+  const doResume = async (e: React.MouseEvent, s: DbStrategy) => {
     e.stopPropagation();
-    const { error } = await supabase.from("strategies").update({ algorithm_paused: !s.algorithm_paused } as any).eq("id", s.id);
-    if (error) { toast.error("Erro ao alterar pausa"); return; }
-    toast.success(s.algorithm_paused ? "Estratégia retomada" : "Estratégia pausada");
+    const { error } = await supabase.from("strategies").update({
+      algorithm_paused: false,
+      algorithm_pause_reason: "",
+    } as any).eq("id", s.id);
+    if (error) { toast.error("Erro ao retomar"); return; }
+    toast.success("Estratégia retomada");
   };
 
   const renderStrategyCard = (s: DbStrategy) => {
@@ -153,6 +177,9 @@ export default function Dashboard() {
                 <span className="shrink-0 text-[10px] py-0 px-1.5 h-4 leading-none rounded-full bg-warning/20 text-warning border border-warning/30 flex items-center" title={s.observation}>📌 Obs</span>
               )}
             </h3>
+            {canPause && s.algorithm_paused && (s as any).algorithm_pause_reason && (
+              <p className="text-xs text-warning mt-1">Motivo da pausa: {(s as any).algorithm_pause_reason}</p>
+            )}
             <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground mt-1">
               {s.operational_manager && (
                 <span className="flex items-center gap-1">
@@ -170,7 +197,11 @@ export default function Dashboard() {
           <div className="flex items-center gap-1 ml-4 shrink-0" onClick={(e) => e.stopPropagation()}>
             {canPause && (
               <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                onClick={(e) => togglePause(e, s)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (s.algorithm_paused) { doResume(e, s); }
+                  else { setPausing(s); setPauseReason(""); }
+                }}
                 title={s.algorithm_paused ? "Retomar" : "Pausar"}>
                 {s.algorithm_paused ? <Play className="h-4 w-4" /> : <Pause className="h-4 w-4" />}
               </Button>
@@ -280,6 +311,19 @@ export default function Dashboard() {
               <SelectItem value="no">Sem estudo</SelectItem>
             </SelectContent>
           </Select>
+          <Select value={filterStatus} onValueChange={setFilterStatus}>
+            <SelectTrigger className="w-full sm:w-[180px]">
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos os status</SelectItem>
+              <SelectItem value="paused">Pausadas</SelectItem>
+              <SelectItem value="returned">Devolvidas</SelectItem>
+              <SelectItem value="in_progress">Em andamento</SelectItem>
+              <SelectItem value="pending_admin_approval">Aguardando validação</SelectItem>
+              <SelectItem value="completed">Concluídas</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       )}
 
@@ -380,6 +424,26 @@ export default function Dashboard() {
           </div>
         )}
       </div>}
+
+      <Dialog open={!!pausing} onOpenChange={(o) => { if (!o) { setPausing(null); setPauseReason(""); } }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Pausar: {pausing?.store_name}</DialogTitle>
+          </DialogHeader>
+          <Textarea rows={3} value={pauseReason} onChange={(e) => setPauseReason(e.target.value)}
+            placeholder="Motivo da pausa (opcional)" />
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => { setPausing(null); setPauseReason(""); }}>Cancelar</Button>
+            <Button variant="outline" onClick={async () => {
+              if (!pausing) return;
+              await doPause(pausing, pauseReason);
+              setPausing(null); setPauseReason("");
+            }}>
+              <Pause className="h-4 w-4 mr-1" /> Confirmar pausa
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
