@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Card } from "@/components/ui/card";
@@ -7,9 +8,16 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Cpu, CheckCircle2, RotateCcw, Clock, AlertTriangle } from "lucide-react";
+import { Cpu, CheckCircle2, RotateCcw, Clock, AlertTriangle, ExternalLink } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
+
+const RETURN_PRIORITY_LABELS: Record<string, { label: string; color: string }> = {
+  urgent: { label: "Urgente", color: "destructive" },
+  high: { label: "Alta", color: "secondary" },
+  medium: { label: "Média", color: "outline" },
+  low: { label: "Baixa", color: "outline" },
+};
 
 interface AdaptationItem {
   id: string;
@@ -21,6 +29,7 @@ interface AdaptationItem {
   algorithm_adaptation_deadline: string | null;
   algorithm_adaptation_status: string;
   algorithm_return_reason: string;
+  algorithm_return_priority: string;
   algorithm_approved_at: string | null;
 }
 
@@ -28,10 +37,12 @@ const PLATFORM_LABELS: Record<string, string> = { ifood: "iFood", "99food": "99"
 
 export default function AlgorithmAdaptation() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [items, setItems] = useState<AdaptationItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [returning, setReturning] = useState<AdaptationItem | null>(null);
   const [reason, setReason] = useState("");
+  const [returnPriority, setReturnPriority] = useState<string>("medium");
   const [strategistFilter, setStrategistFilter] = useState<string>("all");
   const [priorityFilter, setPriorityFilter] = useState<string>("all");
   const [platformFilter, setPlatformFilter] = useState<string>("all");
@@ -40,7 +51,7 @@ export default function AlgorithmAdaptation() {
     setLoading(true);
     const { data } = await supabase
       .from("strategies")
-      .select("id, store_name, platform, user_id, algorithm_adaptation_started_at, algorithm_adaptation_deadline, algorithm_adaptation_status, algorithm_return_reason, algorithm_approved_at")
+      .select("id, store_name, platform, user_id, algorithm_adaptation_started_at, algorithm_adaptation_deadline, algorithm_adaptation_status, algorithm_return_reason, algorithm_return_priority, algorithm_approved_at")
       .neq("algorithm_adaptation_status", "none")
       .is("deleted_at", null)
       .order("algorithm_adaptation_started_at", { ascending: false });
@@ -56,6 +67,7 @@ export default function AlgorithmAdaptation() {
     setItems((data || []).map((s: any) => ({
       ...s,
       strategist_name: nameMap.get(s.user_id) || "—",
+      algorithm_return_priority: s.algorithm_return_priority || "medium",
     })));
     setLoading(false);
   };
@@ -115,13 +127,14 @@ export default function AlgorithmAdaptation() {
     const { error } = await supabase.from("strategies").update({
       algorithm_adaptation_status: "returned",
       algorithm_return_reason: reason.trim(),
+      algorithm_return_priority: returnPriority,
       status: "in_progress",
       admin_approved: false,
       returned: true,
     } as any).eq("id", returning.id);
     if (error) { toast.error("Erro ao devolver"); return; }
     toast.success("Devolvido ao estrategista");
-    setReturning(null); setReason("");
+    setReturning(null); setReason(""); setReturnPriority("medium");
     fetchItems();
   };
 
@@ -137,6 +150,7 @@ export default function AlgorithmAdaptation() {
   const ItemCard = ({ item }: { item: AdaptationItem }) => {
     const left = daysLeft(item.algorithm_adaptation_deadline);
     const overdue = isOverdue(item.algorithm_adaptation_deadline) && item.algorithm_adaptation_status === "pending";
+    const retPriority = RETURN_PRIORITY_LABELS[item.algorithm_return_priority] || RETURN_PRIORITY_LABELS.medium;
     return (
       <Card className="p-4 space-y-3">
         <div className="flex items-start justify-between gap-3">
@@ -164,18 +178,28 @@ export default function AlgorithmAdaptation() {
                 {overdue ? "Atrasada" : `${left}d restantes`}
               </Badge>
             )}
+            {item.algorithm_adaptation_status === "returned" && (
+              <Badge variant={retPriority.color as any}>
+                Prioridade: {retPriority.label}
+              </Badge>
+            )}
           </div>
         </div>
-        {item.algorithm_adaptation_status === "pending" && (
-          <div className="flex gap-2 justify-end">
-            <Button size="sm" variant="outline" onClick={() => { setReturning(item); setReason(""); }}>
-              <RotateCcw className="h-4 w-4 mr-1" /> Devolver
-            </Button>
-            <Button size="sm" onClick={() => approve(item)} className="bg-success hover:bg-success/90 text-success-foreground">
-              <CheckCircle2 className="h-4 w-4 mr-1" /> Aprovar
-            </Button>
-          </div>
-        )}
+        <div className="flex gap-2 justify-end">
+          <Button size="sm" variant="ghost" onClick={() => navigate(`/estrategia/${item.id}`)}>
+            <ExternalLink className="h-4 w-4 mr-1" /> Ver estratégia
+          </Button>
+          {item.algorithm_adaptation_status === "pending" && (
+            <>
+              <Button size="sm" variant="outline" onClick={() => { setReturning(item); setReason(""); setReturnPriority("medium"); }}>
+                <RotateCcw className="h-4 w-4 mr-1" /> Devolver
+              </Button>
+              <Button size="sm" onClick={() => approve(item)} className="bg-success hover:bg-success/90 text-success-foreground">
+                <CheckCircle2 className="h-4 w-4 mr-1" /> Aprovar
+              </Button>
+            </>
+          )}
+        </div>
       </Card>
     );
   };
@@ -251,15 +275,33 @@ export default function AlgorithmAdaptation() {
         </>
       )}
 
-      <Dialog open={!!returning} onOpenChange={(o) => { if (!o) { setReturning(null); setReason(""); } }}>
+      <Dialog open={!!returning} onOpenChange={(o) => { if (!o) { setReturning(null); setReason(""); setReturnPriority("medium"); } }}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Devolver: {returning?.store_name}</DialogTitle>
           </DialogHeader>
-          <Textarea rows={5} value={reason} onChange={(e) => setReason(e.target.value)}
-            placeholder="Motivo da devolução (obrigatório)" />
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <p className="text-sm font-medium">Prioridade de correção</p>
+              <div className="flex gap-2 flex-wrap">
+                {(["urgent", "high", "medium", "low"] as const).map((p) => (
+                  <Button
+                    key={p}
+                    size="sm"
+                    variant={returnPriority === p ? "default" : "outline"}
+                    onClick={() => setReturnPriority(p)}
+                    className={returnPriority === p && p === "urgent" ? "bg-destructive hover:bg-destructive/90 text-destructive-foreground" : ""}
+                  >
+                    {RETURN_PRIORITY_LABELS[p].label}
+                  </Button>
+                ))}
+              </div>
+            </div>
+            <Textarea rows={5} value={reason} onChange={(e) => setReason(e.target.value)}
+              placeholder="Motivo da devolução (obrigatório)" />
+          </div>
           <DialogFooter>
-            <Button variant="ghost" onClick={() => setReturning(null)}>Cancelar</Button>
+            <Button variant="ghost" onClick={() => { setReturning(null); setReturnPriority("medium"); }}>Cancelar</Button>
             <Button variant="destructive" onClick={doReturn}>Devolver ao estrategista</Button>
           </DialogFooter>
         </DialogContent>
