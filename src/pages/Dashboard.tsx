@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Copy, Pencil, Trash2, FileText, Zap, Clock, UserCheck, Undo2, ChevronDown, ChevronRight, CheckCircle2, X, Search, ShieldCheck } from "lucide-react";
+import { Plus, Copy, Pencil, Trash2, FileText, Zap, Clock, UserCheck, Undo2, ChevronDown, ChevronRight, CheckCircle2, X, Search, ShieldCheck, Pause, Play } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { formatDateBR, shortName } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -14,6 +14,7 @@ import { deriveStrategyDisplayStatus, getStatusLabel, getStatusBadgeProps } from
 import { toast } from "sonner";
 import { PlatformBadge } from "@/components/PlatformBadge";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 
 function calcProgress(categories: any[]) {
   const allItems = categories.flatMap((c: any) => c.items);
@@ -116,6 +117,13 @@ export default function Dashboard() {
     setDeletedStrategies((prev) => prev.filter((s) => s.id !== id));
     toast.success("Estratégia excluída permanentemente!");
   };
+  const togglePause = async (e: React.MouseEvent, s: DbStrategy) => {
+    e.stopPropagation();
+    const { error } = await supabase.from("strategies").update({ algorithm_paused: !s.algorithm_paused } as any).eq("id", s.id);
+    if (error) { toast.error("Erro ao alterar pausa"); return; }
+    toast.success(s.algorithm_paused ? "Estratégia retomada" : "Estratégia pausada");
+  };
+
   const renderStrategyCard = (s: DbStrategy) => {
     const progress = calcProgress(s.categories);
     const displayStatus = deriveStrategyDisplayStatus(s);
@@ -123,10 +131,11 @@ export default function Dashboard() {
     const badgeProps = getStatusBadgeProps(displayStatus);
     const isApproved = displayStatus === "completed";
     const isReturned = displayStatus === "returned";
+    const isAlgoAdapting = s.algorithm_adaptation_status === "pending";
     return (
       <Card
         key={s.id}
-        className={`p-5 hover:border-primary/30 transition-colors cursor-pointer ${isApproved ? "border-success/30 bg-success/5" : ""} ${isReturned ? "border-destructive/40 bg-destructive/5" : ""}`}
+        className={`p-5 hover:border-primary/30 transition-colors cursor-pointer ${isApproved ? "border-success/30 bg-success/5" : ""} ${isReturned ? "border-destructive/40 bg-destructive/5" : ""} ${isAlgoAdapting && s.algorithm_paused ? "opacity-70 border-dashed" : ""}`}
         onClick={() => navigate(`/estrategia/${s.id}`)}
       >
         <div className="flex items-start justify-between mb-3">
@@ -135,6 +144,11 @@ export default function Dashboard() {
               <span className="truncate">{s.store_name || "Sem nome"}</span>
               <Badge variant={badgeProps.variant} className={`text-[10px] py-0 px-1.5 h-4 leading-none shrink-0 ${badgeProps.className}`}>{statusLabel}</Badge>
               <PlatformBadge platform={s.platform} />
+              {isAlgoAdapting && (
+                <span className={`shrink-0 text-[10px] py-0 px-1.5 h-4 leading-none rounded-full flex items-center border ${s.algorithm_paused ? "bg-secondary/20 text-secondary-foreground border-secondary/30" : "bg-primary/10 text-primary border-primary/30"}`}>
+                  {s.algorithm_paused ? "Adaptação pausada" : "Em adaptação"}
+                </span>
+              )}
               {s.observation && (
                 <span className="shrink-0 text-[10px] py-0 px-1.5 h-4 leading-none rounded-full bg-warning/20 text-warning border border-warning/30 flex items-center" title={s.observation}>📌 Obs</span>
               )}
@@ -154,6 +168,13 @@ export default function Dashboard() {
             </div>
           </div>
           <div className="flex items-center gap-1 ml-4 shrink-0" onClick={(e) => e.stopPropagation()}>
+            {isAlgoAdapting && isAdmin && (
+              <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                onClick={(e) => togglePause(e, s)}
+                title={s.algorithm_paused ? "Retomar adaptação" : "Pausar adaptação"}>
+                {s.algorithm_paused ? <Play className="h-4 w-4" /> : <Pause className="h-4 w-4" />}
+              </Button>
+            )}
             <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-foreground"
               onClick={() => navigate(`/estrategia/${s.id}`)}>
               <Pencil className="h-4 w-4" />

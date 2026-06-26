@@ -45,6 +45,8 @@ export interface DbStrategy {
   study_requested: boolean;
   ux_completed_by: string | null;
   ux_completed_at: string | null;
+  algorithm_adaptation_status: string;
+  algorithm_paused: boolean;
 }
 
 function jsonToCategories(json: Json): StrategyCategory[] {
