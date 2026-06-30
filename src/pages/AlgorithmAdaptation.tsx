@@ -137,6 +137,17 @@ export default function AlgorithmAdaptation() {
     fetchItems();
   };
 
+  const undoApproval = async (item: AdaptationItem) => {
+    const { error } = await supabase.from("strategies").update({
+      algorithm_adaptation_status: "pending",
+      algorithm_approved_by: null,
+      algorithm_approved_at: null,
+    } as any).eq("id", item.id);
+    if (error) { toast.error("Erro ao desfazer aprovação"); return; }
+    toast.success("Aprovação desfeita — voltou para pendentes");
+    fetchItems();
+  };
+
   const togglePause = async (item: AdaptationItem, reason?: string) => {
     const pausing = !item.algorithm_paused;
     const { error } = await supabase.from("strategies").update({
@@ -284,6 +295,16 @@ export default function AlgorithmAdaptation() {
               </Button>
               <Button size="sm" onClick={() => approve(item)} className="bg-success hover:bg-success/90 text-success-foreground">
                 <CheckCircle2 className="h-4 w-4 mr-1" /> Aprovar
+              </Button>
+            </>
+          )}
+          {item.algorithm_adaptation_status === "approved" && (
+            <>
+              <Button size="sm" variant="outline" onClick={() => { setReturning(item); setReason(""); setReturnPriority("medium"); }}>
+                <RotateCcw className="h-4 w-4 mr-1" /> Devolver
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => undoApproval(item)}>
+                <RotateCcw className="h-4 w-4 mr-1" /> Desfazer aprovação
               </Button>
             </>
           )}
