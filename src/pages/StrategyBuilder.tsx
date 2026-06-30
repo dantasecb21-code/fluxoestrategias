@@ -19,7 +19,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "sonner";
-import { StrategyMeta } from "@/types/strategy";
+import { StrategyMeta, StrategyItem, ItemStatus } from "@/types/strategy";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDateBR } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -181,6 +181,32 @@ export default function StrategyBuilderPage() {
 
   const editor = useCategoryEditor(categories, setCategories);
   const strategyStatus = existing?.status || "in_progress";
+
+  // Marca itens tocados pelo braço direito (strategic_assistant), pra sinalizar na tela
+  // o que ele alterou — pode ter clicado errado, então a sinalização ajuda a auditar.
+  const stampAssistant = <T extends Record<string, unknown>>(updates: T): T =>
+    isStrategicAssistant ? { ...updates, editedByAssistant: true, editedByAssistantName: displayName || "" } : updates;
+
+  const handleEditItem = (catId: string, itemId: string, updates: Partial<StrategyItem>) =>
+    editor.editItem(catId, itemId, stampAssistant(updates));
+
+  const handleAddItem = (catId: string, item: Omit<StrategyItem, "id" | "checked">) =>
+    editor.addItem(catId, stampAssistant(item));
+
+  const handleItemStatusChange = (catId: string, itemId: string, status: ItemStatus) => {
+    setCategories((prev) =>
+      prev.map((c) =>
+        c.id === catId
+          ? {
+              ...c,
+              items: c.items.map((i) =>
+                i.id === itemId ? { ...i, ...stampAssistant({ status }) } : i
+              ),
+            }
+          : c
+      )
+    );
+  };
 
   useEffect(() => {
     if (!id) return;
@@ -581,6 +607,23 @@ export default function StrategyBuilderPage() {
                   </TooltipProvider>
                 );
               })()}
+              {id && existing?.assisted_by_name && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Badge variant="outline" className="text-[10px] py-0 px-1.5 h-4 leading-none border-primary/40 text-primary cursor-help">
+                        🤝 Auxiliado por Braço Direito: {existing.assisted_by_name}
+                      </Badge>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="text-xs">
+                        Último auxílio do braço direito {existing.assisted_by_name}
+                        {existing.assisted_at ? ` em ${formatDateBR(existing.assisted_at)}` : ""}
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
             </div>
           </div>
           <Button size="sm" onClick={handleSave} disabled={saving} className="bg-primary text-primary-foreground hover:bg-primary/90 shrink-0">
@@ -796,30 +839,30 @@ export default function StrategyBuilderPage() {
                       return (
                         <div key={item.id} className="p-4 flex items-start justify-between gap-4">
                           <div className="flex-1">
-                            <p className="text-sm text-foreground leading-relaxed">{item.text}</p>
+                            <p className="text-sm text-foreground leading-relaxed flex items-center gap-2">
+                              {item.text}
+                              {item.editedByAssistant && (
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Badge variant="outline" className="text-[10px] py-0 px-1.5 h-4 leading-none border-primary/40 text-primary cursor-help shrink-0">
+                                        🤝 Braço Direito
+                                      </Badge>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      <p className="text-xs">Alterado por {item.editedByAssistantName || "braço direito"}</p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                              )}
+                            </p>
                             {item.observation && (
                               <p className="text-xs text-muted-foreground mt-1 italic">💬 {item.observation}</p>
                             )}
                           </div>
                           <Select
                             value={st}
-                            onValueChange={(v) => {
-                              setCategories((prev) =>
-                                prev.map((c) =>
-                                  c.id === cat.id
-                                    ? {
-                                        ...c,
-                                        items: c.items.map((i) => {
-                                          if (i.id !== item.id) return i;
-                                          // Se o estrategista tentar voltar para pendente quando o gestor já mexeu,
-                                          // ele pode. O problema relatado era na visão do filtro ou lógica de bloqueio.
-                                          return { ...i, status: v as any };
-                                        }),
-                                      }
-                                    : c
-                                )
-                              );
-                            }}
+                            onValueChange={(v) => handleItemStatusChange(cat.id, item.id, v as ItemStatus)}
                           >
                             <SelectTrigger className="w-36 h-8 text-xs shrink-0">
                               <SelectValue />
@@ -954,7 +997,7 @@ export default function StrategyBuilderPage() {
 
 
           {/* Caixa de texto livre */}
-          <FreeTextDistributor categories={categories} onAddItem={editor.addItem} />
+          <FreeTextDistributor categories={categories} onAddItem={handleAddItem} />
 
           <div className="space-y-4">
             {categories.map((cat) => {
@@ -967,8 +1010,8 @@ export default function StrategyBuilderPage() {
                   isFixed={isFixed}
                   onEditCategory={editor.editCategory}
                   onRemoveCategory={editor.removeCategory}
-                  onAddItem={editor.addItem}
-                  onEditItem={editor.editItem}
+                  onAddItem={handleAddItem}
+                  onEditItem={handleEditItem}
                   onRemoveItem={editor.removeItem}
                   onMoveItem={editor.moveItem}
                   onMoveItemToCategory={editor.moveItemToCategory}

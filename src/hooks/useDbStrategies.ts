@@ -48,6 +48,9 @@ export interface DbStrategy {
   algorithm_adaptation_status: string;
   algorithm_paused: boolean;
   algorithm_pause_reason: string;
+  assisted_by_id: string | null;
+  assisted_by_name: string;
+  assisted_at: string | null;
 }
 
 function jsonToCategories(json: Json): StrategyCategory[] {
@@ -110,7 +113,7 @@ async function syncToSheets(strategy: DbStrategy) {
 }
 
 export function useDbStrategies() {
-  const { user, role, platforms, followedStrategicIds } = useAuth();
+  const { user, role, platforms, followedStrategicIds, displayName } = useAuth();
   const [strategies, setStrategies] = useState<DbStrategy[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -222,6 +225,11 @@ export function useDbStrategies() {
     if (params.store_request_id) {
       insertData.store_request_id = params.store_request_id;
     }
+    if (role === "strategic_assistant") {
+      insertData.assisted_by_id = user.id;
+      insertData.assisted_by_name = displayName || user.email || "";
+      insertData.assisted_at = new Date().toISOString();
+    }
     const { data, error } = await supabase
       .from("strategies")
       .insert(insertData)
@@ -295,6 +303,11 @@ export function useDbStrategies() {
     const updateData: Record<string, unknown> = { ...params };
     if (params.categories) {
       updateData.categories = params.categories as unknown as Json;
+    }
+    if (role === "strategic_assistant" && user) {
+      updateData.assisted_by_id = user.id;
+      updateData.assisted_by_name = displayName || user.email || "";
+      updateData.assisted_at = new Date().toISOString();
     }
 
     // Fetch fresh state from DB to avoid stale closure issues

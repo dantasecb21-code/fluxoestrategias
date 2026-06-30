@@ -273,6 +273,14 @@ export default function PendingStrategies() {
                         {isOverdue && (
                           <span className="h-2 w-2 rounded-full bg-destructive shrink-0" title="Atrasada" />
                         )}
+                        {s.assisted_by_name && (
+                          <span
+                            className="shrink-0 text-[10px] py-0 px-1.5 h-4 leading-none rounded-full bg-primary/10 text-primary border border-primary/30 flex items-center"
+                            title={`Auxiliado por Braço Direito: ${s.assisted_by_name}`}
+                          >
+                            🤝 Auxiliado: {shortName(s.assisted_by_name)}
+                          </span>
+                        )}
                       </h3>
                       <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground mt-1">
                         {s.operational_manager && (

@@ -172,8 +172,16 @@ export function CategoryCard({
                 className="flex items-start gap-2 p-3 rounded-lg hover:bg-muted/30 transition-colors group"
               >
                 <div className="flex-1 min-w-0">
-                  <p className="font-medium text-sm text-foreground">
-                    {item.name}
+                  <p className="font-medium text-sm text-foreground flex items-center gap-2">
+                    <span>{item.name}</span>
+                    {item.editedByAssistant && (
+                      <span
+                        className="shrink-0 text-[10px] py-0 px-1.5 h-4 leading-none rounded-full border border-primary/40 text-primary flex items-center"
+                        title={`Alterado por ${item.editedByAssistantName || "braço direito"}`}
+                      >
+                        🤝 {item.editedByAssistantName || "Braço Direito"}
+                      </span>
+                    )}
                   </p>
                   {item.text && <p className="text-xs text-muted-foreground mt-0.5">{item.text}</p>}
                 </div>

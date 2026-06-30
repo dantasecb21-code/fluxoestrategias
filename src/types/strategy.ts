@@ -7,6 +7,8 @@ export interface StrategyItem {
   checked: boolean;
   status?: ItemStatus;
   observation?: string;
+  editedByAssistant?: boolean;
+  editedByAssistantName?: string;
 }
 
 export interface StrategyCategory {

@@ -176,6 +176,14 @@ export default function Dashboard() {
               {s.observation && (
                 <span className="shrink-0 text-[10px] py-0 px-1.5 h-4 leading-none rounded-full bg-warning/20 text-warning border border-warning/30 flex items-center" title={s.observation}>📌 Obs</span>
               )}
+              {s.assisted_by_name && (
+                <span
+                  className="shrink-0 text-[10px] py-0 px-1.5 h-4 leading-none rounded-full bg-primary/10 text-primary border border-primary/30 flex items-center"
+                  title={`Auxiliado por Braço Direito: ${s.assisted_by_name}`}
+                >
+                  🤝 Auxiliado: {shortName(s.assisted_by_name)}
+                </span>
+              )}
             </h3>
             {canPause && s.algorithm_paused && (s as any).algorithm_pause_reason && (
               <p className="text-xs text-warning mt-1">Motivo da pausa: {(s as any).algorithm_pause_reason}</p>
