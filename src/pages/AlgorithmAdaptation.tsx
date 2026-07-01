@@ -8,8 +8,9 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Cpu, CheckCircle2, RotateCcw, Clock, AlertTriangle, ExternalLink, Pause, Play } from "lucide-react";
+import { Cpu, CheckCircle2, RotateCcw, Clock, AlertTriangle, ExternalLink, Pause, Play, Search } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 
 const RETURN_PRIORITY_LABELS: Record<string, { label: string; color: string }> = {
@@ -51,6 +52,7 @@ export default function AlgorithmAdaptation() {
   const [priorityFilter, setPriorityFilter] = useState<string>("all");
   const [platformFilter, setPlatformFilter] = useState<string>("all");
   const [returnedPlatformFilter, setReturnedPlatformFilter] = useState<string>("all");
+  const [searchTerm, setSearchTerm] = useState("");
 
   const fetchItems = async () => {
     setLoading(true);
@@ -113,6 +115,7 @@ export default function AlgorithmAdaptation() {
   };
 
   const applyFilters = (list: AdaptationItem[]) => list.filter((i) => {
+    if (searchTerm && !i.store_name.toLowerCase().includes(searchTerm.toLowerCase())) return false;
     if (strategistFilter !== "all" && i.user_id !== strategistFilter) return false;
     const prio = priorityOf(i.algorithm_adaptation_deadline, i.algorithm_adaptation_status, i.algorithm_paused);
     if (priorityFilter !== "all" && i.algorithm_adaptation_status === "pending" && prio !== priorityFilter) return false;
@@ -121,6 +124,7 @@ export default function AlgorithmAdaptation() {
   });
 
   const applyReturnedFilters = (list: AdaptationItem[]) => list.filter((i) => {
+    if (searchTerm && !i.store_name.toLowerCase().includes(searchTerm.toLowerCase())) return false;
     if (strategistFilter !== "all" && i.user_id !== strategistFilter) return false;
     if (returnedPlatformFilter !== "all" && i.platform !== returnedPlatformFilter) return false;
     return true;
@@ -344,6 +348,15 @@ export default function AlgorithmAdaptation() {
 
           {/* PENDENTES */}
           <TabsContent value="pending" className="space-y-3 mt-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Pesquisar loja..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-9"
+              />
+            </div>
             <div className="flex flex-col sm:flex-row gap-2">
               <Select value={strategistFilter} onValueChange={setStrategistFilter}>
                 <SelectTrigger className="sm:w-56"><SelectValue placeholder="Estrategista" /></SelectTrigger>
@@ -381,6 +394,15 @@ export default function AlgorithmAdaptation() {
 
           {/* DEVOLVIDAS */}
           <TabsContent value="returned" className="space-y-3 mt-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Pesquisar loja..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-9"
+              />
+            </div>
             <div className="flex flex-col sm:flex-row gap-2">
               <Select value={strategistFilter} onValueChange={setStrategistFilter}>
                 <SelectTrigger className="sm:w-56"><SelectValue placeholder="Estrategista" /></SelectTrigger>
