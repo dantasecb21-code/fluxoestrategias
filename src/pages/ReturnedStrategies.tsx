@@ -1,11 +1,13 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { RotateCcw, AlertTriangle, ExternalLink, Sparkles } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { RotateCcw, AlertTriangle, ExternalLink, Sparkles, Search } from "lucide-react";
 import { toast } from "sonner";
 
 interface Item {
@@ -25,6 +27,8 @@ export default function ReturnedStrategies() {
   const navigate = useNavigate();
   const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [platformFilter, setPlatformFilter] = useState<string>("all");
 
   const fetchItems = async () => {
     if (!user) return;
@@ -54,6 +58,12 @@ export default function ReturnedStrategies() {
     return () => { supabase.removeChannel(ch); };
   }, [user]);
 
+  const filteredItems = useMemo(() => items.filter((i) => {
+    if (searchTerm && !i.store_name.toLowerCase().includes(searchTerm.toLowerCase())) return false;
+    if (platformFilter !== "all" && i.platform !== platformFilter) return false;
+    return true;
+  }), [items, searchTerm, platformFilter]);
+
   const createRealignment = (item: Item) => {
     const params = new URLSearchParams({
       store: item.store_name,
@@ -81,15 +91,42 @@ export default function ReturnedStrategies() {
         </div>
       </div>
 
+      {items.length > 0 && (
+        <div className="flex flex-col sm:flex-row gap-2">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Pesquisar loja..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+          <Select value={platformFilter} onValueChange={setPlatformFilter}>
+            <SelectTrigger className="sm:w-44"><SelectValue placeholder="Plataforma" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas as plataformas</SelectItem>
+              <SelectItem value="ifood">iFood</SelectItem>
+              <SelectItem value="99food">99</SelectItem>
+              <SelectItem value="keeta">Keeta</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+
       {loading ? (
         <p className="text-center text-muted-foreground">Carregando...</p>
       ) : items.length === 0 ? (
         <Card className="p-8 text-center border-dashed">
           <p className="text-muted-foreground text-sm">Nenhuma estratégia devolvida. 🎉</p>
         </Card>
+      ) : filteredItems.length === 0 ? (
+        <Card className="p-8 text-center border-dashed">
+          <p className="text-muted-foreground text-sm">Nenhum resultado para os filtros aplicados.</p>
+        </Card>
       ) : (
         <div className="space-y-3">
-          {items.map((item) => (
+          {filteredItems.map((item) => (
             <Card key={item.id} className="p-4 space-y-3 border-destructive/30">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0 flex-1">
