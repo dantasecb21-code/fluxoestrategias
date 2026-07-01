@@ -16,11 +16,19 @@ interface Item {
   platform: string;
   manager_name: string;
   algorithm_return_reason: string;
+  algorithm_return_priority: string;
   algorithm_adaptation_started_at: string | null;
   updated_at: string;
 }
 
 const PLATFORM_LABELS: Record<string, string> = { ifood: "iFood", "99food": "99", keeta: "Keeta" };
+
+const RETURN_PRIORITY_LABELS: Record<string, { label: string; color: string }> = {
+  urgent: { label: "Urgente", color: "destructive" },
+  high: { label: "Alta", color: "secondary" },
+  medium: { label: "Média", color: "outline" },
+  low: { label: "Baixa", color: "outline" },
+};
 
 export default function ReturnedStrategies() {
   const { user, roles } = useAuth();
@@ -36,7 +44,7 @@ export default function ReturnedStrategies() {
     const isAdmin = roles.includes("admin");
     let query = supabase
       .from("strategies")
-      .select("id, store_name, platform, manager_name, algorithm_return_reason, algorithm_adaptation_started_at, updated_at")
+      .select("id, store_name, platform, manager_name, algorithm_return_reason, algorithm_return_priority, algorithm_adaptation_started_at, updated_at")
       .eq("algorithm_adaptation_status", "returned")
       .is("deleted_at", null)
       .order("updated_at", { ascending: false });
@@ -44,7 +52,7 @@ export default function ReturnedStrategies() {
       query = query.or(`user_id.eq.${user.id},assigned_to.eq.${user.id}`);
     }
     const { data } = await query;
-    setItems((data as Item[]) || []);
+    setItems(((data as any[]) || []).map((i) => ({ ...i, algorithm_return_priority: i.algorithm_return_priority || "medium" })) as Item[]);
     setLoading(false);
   };
 
@@ -146,7 +154,9 @@ export default function ReturnedStrategies() {
         </Card>
       ) : (
         <div className="space-y-3">
-          {filteredItems.map((item) => (
+          {filteredItems.map((item) => {
+            const retPriority = RETURN_PRIORITY_LABELS[item.algorithm_return_priority] || RETURN_PRIORITY_LABELS.medium;
+            return (
             <Card key={item.id} className="p-4 space-y-3 border-destructive/30">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0 flex-1">
@@ -155,6 +165,9 @@ export default function ReturnedStrategies() {
                     <Badge variant="outline">{PLATFORM_LABELS[item.platform] || item.platform}</Badge>
                     <Badge variant="destructive" className="gap-1">
                       <AlertTriangle className="h-3 w-3" /> Devolvida
+                    </Badge>
+                    <Badge variant={retPriority.color as any}>
+                      Prioridade: {retPriority.label}
                     </Badge>
                   </div>
                   <p className="text-xs text-muted-foreground mt-1">
@@ -185,7 +198,7 @@ export default function ReturnedStrategies() {
                 </Button>
               </div>
             </Card>
-          ))}
+          );})}
         </div>
       )}
     </div>
