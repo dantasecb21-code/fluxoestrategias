@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Cpu, CheckCircle2, RotateCcw, Clock, AlertTriangle, ExternalLink, Pause, Play, Search } from "lucide-react";
+import { Cpu, CheckCircle2, RotateCcw, Clock, AlertTriangle, ExternalLink, Pause, Play, Search, Trash2 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
@@ -149,6 +149,26 @@ export default function AlgorithmAdaptation() {
     } as any).eq("id", item.id);
     if (error) { toast.error("Erro ao desfazer aprovação"); return; }
     toast.success("Aprovação desfeita — voltou para pendentes");
+    fetchItems();
+  };
+
+  const requeueReturned = async (item: AdaptationItem) => {
+    const { error } = await supabase.from("strategies").update({
+      algorithm_adaptation_status: "pending",
+      algorithm_return_reason: "",
+    } as any).eq("id", item.id);
+    if (error) { toast.error("Erro ao colocar como pendente"); return; }
+    toast.success("Voltou para pendentes");
+    fetchItems();
+  };
+
+  const deleteReturned = async (item: AdaptationItem) => {
+    if (!confirm(`Excluir a estratégia devolvida de "${item.store_name}"?`)) return;
+    const { error } = await supabase.from("strategies").update({
+      deleted_at: new Date().toISOString(),
+    } as any).eq("id", item.id);
+    if (error) { toast.error("Erro ao excluir"); return; }
+    toast.success("Excluída");
     fetchItems();
   };
 
@@ -309,6 +329,16 @@ export default function AlgorithmAdaptation() {
               </Button>
               <Button size="sm" variant="outline" onClick={() => undoApproval(item)}>
                 <RotateCcw className="h-4 w-4 mr-1" /> Desfazer aprovação
+              </Button>
+            </>
+          )}
+          {item.algorithm_adaptation_status === "returned" && (
+            <>
+              <Button size="sm" variant="outline" onClick={() => requeueReturned(item)}>
+                <RotateCcw className="h-4 w-4 mr-1" /> Colocar como pendente
+              </Button>
+              <Button size="sm" variant="outline" className="text-destructive hover:text-destructive" onClick={() => deleteReturned(item)}>
+                <Trash2 className="h-4 w-4 mr-1" /> Excluir
               </Button>
             </>
           )}

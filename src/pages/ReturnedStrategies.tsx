@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { RotateCcw, AlertTriangle, ExternalLink, Sparkles, Search } from "lucide-react";
+import { RotateCcw, AlertTriangle, ExternalLink, Sparkles, Search, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 interface Item {
@@ -73,6 +73,26 @@ export default function ReturnedStrategies() {
       replaces: item.id,
     });
     navigate(`/nova?${params.toString()}`);
+  };
+
+  const requeuePending = async (item: Item) => {
+    const { error } = await supabase.from("strategies").update({
+      algorithm_adaptation_status: "pending",
+      algorithm_return_reason: "",
+    } as any).eq("id", item.id);
+    if (error) { toast.error("Erro ao colocar como pendente"); return; }
+    toast.success("Voltou para pendentes");
+    fetchItems();
+  };
+
+  const deleteReturned = async (item: Item) => {
+    if (!confirm(`Excluir a estratégia devolvida de "${item.store_name}"?`)) return;
+    const { error } = await supabase.from("strategies").update({
+      deleted_at: new Date().toISOString(),
+    } as any).eq("id", item.id);
+    if (error) { toast.error("Erro ao excluir"); return; }
+    toast.success("Excluída");
+    fetchItems();
   };
 
   return (
@@ -150,9 +170,15 @@ export default function ReturnedStrategies() {
                 </div>
               )}
 
-              <div className="flex justify-end gap-2">
+              <div className="flex justify-end gap-2 flex-wrap">
                 <Button size="sm" variant="outline" onClick={() => navigate(`/estrategia/${item.id}`)}>
                   <ExternalLink className="h-4 w-4 mr-1" /> Abrir estratégia
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => requeuePending(item)}>
+                  <RotateCcw className="h-4 w-4 mr-1" /> Colocar como pendente
+                </Button>
+                <Button size="sm" variant="outline" className="text-destructive hover:text-destructive" onClick={() => deleteReturned(item)}>
+                  <Trash2 className="h-4 w-4 mr-1" /> Excluir
                 </Button>
                 <Button size="sm" onClick={() => createRealignment(item)}>
                   <Sparkles className="h-4 w-4 mr-1" /> Criar estratégia de realinhamento
