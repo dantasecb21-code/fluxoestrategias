@@ -37,6 +37,7 @@ export default function ReturnedStrategies() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [platformFilter, setPlatformFilter] = useState<string>("all");
+  const [priorityFilter, setPriorityFilter] = useState<string>("all");
 
   const fetchItems = async () => {
     if (!user) return;
@@ -69,8 +70,9 @@ export default function ReturnedStrategies() {
   const filteredItems = useMemo(() => items.filter((i) => {
     if (searchTerm && !i.store_name.toLowerCase().includes(searchTerm.toLowerCase())) return false;
     if (platformFilter !== "all" && i.platform !== platformFilter) return false;
+    if (priorityFilter !== "all" && i.algorithm_return_priority !== priorityFilter) return false;
     return true;
-  }), [items, searchTerm, platformFilter]);
+  }), [items, searchTerm, platformFilter, priorityFilter]);
 
   const createRealignment = (item: Item) => {
     const params = new URLSearchParams({
@@ -112,6 +114,9 @@ export default function ReturnedStrategies() {
         <div>
           <h1 className="font-heading font-bold text-3xl text-foreground">
             Devolvidas pelo <span className="text-primary">Braço Direito</span>
+            <Badge variant="outline" className="ml-3 align-middle text-sm font-normal">
+              {filteredItems.length}
+            </Badge>
           </h1>
           <p className="text-sm text-muted-foreground">
             Ajuste o que foi pedido e reenvie para a aprovação final.
@@ -130,6 +135,16 @@ export default function ReturnedStrategies() {
               className="pl-9"
             />
           </div>
+          <Select value={priorityFilter} onValueChange={setPriorityFilter}>
+            <SelectTrigger className="sm:w-48"><SelectValue placeholder="Prioridade" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas as prioridades</SelectItem>
+              <SelectItem value="urgent">Urgente</SelectItem>
+              <SelectItem value="high">Alta</SelectItem>
+              <SelectItem value="medium">Média</SelectItem>
+              <SelectItem value="low">Baixa</SelectItem>
+            </SelectContent>
+          </Select>
           <Select value={platformFilter} onValueChange={setPlatformFilter}>
             <SelectTrigger className="sm:w-44"><SelectValue placeholder="Plataforma" /></SelectTrigger>
             <SelectContent>
